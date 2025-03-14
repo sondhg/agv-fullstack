@@ -2,6 +2,7 @@ import { PageAGVs } from "@/app/admin/AGVs/PageAGVs";
 import { PageDashboard } from "@/app/admin/dashboard/PageDashboard";
 import { PageOrders } from "@/app/admin/orders/PageOrders";
 import { PageSchedules } from "@/app/admin/schedules/PageSchedules";
+import { PageMap } from "@/app/admin/map/PageMap";
 import { LoginPage } from "@/app/auth/LoginPage";
 import { RegisterPage } from "@/app/auth/RegisterPage";
 import { PageDashboardDemo } from "@/app/demo/dashboard-demo/PageDashboardDemo";
@@ -30,6 +31,7 @@ export function AllRoutes() {
               <Route path="orders" element={<PageOrders />} />
               <Route path="schedules" element={<PageSchedules />} />
               <Route path="dashboard" element={<PageDashboard />} />
+              <Route path="map" element={<PageMap />} />
             </Route>
           </Route>
 
