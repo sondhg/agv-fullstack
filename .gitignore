@@ -1,0 +1,69 @@
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+bower_components/
+jspm_packages/
+
+# Build outputs
+build/
+dist/
+.cache/
+
+# Django
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Python
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+*.py[cod]
+*$py.class
+
+# Coverage and testing
+.coverage
+.coverage.*
+.cache
+.tox/
+.nox/
+.pytest_cache/
+.hypothesis/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Parcel, Next.js, Nuxt.js, Gatsby, etc.
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist
+.docusaurus/
+.svelte-kit/
+
+# Miscellaneous
+*.tgz
+*.tsbuildinfo
