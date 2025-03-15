@@ -48,7 +48,7 @@ export function PageMap() {
     const allNodes = new Set(data.nodes);
     const invalidConnections = data.connections.some(
       (conn: { node1: number; node2: number; distance: number }) =>
-      !allNodes.has(conn.node1) || !allNodes.has(conn.node2),
+        !allNodes.has(conn.node1) || !allNodes.has(conn.node2),
     );
     const invalidDirections = data.directions.some(
       (dir: { node1: number; node2: number; direction: number }) =>
@@ -100,7 +100,11 @@ export function PageMap() {
 
         <Button onClick={handleShowMap}>Show map image</Button>
       </div>
-      {mapData && <MapVisualizer data={mapData} />}
+      {error ? (
+        <div className="font-bold text-red-500">{error}</div>
+      ) : (
+        mapData && <MapVisualizer data={mapData} />
+      )}
     </div>
   );
 }
