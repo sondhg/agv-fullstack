@@ -1,11 +1,18 @@
 import api from "@/utils/axiosCustomize";
 
+export const importConnections = async (csvData: string) => {
+  return api.post("import-connections/", csvData, {
+    headers: { "Content-Type": "text/csv" },
+  });
+};
+
+export const importDirections = async (csvData: string) => {
+  return api.post("import-directions/", csvData, {
+    headers: { "Content-Type": "text/csv" },
+  });
+};
+
 export const fetchMapData = async () => {
-  try {
-    const response = await api.get("map/");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching map data:", error);
-    throw error;
-  }
+  const response = await api.get("get-map-data/");
+  return response.data;
 };

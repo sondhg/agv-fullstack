@@ -1,3 +1,17 @@
 from django.db import models
 
-# Create your models here.
+
+class MapData(models.Model):
+    node_count = models.IntegerField(default=0)
+
+
+class Connection(models.Model):
+    node1 = models.IntegerField()
+    node2 = models.IntegerField()
+    distance = models.FloatField()
+
+
+class Direction(models.Model):
+    node1 = models.IntegerField()
+    node2 = models.IntegerField()
+    direction = models.IntegerField()  # 0-5 values from map-direction.csv

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'channels',
     'users',
     'order_data',
+    'map_data',  # Add this line
 
 ]
 
