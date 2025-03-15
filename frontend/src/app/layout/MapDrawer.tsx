@@ -1,5 +1,5 @@
+import { MapVisualizer } from "@/app/admin/map/PageMap"; // Import MapVisualizer
 import map_image from "@/assets/map_image.png";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -8,39 +8,50 @@ import {
   DrawerFooter,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Terminal } from "lucide-react";
+import { fetchMapData } from "@/services/APIs/mapAPI"; // Import the fetchMapData function
+import { useState } from "react";
+import { toast } from "sonner";
+
+interface MapDrawerProps {
+  mapData: {
+    nodes: number[];
+    connections: { node1: number; node2: number; distance: number }[];
+    directions: { node1: number; node2: number; direction: number }[];
+  } | null;
+}
 
 export function MapDrawer() {
+  const [mapData, setMapData] = useState<{
+    nodes: number[];
+    connections: { node1: number; node2: number; distance: number }[];
+    directions: { node1: number; node2: number; direction: number }[];
+  } | null>(null);
+
+  const handleFetchMapData = async () => {
+    const data = await fetchMapData();
+    console.log("Fetched map data:", data); // Debug log
+
+    if (!data || !data.nodes || !data.connections) {
+      toast.error("Failed to load map data.");
+      return;
+    }
+    setMapData(data);
+  };
+
   return (
-    <Drawer>
+    <Drawer onOpenChange={(isOpen) => isOpen && handleFetchMapData()}>
       <DrawerTrigger asChild>
         <Button variant="secondary">Show map</Button>
       </DrawerTrigger>
       <DrawerContent>
         <div className="mx-auto w-full max-w-6xl">
-          <div className="columns-2 p-4 pb-0">
-            <img src={map_image} alt="Map layout" />
-            <div className="space-y-2">
-              <Alert>
-                <Terminal className="h-4 w-4" />
-                <AlertTitle className="text-blue-500">Blue</AlertTitle>
-                <AlertDescription>Start points</AlertDescription>
-              </Alert>
-              <Alert>
-                <Terminal className="h-4 w-4" />
-                <AlertTitle className="text-red-500">Red</AlertTitle>
-                <AlertDescription>End points</AlertDescription>
-              </Alert>
-              <Alert>
-                <Terminal className="h-4 w-4" />
-                <AlertTitle className="text-yellow-500">Yellow</AlertTitle>
-                <AlertDescription>Charge stations</AlertDescription>
-              </Alert>
-              <Alert>
-                <Terminal className="h-4 w-4" />
-                <AlertTitle className="text-green-500">Green</AlertTitle>
-                <AlertDescription>Traverse points</AlertDescription>
-              </Alert>
+          <div className="p-4 pb-0">
+            <div className="flex items-center justify-center space-x-2">
+              {mapData ? (
+                <MapVisualizer data={mapData} /> // Render MapVisualizer if mapData exists
+              ) : (
+                <img src={map_image} alt="Map layout" />
+              )}
             </div>
           </div>
           <DrawerFooter>

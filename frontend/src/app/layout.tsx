@@ -21,7 +21,7 @@ export default function Layout() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <ModeToggle />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <MapDrawer />
+            <MapDrawer /> {/* No need to pass mapData */}
             <LayoutBreadcrumb />
           </div>
         </header>

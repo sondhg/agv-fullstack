@@ -5,7 +5,7 @@ import {
   importDirections,
 } from "@/services/APIs/mapAPI";
 import Papa from "papaparse";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function PageMap() {
@@ -14,6 +14,8 @@ export function PageMap() {
     connections: { node1: number; node2: number; distance: number }[];
     directions: { node1: number; node2: number; direction: number }[];
   } | null>(null);
+
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileImport = (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -36,17 +38,43 @@ export function PageMap() {
     const data = await fetchMapData();
     console.log("Fetched map data:", data); // Debug log
 
-    if (!data || !data.nodes || !data.connections) {
+    if (!data || !data.nodes || !data.connections || !data.directions) {
       toast.error("Failed to load map data.");
+      setError("Incomplete data: Please ensure both CSV files are imported.");
+      setMapData(null);
       return;
     }
+    // Validate that connections and directions are related
+    const allNodes = new Set(data.nodes);
+    const invalidConnections = data.connections.some(
+      (conn: { node1: number; node2: number; distance: number }) =>
+      !allNodes.has(conn.node1) || !allNodes.has(conn.node2),
+    );
+    const invalidDirections = data.directions.some(
+      (dir: { node1: number; node2: number; direction: number }) =>
+        !allNodes.has(dir.node1) || !allNodes.has(dir.node2),
+    );
+
+    if (invalidConnections || invalidDirections) {
+      setError(
+        "Invalid data: Connections or directions do not match the nodes.",
+      );
+      setMapData(null);
+      return;
+    }
+
+    setError(null); // Clear any previous errors
     setMapData(data);
   };
+
+  // Automatically fetch and display the map data when the component mounts
+  useEffect(() => {
+    handleShowMap();
+  }, []);
 
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">Map</h2>
-
       <div className="space-x-5">
         <Button onClick={() => document.getElementById("conn-file")?.click()}>
           Import CSV for connection and distance
@@ -72,13 +100,12 @@ export function PageMap() {
 
         <Button onClick={handleShowMap}>Show map image</Button>
       </div>
-
       {mapData && <MapVisualizer data={mapData} />}
     </div>
   );
 }
 
-const MapVisualizer = ({ data }: { data: any }) => {
+export const MapVisualizer = ({ data }: { data: any }) => {
   const [positions, setPositions] = useState<{
     [key: number]: { x: number; y: number };
   }>({});
@@ -187,13 +214,12 @@ const MapVisualizer = ({ data }: { data: any }) => {
 
   return (
     <div className="relative border border-gray-300 p-5">
-      <h3 className="text-xl font-bold">Map Visualization</h3>
       <svg
-        viewBox="0 0 1000 1000" // Defines the coordinate system for the SVG
-        preserveAspectRatio="xMidYMid meet" // Ensures the aspect ratio is maintained
-        width="100%" // Makes the SVG take up the full width of the container
-        height="auto" // Automatically adjusts the height based on the aspect ratio
-        className="border border-gray-400"
+        viewBox="0 0 1000 1000"
+        preserveAspectRatio="xMidYMid meet"
+        width="100%"
+        height="auto"
+        className="border border-gray-400 bg-white"
       >
         {data.connections.map((conn: any, index: number) => {
           const pos1 = scaledPositions[conn.node1];
