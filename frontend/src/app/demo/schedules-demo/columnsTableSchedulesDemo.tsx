@@ -50,9 +50,9 @@ export const columnsTableSchedulesDemo: ColumnDef<Schedule>[] = [
     ),
   },
   {
-    accessorKey: "est_start_time",
+    accessorKey: "start_time",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Estimated Start Time" />
+      <DataTableColumnHeader column={column} title="Start Time" />
     ),
   },
   {
