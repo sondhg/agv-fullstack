@@ -58,7 +58,6 @@ export function PageSchedules() {
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
         <div className="space-x-4">
-          <Button onClick={fetchListData}>Fetch Schedules</Button>
           <Button
             onClick={handleCreateSchedule}
             disabled={isCreating}

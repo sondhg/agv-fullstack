@@ -66,12 +66,6 @@ export const columnsTableSchedules = (
     ),
   },
   {
-    accessorKey: "load_name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Name" />
-    ),
-  },
-  {
     accessorKey: "start_point",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Start Point" />
@@ -83,18 +77,24 @@ export const columnsTableSchedules = (
       <DataTableColumnHeader column={column} title="End Point" />
     ),
   },
-  {
-    accessorKey: "load_amount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Amount" />
-    ),
-  },
-  {
-    accessorKey: "load_weight",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Weight" />
-    ),
-  },
+  // {
+  //   accessorKey: "load_name",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Load Name" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "load_amount",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Load Amount" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "load_weight",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Load Weight" />
+  //   ),
+  // },
   {
     accessorKey: "instruction_set",
     header: ({ column }) => (
