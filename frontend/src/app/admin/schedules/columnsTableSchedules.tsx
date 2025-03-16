@@ -91,4 +91,10 @@ export const columnsTableSchedules: ColumnDef<Schedule>[] = [
       <DataTableColumnHeader column={column} title="Load Weight" />
     ),
   },
+  {
+    accessorKey: "instruction_set",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Instruction Set" />
+    ),
+  },
 ];
