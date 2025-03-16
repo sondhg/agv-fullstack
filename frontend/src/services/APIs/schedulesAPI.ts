@@ -25,7 +25,7 @@ const generateSchedules = async (): Promise<void> => {
       throw new Error(error.response.data.warning);
     }
     console.error(">>> Error generating schedules:", error);
-    throw new Error(">>> Failed to generate schedules");
+    throw new Error("Failed to generate schedules");
   }
 };
 

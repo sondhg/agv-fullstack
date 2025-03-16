@@ -96,7 +96,7 @@ export function PageMap() {
           onClick={() => document.getElementById("dir-file")?.click()}
         >
           <FileUp />
-          Import CSV for relative cardinal directions between nodes
+          Import CSV for relative directions between nodes
         </Button>
         <input
           id="dir-file"

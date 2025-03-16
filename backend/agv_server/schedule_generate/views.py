@@ -61,6 +61,10 @@ class GenerateSchedulesView(APIView):
                 # Train Q-learning for the current order
                 try:
                     q_learning.train(order.start_point, order.end_point)
+
+                    # ! Visualize the Q-table as a heatmap
+                    # q_learning.visualize_q_table("q_table_heatmap_order_1.png")
+
                     shortest_path = q_learning.get_shortest_path(
                         order.start_point, order.end_point
                     )
@@ -83,6 +87,7 @@ class GenerateSchedulesView(APIView):
                     "end_point": order.end_point,
                     "load_name": order.load_name,
                     "load_amount": order.load_amount,
+                    "load_weight": order.load_weight,
                     # Serialize as JSON string
                     "instruction_set": json.dumps(shortest_path),
                 }
