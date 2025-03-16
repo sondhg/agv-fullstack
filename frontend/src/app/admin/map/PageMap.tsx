@@ -7,6 +7,8 @@ import {
 import Papa from "papaparse";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { FileUp } from "lucide-react";
+import { AlertMapGuide } from "./AlertMapGuide";
 
 export function PageMap() {
   const [mapData, setMapData] = useState<{
@@ -75,9 +77,11 @@ export function PageMap() {
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">Map</h2>
+      <AlertMapGuide />
       <div className="space-x-5">
         <Button onClick={() => document.getElementById("conn-file")?.click()}>
-          Import CSV for connection and distance
+          <FileUp />
+          Import CSV for connection and distance between nodes
         </Button>
         <input
           id="conn-file"
@@ -87,8 +91,12 @@ export function PageMap() {
           onChange={(e) => handleFileImport(e, importConnections)}
         />
 
-        <Button onClick={() => document.getElementById("dir-file")?.click()}>
-          Import CSV for relative directions
+        <Button
+          variant={"secondary"}
+          onClick={() => document.getElementById("dir-file")?.click()}
+        >
+          <FileUp />
+          Import CSV for relative cardinal directions between nodes
         </Button>
         <input
           id="dir-file"
@@ -98,7 +106,9 @@ export function PageMap() {
           onChange={(e) => handleFileImport(e, importDirections)}
         />
 
-        <Button onClick={handleShowMap}>Show map image</Button>
+        <Button variant={"destructive"} onClick={handleShowMap}>
+          Show map image
+        </Button>
       </div>
       {error ? (
         <div className="font-bold text-red-500">{error}</div>
@@ -223,7 +233,7 @@ export const MapVisualizer = ({ data }: { data: any }) => {
         preserveAspectRatio="xMidYMid meet"
         width="100%"
         height="auto"
-        className="border border-gray-400 bg-white"
+        className="border border-gray-400 bg-zinc-200"
       >
         {data.connections.map((conn: any, index: number) => {
           const pos1 = scaledPositions[conn.node1];
