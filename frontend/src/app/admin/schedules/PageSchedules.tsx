@@ -78,11 +78,7 @@ export function PageSchedules() {
             onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
           />
 
-          <Button
-            onClick={handleCreateSchedule}
-            disabled={isCreating}
-            variant="secondary"
-          >
+          <Button onClick={handleCreateSchedule} disabled={isCreating}>
             <CalendarPlus className="mr-2 h-4 w-4" />
             {isCreating ? "Generating Schedules..." : "Create Schedules"}
           </Button>
