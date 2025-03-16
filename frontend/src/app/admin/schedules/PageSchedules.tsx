@@ -1,24 +1,17 @@
+import { AlgorithmSelect } from "@/app/admin/schedules/AlgorithmSelect";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import {
+  deleteSchedule,
   generateSchedules,
   getSchedules,
-  deleteSchedule,
 } from "@/services/APIs/schedulesAPI";
 import { Schedule } from "@/types/Schedule.types";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableSchedules } from "./columnsTableSchedules";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export function PageSchedules() {
   const [listData, setListData] = useState<Schedule[]>([]);
@@ -68,32 +61,22 @@ export function PageSchedules() {
     <div>
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
+        <Alert>
+          <Terminal className="h-4 w-4" />
+          <AlertTitle>
+            Choose a path-finding algorithm in the dropdown below
+          </AlertTitle>
+          <AlertDescription>
+            Choose either Dijkstra's algorithm or Q-Learning to generate
+            schedules.
+          </AlertDescription>
+        </Alert>
         <div className="flex items-center space-x-4">
-          {/* Dropdown for selecting the algorithm */}
-          {/* <select
-            value={selectedAlgorithm}
-            onChange={(e) => setSelectedAlgorithm(e.target.value)}
-            className="rounded border px-3 py-2"
-          >
-            <option value="dijkstra">Dijkstra</option>
-            <option value="q_learning">Q-Learning</option>
-          </select> */}
-
-          <Select
-            onValueChange={(value) => setSelectedAlgorithm(value)} // Update the selected algorithm
-            defaultValue="dijkstra" // Default value
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Algorithm" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Algorithms</SelectLabel>
-                <SelectItem value="dijkstra">Dijkstra</SelectItem>
-                <SelectItem value="q_learning">Q-Learning</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          {/* Use the AlgorithmSelect component */}
+          <AlgorithmSelect
+            selectedAlgorithm={selectedAlgorithm}
+            onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
+          />
 
           <Button
             onClick={handleCreateSchedule}
