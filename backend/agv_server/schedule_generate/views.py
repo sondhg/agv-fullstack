@@ -6,7 +6,8 @@ from .serializers import ScheduleSerializer
 from order_data.models import Order
 from rest_framework.generics import ListAPIView
 from .q_learning import QLearning
-from map_data.models import Direction, Connection  # Fixed missing imports
+from .dijkstra import Dijkstra
+from map_data.models import Direction, Connection  # Ensure distance data is used
 import logging
 import json
 
@@ -28,7 +29,8 @@ class GenerateSchedulesView(APIView):
             # Fetch map data
             nodes = list(Direction.objects.values_list(
                 "node1", flat=True).distinct())
-            connections = list(Connection.objects.values())
+            connections = list(Connection.objects.values()
+                               )  # Includes distance
             if not nodes or not connections:
                 logger.error("Map data is incomplete or missing.")
                 return Response(
@@ -36,15 +38,15 @@ class GenerateSchedulesView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            logger.info(f"Fetched nodes: {nodes}")
-            logger.info(f"Fetched connections: {connections}")
+            # Initialize Dijkstra
+            path_finder = Dijkstra(nodes, connections)
 
-            # Initialize Q-learning
+            # Initialize Q-learning with distances
             q_learning = QLearning(nodes, connections)
 
             schedules = []
             for order in orders:
-                # Check if a schedule for this order already exists
+                # Skip existing schedules
                 if Schedule.objects.filter(schedule_id=order.order_id).exists():
                     logger.info(
                         f"Schedule for order {order.order_id} already exists.")
@@ -60,21 +62,27 @@ class GenerateSchedulesView(APIView):
 
                 # Train Q-learning for the current order
                 try:
-                    q_learning.train(order.start_point, order.end_point)
+                    # ! Only choose one of the following path-finding methods
 
-                    # ! Visualize the Q-table as a heatmap
-                    # q_learning.visualize_q_table("q_table_heatmap_order_1.png")
+                    # ! Train Q-learning
+                    # q_learning.train(order.start_point, order.end_point)
+                    # shortest_path = q_learning.get_shortest_path(
+                    #     order.start_point, order.end_point)
 
-                    shortest_path = q_learning.get_shortest_path(
-                        order.start_point, order.end_point
-                    )
+                    # ! Use Dijkstra
+                    shortest_path = path_finder.find_shortest_path(
+                        order.start_point, order.end_point)
+
+                    if not shortest_path:
+                        logger.error(
+                            f"No valid path found for order {order.order_id}.")
+                        continue
+
                     logger.info(
-                        f"Shortest path for order {order.order_id}: {shortest_path}"
-                    )
+                        f"Shortest path for order {order.order_id}: {shortest_path}")
                 except Exception as e:
                     logger.error(
-                        f"Failed to compute shortest path for order {order.order_id}: {e}"
-                    )
+                        f"Failed to compute shortest path for order {order.order_id}: {e}")
                     continue
 
                 # Create a schedule
@@ -88,8 +96,7 @@ class GenerateSchedulesView(APIView):
                     "load_name": order.load_name,
                     "load_amount": order.load_amount,
                     "load_weight": order.load_weight,
-                    # Serialize as JSON string
-                    "instruction_set": json.dumps(shortest_path),
+                    "instruction_set": json.dumps(shortest_path),  # Store path
                 }
                 serializer = ScheduleSerializer(data=schedule_data)
                 if serializer.is_valid():

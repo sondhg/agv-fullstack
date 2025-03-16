@@ -16,4 +16,4 @@ class QLearningTestCase(TestCase):
     def test_shortest_path(self):
         self.q_learning.train(0, 3)
         path = self.q_learning.get_shortest_path(0, 3)
-        self.assertEqual(path, [0, 1, 2, 3])
+        self.assertEqual(path, [0, 1, 2, 3])  # Validate the shortest path
