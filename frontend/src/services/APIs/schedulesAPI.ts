@@ -16,9 +16,11 @@ const getSchedules = async (): Promise<Schedule[]> => {
   }
 };
 
-const generateSchedules = async (): Promise<void> => {
+const generateSchedules = async (
+  algorithm: string = "dijkstra",
+): Promise<void> => {
   try {
-    const { data } = await api.post(GENERATE_SCHEDULES_URL);
+    const { data } = await api.post(GENERATE_SCHEDULES_URL, { algorithm });
     return data;
   } catch (error: any) {
     if (error.response?.status === 400 && error.response?.data?.warning) {

@@ -10,10 +10,21 @@ import { CalendarPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableSchedules } from "./columnsTableSchedules";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function PageSchedules() {
   const [listData, setListData] = useState<Schedule[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedAlgorithm, setSelectedAlgorithm] =
+    useState<string>("dijkstra"); // Default algorithm
 
   const fetchListData = async () => {
     const data = await getSchedules();
@@ -23,7 +34,7 @@ export function PageSchedules() {
   const handleCreateSchedule = async () => {
     try {
       setIsCreating(true);
-      await generateSchedules();
+      await generateSchedules(selectedAlgorithm); // Pass the selected algorithm
       toast.success("Schedules generated successfully");
       await fetchListData(); // Refresh the list after generating
     } catch (error: any) {
@@ -57,7 +68,33 @@ export function PageSchedules() {
     <div>
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
-        <div className="space-x-4">
+        <div className="flex items-center space-x-4">
+          {/* Dropdown for selecting the algorithm */}
+          {/* <select
+            value={selectedAlgorithm}
+            onChange={(e) => setSelectedAlgorithm(e.target.value)}
+            className="rounded border px-3 py-2"
+          >
+            <option value="dijkstra">Dijkstra</option>
+            <option value="q_learning">Q-Learning</option>
+          </select> */}
+
+          <Select
+            onValueChange={(value) => setSelectedAlgorithm(value)} // Update the selected algorithm
+            defaultValue="dijkstra" // Default value
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Algorithm" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Algorithms</SelectLabel>
+                <SelectItem value="dijkstra">Dijkstra</SelectItem>
+                <SelectItem value="q_learning">Q-Learning</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+
           <Button
             onClick={handleCreateSchedule}
             disabled={isCreating}
