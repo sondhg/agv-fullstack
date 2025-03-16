@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'users',
     'order_data',
     'map_data',  # Add this line
+    'schedule_generate',  # Add this line
 
 ]
 

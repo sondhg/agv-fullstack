@@ -1,8 +1,10 @@
 import { Schedule } from "@/types/Schedule.types";
 import api from "@/utils/axiosCustomize";
 
-const SEE_SCHEDULES_URL = "schedule/"; // API endpoint của Hoàng Anh là schedule, không phải schedules
-const CREATE_SCHEDULE_URL = "requests_management/schedule/";
+const SEE_SCHEDULES_URL = "schedule_generate/";
+const GENERATE_SCHEDULES_URL = "schedule_generate/generate/";
+const DELETE_SCHEDULE_URL = (scheduleId: number) =>
+  `schedule_generate/${scheduleId}/delete/`;
 
 const getSchedules = async (): Promise<Schedule[]> => {
   try {
@@ -14,14 +16,26 @@ const getSchedules = async (): Promise<Schedule[]> => {
   }
 };
 
-const createSchedule = async (): Promise<void> => {
+const generateSchedules = async (): Promise<void> => {
   try {
-    const { data } = await api.get(CREATE_SCHEDULE_URL);
+    const { data } = await api.post(GENERATE_SCHEDULES_URL);
     return data;
-  } catch (error) {
-    console.error(">>> Error creating schedule:", error);
-    throw new Error(">>> Failed to create schedule");
+  } catch (error: any) {
+    if (error.response?.status === 400 && error.response?.data?.warning) {
+      throw new Error(error.response.data.warning);
+    }
+    console.error(">>> Error generating schedules:", error);
+    throw new Error(">>> Failed to generate schedules");
   }
 };
 
-export { getSchedules, createSchedule };
+const deleteSchedule = async (scheduleId: number): Promise<void> => {
+  try {
+    await api.delete(DELETE_SCHEDULE_URL(scheduleId));
+  } catch (error) {
+    console.error(`>>> Error deleting schedule with ID ${scheduleId}:`, error);
+    throw new Error(">>> Failed to delete schedule");
+  }
+};
+
+export { getSchedules, generateSchedules, deleteSchedule };

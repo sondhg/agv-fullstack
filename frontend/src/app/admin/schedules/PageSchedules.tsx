@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import {
-  createSchedule,
+  generateSchedules,
   getSchedules,
+  deleteSchedule,
 } from "@/services/APIs/schedulesAPI";
 import { Schedule } from "@/types/Schedule.types";
 import { CalendarPlus } from "lucide-react";
@@ -16,21 +17,35 @@ export function PageSchedules() {
 
   const fetchListData = async () => {
     const data = await getSchedules();
-    console.log(">>> data: ", data);
     setListData(data);
   };
 
   const handleCreateSchedule = async () => {
     try {
       setIsCreating(true);
-      await createSchedule();
-      toast.success("Schedule created successfully");
-      await fetchListData(); // Refresh the list after creating
-    } catch (error) {
-      toast.error("Failed to create schedule");
-      console.error("Error creating schedule:", error);
+      await generateSchedules();
+      toast.success("Schedules generated successfully");
+      await fetchListData(); // Refresh the list after generating
+    } catch (error: any) {
+      if (error.message) {
+        toast.error(error.message); // Display the warning message
+      } else {
+        toast.error("Failed to generate schedules");
+      }
+      console.error("Error generating schedules:", error);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleClickBtnDelete = async (schedule_id: number) => {
+    try {
+      await deleteSchedule(schedule_id);
+      toast.success("Schedule deleted successfully");
+      await fetchListData(); // Refresh the list after deletion
+    } catch (error) {
+      console.error("Failed to delete schedule:", error);
+      toast.error("Failed to delete schedule. Please try again.");
     }
   };
 
@@ -50,12 +65,12 @@ export function PageSchedules() {
             variant="secondary"
           >
             <CalendarPlus className="mr-2 h-4 w-4" />
-            {isCreating ? "Creating Schedule..." : "Create Schedule"}
+            {isCreating ? "Generating Schedules..." : "Create Schedules"}
           </Button>
         </div>
         <DataTable
           data={listData}
-          columns={columnsTableSchedules}
+          columns={columnsTableSchedules(handleClickBtnDelete)}
           filterSearchByColumn="order_date"
         />
       </div>

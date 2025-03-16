@@ -17,3 +17,6 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.order_id} has been created"
+
+    class Meta:
+        ordering = ['order_id']  # Ensure ascending order by order_id

@@ -25,5 +25,7 @@ urlpatterns = [
     path("api/", include("users.urls")),
     path("api/", include("order_data.urls")),
     path("api/", include("map_data.urls")),  # Include map_data's URLs
+    path("api/schedule_generate/",
+         include("schedule_generate.urls")),  # Add this line
     # path("api/", include("agv_data.urls")),
 ]

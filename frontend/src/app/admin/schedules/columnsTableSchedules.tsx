@@ -5,8 +5,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { Schedule } from "@/types/Schedule.types";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
-export const columnsTableSchedules: ColumnDef<Schedule>[] = [
+export const columnsTableSchedules = (
+  handleClickBtnDelete: (scheduleId: number) => void,
+): ColumnDef<Schedule>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -96,5 +100,20 @@ export const columnsTableSchedules: ColumnDef<Schedule>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Instruction Set" />
     ),
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const schedule = row.original;
+
+      return (
+        <Button
+          variant={"destructive"}
+          onClick={() => handleClickBtnDelete(schedule.schedule_id)}
+        >
+          <Trash2 />
+        </Button>
+      );
+    },
   },
 ];
