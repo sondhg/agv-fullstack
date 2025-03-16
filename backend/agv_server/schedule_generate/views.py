@@ -4,8 +4,13 @@ from rest_framework import status
 from .models import Schedule
 from .serializers import ScheduleSerializer
 from order_data.models import Order
-from order_data.serializers import OrderSerializer
 from rest_framework.generics import ListAPIView
+from .q_learning import QLearning
+from map_data.models import Direction, Connection  # Fixed missing imports
+import logging
+import json
+
+logger = logging.getLogger(__name__)
 
 
 class GenerateSchedulesView(APIView):
@@ -14,21 +19,61 @@ class GenerateSchedulesView(APIView):
             # Fetch all orders
             orders = Order.objects.all()
             if not orders.exists():
+                logger.warning("No orders available to generate schedules.")
                 return Response(
                     {"message": "No orders available to generate schedules."},
                     status=status.HTTP_404_NOT_FOUND,
                 )
 
+            # Fetch map data
+            nodes = list(Direction.objects.values_list(
+                "node1", flat=True).distinct())
+            connections = list(Connection.objects.values())
+            if not nodes or not connections:
+                logger.error("Map data is incomplete or missing.")
+                return Response(
+                    {"message": "Map data is incomplete or missing."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            logger.info(f"Fetched nodes: {nodes}")
+            logger.info(f"Fetched connections: {connections}")
+
+            # Initialize Q-learning
+            q_learning = QLearning(nodes, connections)
+
             schedules = []
             for order in orders:
                 # Check if a schedule for this order already exists
                 if Schedule.objects.filter(schedule_id=order.order_id).exists():
-                    return Response(
-                        {"warning": f"A schedule with order_id {order.order_id} already exists."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+                    logger.info(
+                        f"Schedule for order {order.order_id} already exists.")
+                    continue
 
-                # Create a schedule based on the order
+                # Validate order data
+                if order.start_point not in nodes or order.end_point not in nodes:
+                    logger.warning(
+                        f"Order {order.order_id} has invalid start or end points. "
+                        f"Start: {order.start_point}, End: {order.end_point}"
+                    )
+                    continue
+
+                # Train Q-learning for the current order
+                try:
+                    q_learning.train(order.start_point, order.end_point)
+                    shortest_path = q_learning.get_shortest_path(
+                        order.start_point, order.end_point
+                    )
+                    logger.info(
+                        f"Shortest path for order {order.order_id}: {shortest_path}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to compute shortest path for order {order.order_id}: {e}"
+                    )
+                    continue
+
+                # Create a schedule
                 schedule_data = {
                     "schedule_id": order.order_id,
                     "order_id": order.order_id,
@@ -38,17 +83,24 @@ class GenerateSchedulesView(APIView):
                     "end_point": order.end_point,
                     "load_name": order.load_name,
                     "load_amount": order.load_amount,
-                    "load_weight": order.load_weight,
-                    "est_end_time": "00:00:00",  # Default value
-                    "instruction_set": "[]",    # Default value
+                    # Serialize as JSON string
+                    "instruction_set": json.dumps(shortest_path),
                 }
                 serializer = ScheduleSerializer(data=schedule_data)
                 if serializer.is_valid():
                     serializer.save()
                     schedules.append(serializer.data)
+                else:
+                    logger.error(
+                        f"Failed to serialize schedule for order {order.order_id}: {serializer.errors}"
+                    )
 
-                    # Delete the corresponding order after creating the schedule
-                    order.delete()
+            if not schedules:
+                logger.warning("No schedules were generated.")
+                return Response(
+                    {"message": "No schedules were generated. Check the logs for details."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             return Response(
                 {"message": "Schedules generated successfully.",
@@ -56,10 +108,8 @@ class GenerateSchedulesView(APIView):
                 status=status.HTTP_201_CREATED,
             )
         except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            logger.exception("An error occurred during schedule generation.")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ListSchedulesView(ListAPIView):

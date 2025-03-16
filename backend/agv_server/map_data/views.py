@@ -3,6 +3,9 @@ import io
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import MapData, Connection, Direction
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -27,8 +30,10 @@ def import_connections(request):
             for j in range(node_count):
                 if i != j and int(matrix[i][j]) != 100000:
                     Connection.objects.create(
-                        node1=i, node2=j, distance=int(matrix[i][j]))
+                        node1=i, node2=j, distance=int(matrix[i][j])
+                    )
 
+        logger.info(f"Imported connections: {Connection.objects.all()}")
         return JsonResponse({"message": "Connection data imported successfully"}, status=200)
 
 
@@ -47,19 +52,29 @@ def import_directions(request):
             for j in range(len(matrix[i])):
                 if int(matrix[i][j]) != 5:  # Only save valid directions
                     Direction.objects.create(
-                        node1=i, node2=j, direction=int(matrix[i][j]))
+                        node1=i, node2=j, direction=int(matrix[i][j])
+                    )
 
+        logger.info(f"Imported directions: {Direction.objects.all()}")
         return JsonResponse({"message": "Direction data imported successfully"}, status=200)
 
 
 @csrf_exempt
 def get_map_data(request):
-    nodes = list(Direction.objects.values_list("node1", flat=True).distinct())
-    connections = list(Connection.objects.values())
-    directions = list(Direction.objects.values())
+    try:
+        nodes = list(Direction.objects.values_list(
+            "node1", flat=True).distinct())
+        connections = list(Connection.objects.values())
+        directions = list(Direction.objects.values())
 
-    return JsonResponse({
-        "nodes": nodes,
-        "connections": connections,
-        "directions": directions
-    }, status=200)
+        if not nodes or not connections:
+            return JsonResponse(
+                {"message": "Map data is incomplete or missing."}, status=400
+            )
+
+        return JsonResponse(
+            {"nodes": nodes, "connections": connections, "directions": directions},
+            status=200,
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
