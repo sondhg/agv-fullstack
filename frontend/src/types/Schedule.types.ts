@@ -11,6 +11,7 @@ export const CreateScheduleZod = z.object({
   load_name: z.string(),
   load_amount: z.number(),
   load_weight: z.number(),
+  instruction_set: z.string(),
 });
 
 export type CreateScheduleDto = z.infer<typeof CreateScheduleZod>;
@@ -26,4 +27,5 @@ export interface Schedule {
   load_name: string;
   load_amount: number;
   load_weight: number;
+  instruction_set: string;
 }
