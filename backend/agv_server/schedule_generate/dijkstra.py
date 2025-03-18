@@ -3,6 +3,7 @@ import heapq
 
 class Dijkstra:
     """Dijkstra's algorithm for shortest path."""
+
     def __init__(self, nodes, connections):
         self.nodes = nodes
         self.graph = self._build_graph(connections)
@@ -30,7 +31,12 @@ class Dijkstra:
             path = path + [node]
 
             if node == end:
-                return path  # Found the shortest path
+                # # ! Shortest path from start_point to end_point
+                # return path
+
+                # ! Append the reversed path back to the start_point
+                # Reverse the path excluding the last node
+                return path + path[-2::-1]
 
             for neighbor, distance in self.graph[node].items():
                 if neighbor not in visited:
