@@ -80,4 +80,5 @@ class QLearning:
             path.append(next_node)
             current_node = next_node
 
-        return path
+        # Append the reversed path back to the start_point
+        return path + path[-2::-1]  # Reverse the path excluding the last node
