@@ -42,7 +42,7 @@ class GenerateSchedulesView(APIView):
                 )
 
             # Initialize pathfinding algorithms
-            path_finder = Dijkstra(nodes, connections)
+            dijkstra = Dijkstra(nodes, connections)
             q_learning = QLearning(nodes, connections)
 
             schedules = []
@@ -68,7 +68,7 @@ class GenerateSchedulesView(APIView):
                         shortest_path = q_learning.get_shortest_path(
                             order.start_point, order.end_point)
                     elif algorithm == "dijkstra":
-                        shortest_path = path_finder.find_shortest_path(
+                        shortest_path = dijkstra.find_shortest_path(
                             order.start_point, order.end_point)
                     else:
                         logger.error(f"Invalid algorithm: {algorithm}")
