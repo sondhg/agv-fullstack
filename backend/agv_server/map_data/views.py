@@ -7,6 +7,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Define a constant for no direct connection between nodes
+NO_CONNECTION = -1
+
+...
+
 
 @csrf_exempt
 def import_connections(request):
@@ -28,8 +33,8 @@ def import_connections(request):
         # Save new connections
         for i in range(node_count):
             for j in range(node_count):
-                # now use -1 instead of 100000. this -1 means no direct connection between node1 and node2
-                if i != j and int(matrix[i][j]) != -1:
+                # Use the constant NO_CONNECTION instead of -1
+                if i != j and int(matrix[i][j]) != NO_CONNECTION:
                     Connection.objects.create(
                         node1=i, node2=j, distance=int(matrix[i][j])
                     )

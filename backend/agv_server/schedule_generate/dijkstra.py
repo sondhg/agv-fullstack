@@ -1,6 +1,12 @@
 import heapq
 from map_data.models import Direction
 
+# Define constants for cardinal directions
+NORTH = 1
+EAST = 2
+SOUTH = 3
+WEST = 4
+
 
 class Dijkstra:
     """Dijkstra's algorithm for shortest path with detailed instructions."""
@@ -37,31 +43,17 @@ class Dijkstra:
 
     def _get_direction(self, from_node, to_node):
         """
-    Get the cardinal direction from one node to another.
+        Get the cardinal direction from one node to another.
 
-    This method retrieves the relative direction of `to_node` with respect to `from_node`
-    based on the `Direction` model. The `direction` field in the `Direction` model
-    represents the cardinal direction:
-        - 1 = north
-        - 2 = east
-        - 3 = south
-        - 4 = west
+        Args:
+            from_node (int): The starting node.
+            to_node (int): The destination node.
 
-    For example:
-        - If `from_node` is 0 and `to_node` is 3, and node 3 is to the east of node 0,
-          this method will return 2 (east).
-        - If `from_node` is 3 and `to_node` is 0, and node 0 is to the west of node 3,
-          this method will return 4 (west).
-
-    Args:
-        from_node (int): The starting node.
-        to_node (int): The destination node.
-
-    Returns:
-        int: The direction from `from_node` to `to_node`:
-             1 = north, 2 = east, 3 = south, 4 = west.
-             Returns None if no direction is found in the `Direction` model.
-    """
+        Returns:
+            int: The direction from `from_node` to `to_node`(`to_node` is to the north, east, south, or west of `from_node`):
+                 NORTH, EAST, SOUTH, WEST.
+                 Returns None if no direction is found in the `Direction` model.
+        """
         try:
             return Direction.objects.get(node1=from_node, node2=to_node).direction
         except Direction.DoesNotExist:
@@ -93,23 +85,23 @@ class Dijkstra:
         # Determine the action based on the direction change
         if direction_to_current == direction_to_next:
             return "none"  # No direction change (straight line)
-        elif (direction_to_current == 1 and direction_to_next == 2) or \
-             (direction_to_current == 2 and direction_to_next == 3) or \
-             (direction_to_current == 3 and direction_to_next == 4) or \
-             (direction_to_current == 4 and direction_to_next == 1):
+        elif (direction_to_current == NORTH and direction_to_next == EAST) or \
+             (direction_to_current == EAST and direction_to_next == SOUTH) or \
+             (direction_to_current == SOUTH and direction_to_next == WEST) or \
+             (direction_to_current == WEST and direction_to_next == NORTH):
             return "right"  # Clockwise turn
-        elif (direction_to_current == 1 and direction_to_next == 4) or \
-             (direction_to_current == 4 and direction_to_next == 3) or \
-             (direction_to_current == 3 and direction_to_next == 2) or \
-             (direction_to_current == 2 and direction_to_next == 1):
+        elif (direction_to_current == NORTH and direction_to_next == WEST) or \
+             (direction_to_current == WEST and direction_to_next == SOUTH) or \
+             (direction_to_current == SOUTH and direction_to_next == EAST) or \
+             (direction_to_current == EAST and direction_to_next == NORTH):
             return "left"  # Counterclockwise turn
-        elif (direction_to_current == 1 and direction_to_next == 3) or \
-             (direction_to_current == 3 and direction_to_next == 1) or \
-             (direction_to_current == 2 and direction_to_next == 4) or \
-             (direction_to_current == 4 and direction_to_next == 2):
+        elif (direction_to_current == NORTH and direction_to_next == SOUTH) or \
+             (direction_to_current == SOUTH and direction_to_next == NORTH) or \
+             (direction_to_current == EAST and direction_to_next == WEST) or \
+             (direction_to_current == WEST and direction_to_next == EAST):
             return "reverse"  # Turn around (180 degrees)
         else:
-            return "none"  # Default to "none" for unexpected cases
+            return "none"  # Default to "none" if 3 nodes are in a straight line
 
     def find_shortest_path(self, start, end):
         """
