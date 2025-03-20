@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FileUp } from "lucide-react";
 import { AlertMapGuide } from "./AlertMapGuide";
+import { DownloadSampleCSVFilesForMap } from "./DownloadSampleCSVFilesForMap";
+import { AccordionCSVMapGuide } from "./AccordionCSVMapGuide";
 
 export function PageMap() {
   const [mapData, setMapData] = useState<{
@@ -78,10 +80,11 @@ export function PageMap() {
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">Map</h2>
       <AlertMapGuide />
+      <AccordionCSVMapGuide />
       <div className="space-x-5">
         <Button onClick={() => document.getElementById("conn-file")?.click()}>
           <FileUp />
-          Import CSV for connection and distance between nodes
+          Import 1st CSV
         </Button>
         <input
           id="conn-file"
@@ -96,7 +99,7 @@ export function PageMap() {
           onClick={() => document.getElementById("dir-file")?.click()}
         >
           <FileUp />
-          Import CSV for relative directions between nodes
+          Import 2nd CSV
         </Button>
         <input
           id="dir-file"
@@ -109,6 +112,7 @@ export function PageMap() {
         <Button variant={"destructive"} onClick={handleShowMap}>
           Show map image
         </Button>
+        <DownloadSampleCSVFilesForMap />
       </div>
       {error ? (
         <div className="font-bold text-red-500">{error}</div>

@@ -7,7 +7,12 @@ export function AlertMapGuide() {
       <FileQuestion className="h-4 w-4" />
       <AlertTitle>Map creation guide</AlertTitle>
       <AlertDescription>
-        You must import 2 CSV files to create a map layout. Test files can be found in <code>sample-data</code> folder.
+        You must import 2 CSV files to create a map layout. These will be
+        referred to as the <strong>1st and 2nd CSV files</strong>. They are{" "}
+        <strong>
+          <u>different</u>
+        </strong>{" "}
+        from each other, and their contents are explained below.
       </AlertDescription>
     </Alert>
   );
