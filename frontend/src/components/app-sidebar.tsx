@@ -42,7 +42,7 @@ const data = {
   ],
   navMain: [
     {
-      title: "Admin (main pages)",
+      title: "Admin",
       url: "#",
       icon: Navigation,
       isActive: true,
