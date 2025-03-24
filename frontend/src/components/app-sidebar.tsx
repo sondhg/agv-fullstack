@@ -1,5 +1,4 @@
 import { NavMain } from "@/components/nav-main";
-import { NavSettings } from "@/components/nav-settings";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -23,7 +22,6 @@ import {
   Map,
   Navigation,
   PlaneLanding,
-  Settings,
   University,
   UserPlus,
 } from "lucide-react";
@@ -116,13 +114,6 @@ const data = {
       ],
     },
   ],
-  settings: [
-    {
-      name: "Change theme",
-      // url: "#",
-      icon: Settings,
-    },
-  ],
 };
 
 export function AppSidebar({ ...props }) {
@@ -136,7 +127,6 @@ export function AppSidebar({ ...props }) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavSettings settings={data.settings} />
       </SidebarContent>
       {/* Conditionally render SidebarFooter based on authentication */}
       {isAuthenticated && account && (
