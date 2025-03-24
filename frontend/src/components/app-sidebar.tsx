@@ -42,7 +42,7 @@ const data = {
   ],
   navMain: [
     {
-      title: "ADMIN pages",
+      title: "Admin (main pages)",
       url: "#",
       icon: Navigation,
       isActive: true,
@@ -75,7 +75,7 @@ const data = {
       ],
     },
     {
-      title: "Landing pages",
+      title: "Home & Auth",
       url: "#",
       icon: PlaneLanding,
       items: [
@@ -97,7 +97,7 @@ const data = {
       ],
     },
     {
-      title: "Demo pages",
+      title: "Demos (for view only)",
       url: "#",
       icon: GalleryThumbnails,
       items: [
