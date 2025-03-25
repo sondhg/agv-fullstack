@@ -106,11 +106,6 @@ const data = {
           url: "/demo/dashboard-demo",
           icon: ChartLine,
         },
-        {
-          title: "Schedules Demo",
-          url: "/demo/schedules-demo",
-          icon: CalendarDays,
-        },
       ],
     },
   ],
