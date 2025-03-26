@@ -8,3 +8,4 @@ services:
       - /app/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
+      - VITE_API_BASE_URL=http://localhost:8001/api/
