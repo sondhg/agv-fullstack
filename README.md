@@ -1,55 +1,63 @@
-## How to Use the Web App
+# How to run AGV web app
 
-1. **Clone the repository**:
+Pre-requisite: [Docker Desktop](https://www.docker.com/products/docker-desktop) must be installed on your machine.
+
+1. **Clone repo**:
 
    ```bash
    git clone https://github.com/sondhg/agv-fullstack.git
    cd agv-fullstack
    ```
 
-2. **Start Backend Services**:
+2. **Run PostgreSQL database and Django backend server**:
+
+   Open the FIRST terminal:
 
    ```bash
    cd agv_server
-   docker-compose up --build
+   docker compose up -d db
+   docker compose run web python manage.py migrate
+   docker compose up
    ```
 
-   This starts the PostgreSQL database, Django backend, and Nginx proxy. Ensure you run these commands in the outer `agv_server` folder containing `manage.py`, NOT the inner `agv_server` folder containing `settings.py`.
+   Ensure you run these commands in the outer `agv_server` folder containing `manage.py`, NOT the inner `agv_server` folder containing `settings.py`.
 
-3. **Start Frontend Application**:
+3. **Run React frontend**:
 
-   Open a new terminal:
+   Open the SECOND terminal:
 
    ```bash
    cd frontend
-   docker-compose up --build
+   docker compose up --build
    ```
 
-4. **Access the Application**:
+4. **Access the app**:
 
-   - Backend API: [http://localhost:8001](http://localhost:8001) (If you see something here, it means the server is up and working fine. No interaction needed here).
+   - Backend API: [http://localhost:8000](http://localhost:8001) (If you see something here, it means the server is up and working fine. No interaction needed here).
    - Frontend: [http://localhost:5173](http://localhost:5173).
 
-5. **Stop Services**:
-   Press `Ctrl+C` in each terminal, then run:
+5. **Stop services**:
+   Press `Ctrl+C` in each terminal then run:
 
    ```bash
-   docker-compose down
+   docker compose down
    ```
 
    Execute this in both `agv_server` and `frontend` directories.
 
-6. **Restart the Web App**:
+6. **Restart the web app**:
+
+   If you did all steps above at least once, then later, when you want to run the app again, simply open 2 terminals and run `docker compose up` in each directory
 
    - Backend:
      ```bash
      cd agv_server
-     docker-compose up
+     docker compose up
      ```
    - Frontend:
      ```bash
      cd frontend
-     docker-compose up
+     docker compose up
      ```
 
    Access the app at the same URLs as above.

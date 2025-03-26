@@ -68,3 +68,6 @@ Thumbs.db
 # Miscellaneous
 *.tgz
 *.tsbuildinfo
+
+# Postgres
+data/

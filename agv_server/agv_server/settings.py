@@ -12,9 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
-load_dotenv('.env.local')
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,17 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'django-insecure-%_nvdij7!fp1u(5mr-m$b97tx+z2j#dbod$=lw7a8$uz-lkny1'
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = 'django-insecure-%_nvdij7!fp1u(5mr-m$b97tx+z2j#dbod$=lw7a8$uz-lkny1'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = bool(os.getenv("DEBUG", default=0))
+DEBUG = True
 
 # ALLOWED_HOSTS = []
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1").split(",")
+ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "http://127.0.0.1").split(",")
 
 # Application definition
 
@@ -90,25 +86,16 @@ WSGI_APPLICATION = 'agv_server.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "agv_backend",  # Name of the database you created
-#         "USER": "postgres",  # PostgreSQL user you created
-#         "PASSWORD": "12345678",  # Password for the user
-#         "HOST": "localhost",  # Or the server address
-#         "PORT": "5432",  # Default PostgreSQL port
-#     }
-# }
 
+# Database Configuration
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.{}".format(os.getenv("DATABASE_ENGINE", "postgresql")),
-        "NAME": os.getenv("DATABASE_NAME", "agv_backend"),
-        "USER": os.getenv("DATABASE_USER", "postgres"),
-        "PASSWORD": os.getenv("DATABASE_PASSWORD", "12345678"),
-        "HOST": os.getenv("DATABASE_HOST", "127.0.0.1"),
-        "PORT": os.getenv("DATABASE_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_NAME'),
+        'USER': os.environ.get('POSTGRES_USER'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        'HOST': 'db',
+        'PORT': 5432,
     }
 }
 
@@ -148,7 +135,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
