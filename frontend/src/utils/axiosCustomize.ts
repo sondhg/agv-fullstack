@@ -2,7 +2,7 @@ import axios from "axios";
 import { store } from "../redux/store";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api/",
+  baseURL: "http://localhost:8001/api/",
   headers: {
     "content-type": "application/json",
   },
