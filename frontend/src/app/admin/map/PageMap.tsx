@@ -5,6 +5,7 @@ import {
   importDirections,
 } from "@/services/APIs/mapAPI";
 import Papa from "papaparse";
+import { AxiosResponse } from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { FileUp } from "lucide-react";
@@ -12,24 +13,26 @@ import { AlertMapGuide } from "./AlertMapGuide";
 import { DownloadSampleCSVFilesForMap } from "./DownloadSampleCSVFilesForMap";
 import { AccordionCSVMapGuide } from "./AccordionCSVMapGuide";
 
+interface MapData {
+  nodes: number[];
+  connections: { node1: number; node2: number; distance: number }[];
+  directions: { node1: number; node2: number; direction: number }[];
+}
+
 export function PageMap() {
-  const [mapData, setMapData] = useState<{
-    nodes: number[];
-    connections: { node1: number; node2: number; distance: number }[];
-    directions: { node1: number; node2: number; direction: number }[];
-  } | null>(null);
+  const [mapData, setMapData] = useState<MapData | null>(null);
 
   const [error, setError] = useState<string | null>(null);
 
   const handleFileImport = (
     event: React.ChangeEvent<HTMLInputElement>,
-    importFunction: Function,
+    importFunction: (csvData: string) => Promise<AxiosResponse<any, any>>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     Papa.parse(file, {
-      complete: async (result) => {
+      complete: async (result: { data: string[][] }) => {
         const csvData = result.data.map((row: any) => row.join(",")).join("\n");
         await importFunction(csvData);
         toast.success("Import successful");
@@ -123,10 +126,10 @@ export function PageMap() {
   );
 }
 
-export const MapVisualizer = ({ data }: { data: any }) => {
-  const [positions, setPositions] = useState<{
-    [key: number]: { x: number; y: number };
-  }>({});
+export const MapVisualizer = ({ data }: { data: MapData }) => {
+  // const [positions, setPositions] = useState<{
+  //   [key: number]: { x: number; y: number };
+  // }>({});
   const [scaledPositions, setScaledPositions] = useState<{
     [key: number]: { x: number; y: number };
   }>({});
@@ -199,7 +202,7 @@ export const MapVisualizer = ({ data }: { data: any }) => {
         });
     }
 
-    setPositions(newPositions);
+    // setPositions(newPositions);
 
     // Scale positions to fit within the canvas
     const allX = Object.values(newPositions).map((pos) => pos.x);

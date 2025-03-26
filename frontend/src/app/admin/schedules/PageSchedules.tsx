@@ -30,8 +30,8 @@ export function PageSchedules() {
       await generateSchedules(selectedAlgorithm); // Pass the selected algorithm
       toast.success("Schedules generated successfully");
       await fetchListData(); // Refresh the list after generating
-    } catch (error: any) {
-      if (error.message) {
+    } catch (error) {
+      if (error instanceof Error) {
         toast.error(error.message); // Display the warning message
       } else {
         toast.error("Failed to generate schedules");

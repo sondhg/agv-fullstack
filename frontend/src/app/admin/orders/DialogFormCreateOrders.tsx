@@ -26,7 +26,6 @@ import { createOrder } from "@/services/APIs/ordersAPI";
 import { CreateOrderDto } from "@/types/Order.types";
 import { loadNames, loadNamesEnum } from "@/utils/arraysUsedOften";
 import {
-  convertDateToString,
   convertStringToNumber,
   isEndPointWithinRange,
   isLoadAmountWithinRange,

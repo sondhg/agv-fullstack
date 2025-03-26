@@ -21,11 +21,7 @@ interface MapDrawerProps {
 }
 
 export function MapDrawer() {
-  const [mapData, setMapData] = useState<{
-    nodes: number[];
-    connections: { node1: number; node2: number; distance: number }[];
-    directions: { node1: number; node2: number; direction: number }[];
-  } | null>(null);
+  const [mapData, setMapData] = useState<MapDrawerProps["mapData"]>(null);
 
   const handleFetchMapData = async () => {
     const data = await fetchMapData();
