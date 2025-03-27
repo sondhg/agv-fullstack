@@ -5,11 +5,10 @@ from .models import Schedule
 from .serializers import ScheduleSerializer
 from order_data.models import Order
 from rest_framework.generics import ListAPIView
-from .q_learning import QLearning
-from .dijkstra import Dijkstra
-from map_data.models import Direction, Connection  # Ensure distance data is used
+from map_data.models import Direction, Connection
 import json
 from .path_utils import format_instruction_set
+from .pathfinding.factory import PathfindingFactory
 
 
 class GenerateSchedulesView(APIView):
@@ -37,9 +36,16 @@ class GenerateSchedulesView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # Initialize pathfinding algorithms
-            dijkstra = Dijkstra(nodes, connections)
-            q_learning = QLearning(nodes, connections)
+            # Initialize the selected pathfinding algorithm
+            try:
+                pathfinding_algorithm = PathfindingFactory.get_algorithm(
+                    algorithm, nodes, connections
+                )
+            except ValueError as e:
+                return Response(
+                    {"error": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             schedules = []
             for order in orders:
@@ -53,21 +59,13 @@ class GenerateSchedulesView(APIView):
 
                 # Compute the shortest path based on the selected algorithm
                 try:
-                    if algorithm == "q_learning":
-                        q_learning.train(order.start_point, order.end_point)
-                        path = q_learning.get_shortest_path(
-                            order.start_point, order.end_point
-                        )
-                    elif algorithm == "dijkstra":
-                        path = dijkstra.find_shortest_path(
-                            order.start_point, order.end_point
-                        )
-                    else:
-                        return Response(
-                            {"error": f"Invalid algorithm: {algorithm}. Use 'q_learning' or 'dijkstra'."},
-                            status=status.HTTP_400_BAD_REQUEST,
-                        )
-
+                    path_to_end = pathfinding_algorithm.find_shortest_path(
+                        order.start_point, order.end_point
+                    )
+                    path_back_to_start = pathfinding_algorithm.find_shortest_path(
+                        order.end_point, order.start_point
+                    )
+                    path = path_to_end + path_back_to_start[1:]
                     if not path:
                         continue
 
