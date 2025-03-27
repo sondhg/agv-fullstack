@@ -52,12 +52,6 @@ export function RegisterForm() {
       return;
     }
 
-    if (password.length < 8) {
-      toast.error("Password must have at least 8 characters");
-      passwordRef.current?.classList.add("border-red-500");
-      return;
-    }
-
     if (password !== repeatPassword) {
       toast.error("Passwords do not match");
       repeatPasswordRef.current?.classList.add("border-red-500");
