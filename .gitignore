@@ -71,3 +71,6 @@ Thumbs.db
 
 # Postgres
 db-data/
+
+# Personal
+docs/
