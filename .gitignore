@@ -70,4 +70,4 @@ Thumbs.db
 *.tsbuildinfo
 
 # Postgres
-data/
+db-data/
