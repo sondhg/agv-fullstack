@@ -31,8 +31,9 @@ export function PageSchedules() {
       toast.success("Schedules generated successfully");
       await fetchListData(); // Refresh the list after generating
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message); // Display the warning message
+      if (error instanceof Response) {
+        const errorData = await error.json();
+        toast.error(errorData.error || "Failed to generate schedules");
       } else {
         toast.error("Failed to generate schedules");
       }
@@ -48,8 +49,13 @@ export function PageSchedules() {
       toast.success("Schedule deleted successfully");
       await fetchListData(); // Refresh the list after deletion
     } catch (error) {
+      if (error instanceof Response) {
+        const errorData = await error.json();
+        toast.error(errorData.error || "Failed to delete schedule");
+      } else {
+        toast.error("Failed to delete schedule. Please try again.");
+      }
       console.error("Failed to delete schedule:", error);
-      toast.error("Failed to delete schedule. Please try again.");
     }
   };
 
