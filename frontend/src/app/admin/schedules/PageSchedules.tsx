@@ -5,13 +5,14 @@ import {
   deleteSchedule,
   generateSchedules,
   getSchedules,
+  bulkDeleteSchedules,
 } from "@/services/APIs/schedulesAPI";
 import { Schedule } from "@/types/Schedule.types";
-import { CalendarPlus, Terminal } from "lucide-react";
+import { CalendarPlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { columnsTableSchedules } from "./columnsTableSchedules";
 import { AlertSchedulesGuide } from "./AlertSchedulesGuide";
+import { columnsTableSchedules } from "./columnsTableSchedules";
 
 export function PageSchedules() {
   const [listData, setListData] = useState<Schedule[]>([]);
@@ -19,6 +20,17 @@ export function PageSchedules() {
   const [selectedAlgorithm, setSelectedAlgorithm] =
     useState<string>("dijkstra"); // Default algorithm
 
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+  const [selectedScheduleIds, setSelectedScheduleIds] = useState<number[]>([]);
+
+  // Add this effect to convert row selection to IDs
+  useEffect(() => {
+    const selectedIds = Object.keys(rowSelection)
+      .filter((key) => rowSelection[key])
+      .map((rowIndex) => listData[parseInt(rowIndex)].schedule_id);
+
+    setSelectedScheduleIds(selectedIds);
+  }, [rowSelection, listData]);
   const fetchListData = async () => {
     const data = await getSchedules();
     setListData(data);
@@ -59,6 +71,30 @@ export function PageSchedules() {
     }
   };
 
+  const handleMassDelete = async () => {
+    if (selectedScheduleIds.length === 0) {
+      toast.error("Please select at least one schedule to delete");
+      return;
+    }
+
+    try {
+      await bulkDeleteSchedules(selectedScheduleIds);
+      toast.success(
+        `${selectedScheduleIds.length} schedules deleted successfully`,
+      );
+      await fetchListData();
+      setRowSelection({});
+    } catch (error) {
+      if (error instanceof Response) {
+        const errorData = await error.json();
+        toast.error(errorData.error || "Failed to delete schedules");
+      } else {
+        toast.error("Failed to delete schedules");
+      }
+      console.error("Mass delete error:", error);
+    }
+  };
+
   useEffect(() => {
     fetchListData();
   }, []);
@@ -79,11 +115,21 @@ export function PageSchedules() {
             <CalendarPlus className="mr-2 h-4 w-4" />
             {isCreating ? "Generating Schedules..." : "Create Schedules"}
           </Button>
+          <Button
+            variant="destructive"
+            onClick={handleMassDelete}
+            disabled={selectedScheduleIds.length === 0}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Mass Delete Schedules
+          </Button>
         </div>
         <DataTable
           data={listData}
           columns={columnsTableSchedules(handleClickBtnDelete)}
           filterSearchByColumn="order_date"
+          onRowSelectionChange={setRowSelection} // Add this
+          rowSelection={rowSelection} // Add this
         />
       </div>
     </div>

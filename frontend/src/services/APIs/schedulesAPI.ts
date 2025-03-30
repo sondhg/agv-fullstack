@@ -5,6 +5,7 @@ const SEE_SCHEDULES_URL = "schedule_generate/";
 const GENERATE_SCHEDULES_URL = "schedule_generate/generate/";
 const DELETE_SCHEDULE_URL = (scheduleId: number) =>
   `schedule_generate/${scheduleId}/delete/`;
+const BULK_DELETE_SCHEDULES_URL = "schedule_generate/bulk-delete/";
 
 const getSchedules = async (): Promise<Schedule[]> => {
   try {
@@ -40,4 +41,15 @@ const deleteSchedule = async (scheduleId: number): Promise<void> => {
   }
 };
 
-export { getSchedules, generateSchedules, deleteSchedule };
+const bulkDeleteSchedules = async (scheduleIds: number[]): Promise<void> => {
+  try {
+    await api.delete(BULK_DELETE_SCHEDULES_URL, {
+      data: { schedule_ids: scheduleIds },
+    });
+  } catch (error) {
+    console.error(">>> Error bulk deleting schedules:", error);
+    throw new Error(">>> Failed to bulk delete schedules");
+  }
+};
+
+export { getSchedules, generateSchedules, deleteSchedule, bulkDeleteSchedules };

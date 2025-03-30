@@ -23,7 +23,7 @@ from django.conf import settings
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("users.urls")),
-    path("api/", include("order_data.urls")),
+    path("api/orders/", include("order_data.urls")),
     path("api/", include("map_data.urls")),  # Include map_data's URLs
     path("api/schedule_generate/",
          include("schedule_generate.urls")),  # Add this line

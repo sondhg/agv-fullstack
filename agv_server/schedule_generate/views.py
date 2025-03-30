@@ -137,3 +137,26 @@ class DeleteScheduleView(APIView):
                 {"error": f"Schedule {schedule_id} does not exist."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+
+class BulkDeleteSchedulesView(APIView):
+    def delete(self, request):
+        try:
+            schedule_ids = request.data.get("schedule_ids", [])
+            if not schedule_ids:
+                return Response(
+                    {"error": "No schedule IDs provided for deletion."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            deleted_count, _ = Schedule.objects.filter(
+                schedule_id__in=schedule_ids).delete()
+            return Response(
+                {"message": f"{deleted_count} schedules deleted successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred during bulk deletion: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

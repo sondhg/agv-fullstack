@@ -3,6 +3,8 @@
 import {
   ColumnDef,
   ColumnFiltersState,
+  OnChangeFn,
+  RowSelectionState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -32,12 +34,16 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   filterSearchByColumn: string;
   onSelectionChange?: (selectedIds: number[]) => void; // New prop for selection change
+  onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  rowSelection?: Record<string, boolean>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   filterSearchByColumn,
+  onRowSelectionChange,
+  rowSelection,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -45,7 +51,7 @@ export function DataTable<TData, TValue>({
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = React.useState({});
+  // const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
     data,
@@ -57,7 +63,8 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    // onRowSelectionChange: setRowSelection,
+    onRowSelectionChange,
     state: {
       sorting,
       columnFilters,
