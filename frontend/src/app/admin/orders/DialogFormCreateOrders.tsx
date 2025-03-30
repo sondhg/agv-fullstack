@@ -1,6 +1,6 @@
 "use client";
 
-import { MapDrawer } from "@/app/layout/MapDrawer";
+import { DialogMap } from "@/app/layout/DialogMap";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -386,7 +386,7 @@ export function DialogFormCreateOrders({
               <Button type="submit" disabled={!form.formState.isValid}>
                 Submit
               </Button>
-              <MapDrawer />
+              <DialogMap />
             </div>
           </form>
         </Form>

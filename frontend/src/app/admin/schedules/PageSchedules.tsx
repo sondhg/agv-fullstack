@@ -1,5 +1,4 @@
 import { AlgorithmSelect } from "@/app/admin/schedules/AlgorithmSelect";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -12,6 +11,7 @@ import { CalendarPlus, Terminal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableSchedules } from "./columnsTableSchedules";
+import { AlertSchedulesGuide } from "./AlertSchedulesGuide";
 
 export function PageSchedules() {
   const [listData, setListData] = useState<Schedule[]>([]);
@@ -67,16 +67,7 @@ export function PageSchedules() {
     <div>
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
-        <Alert>
-          <Terminal className="h-4 w-4" />
-          <AlertTitle>
-            Choose a path-finding algorithm in the dropdown below
-          </AlertTitle>
-          <AlertDescription>
-            Choose either Dijkstra's algorithm or Q-Learning to generate
-            schedules.
-          </AlertDescription>
-        </Alert>
+        <AlertSchedulesGuide />
         <div className="flex items-center space-x-4">
           {/* Use the AlgorithmSelect component */}
           <AlgorithmSelect

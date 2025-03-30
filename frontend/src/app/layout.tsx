@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Outlet } from "react-router-dom";
 import { LayoutBreadcrumb } from "./layout/LayoutBreadcrumb";
-import { MapDrawer } from "./layout/MapDrawer";
+import { DialogMap } from "./layout/DialogMap";
 
 export default function Layout() {
   return (
@@ -21,7 +21,7 @@ export default function Layout() {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <ModeToggle />
             <Separator orientation="vertical" className="mr-2 h-4" />
-            <MapDrawer /> {/* No need to pass mapData */}
+            <DialogMap /> {/* No need to pass mapData */}
             <LayoutBreadcrumb />
           </div>
         </header>
