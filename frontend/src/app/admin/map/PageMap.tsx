@@ -3,6 +3,7 @@ import {
   fetchMapData,
   importConnections,
   importDirections,
+  deleteAllMapData,
 } from "@/services/APIs/mapAPI";
 import { AxiosResponse } from "axios";
 import { FileUp } from "lucide-react";
@@ -22,19 +23,45 @@ interface MapData {
 
 export function PageMap() {
   const [mapData, setMapData] = useState<MapData | null>(null);
-
   const [error, setError] = useState<string | null>(null);
+
+  const resetFileInputs = () => {
+    const connFileInput = document.getElementById(
+      "conn-file",
+    ) as HTMLInputElement;
+    const dirFileInput = document.getElementById(
+      "dir-file",
+    ) as HTMLInputElement;
+
+    if (connFileInput) connFileInput.value = ""; // Reset the value of the connection file input
+    if (dirFileInput) dirFileInput.value = ""; // Reset the value of the direction file input
+  };
+
+  const handleDeleteAllMapData = async () => {
+    try {
+      await deleteAllMapData(); // Call the API to delete all map data
+      toast.success("All map data deleted successfully.");
+      setMapData(null); // Clear the map data from the UI
+      setError(null); // Clear any errors
+      resetFileInputs(); // Reset the file inputs
+    } catch (error) {
+      toast.error("Failed to delete map data.");
+      console.error("Error deleting map data:", error);
+    }
+  };
 
   const handleFileImport = (
     event: React.ChangeEvent<HTMLInputElement>,
-    importFunction: (csvData: string) => Promise<AxiosResponse<any, any>>,
+    importFunction: (csvData: string) => Promise<AxiosResponse<unknown>>,
   ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     Papa.parse(file, {
       complete: async (result: { data: string[][] }) => {
-        const csvData = result.data.map((row: any) => row.join(",")).join("\n");
+        const csvData = result.data
+          .map((row: string[]) => row.join(","))
+          .join("\n");
         await importFunction(csvData);
         toast.success("Import successful");
       },
@@ -43,7 +70,7 @@ export function PageMap() {
   };
 
   const handleShowMap = async () => {
-    const data = await fetchMapData();
+    const data = (await fetchMapData()) as MapData;
     console.log("Fetched map data:", data); // Debug log
 
     if (!data || !data.nodes || !data.connections || !data.directions) {
@@ -75,7 +102,6 @@ export function PageMap() {
     setMapData(data);
   };
 
-  // Automatically fetch and display the map data when the component mounts
   useEffect(() => {
     handleShowMap();
   }, []);
@@ -98,10 +124,7 @@ export function PageMap() {
           onChange={(e) => handleFileImport(e, importConnections)}
         />
 
-        <Button
-          variant={"secondary"}
-          onClick={() => document.getElementById("dir-file")?.click()}
-        >
+        <Button onClick={() => document.getElementById("dir-file")?.click()}>
           <FileUp />
           Import 2nd CSV
         </Button>
@@ -113,9 +136,14 @@ export function PageMap() {
           onChange={(e) => handleFileImport(e, importDirections)}
         />
 
-        <Button variant={"destructive"} onClick={handleShowMap}>
+        <Button variant={"secondary"} onClick={handleShowMap}>
           Show map image
         </Button>
+
+        <Button variant={"destructive"} onClick={handleDeleteAllMapData}>
+          Delete All Map Data
+        </Button>
+
         <DownloadSampleCSVFilesForMap />
       </div>
       {error ? (

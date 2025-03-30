@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import MapData, Connection, Direction
 import logging
+from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
@@ -83,4 +84,20 @@ def get_map_data(request):
             status=200,
         )
     except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def delete_all_map_data(request):
+    try:
+        # Delete all map data
+        Connection.objects.all().delete()
+        Direction.objects.all().delete()
+        MapData.objects.all().delete()
+
+        logger.info("All map data deleted successfully.")
+        return JsonResponse({"message": "All map data deleted successfully"}, status=200)
+    except Exception as e:
+        logger.error(f"Error deleting map data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

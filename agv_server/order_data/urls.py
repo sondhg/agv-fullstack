@@ -1,16 +1,12 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import CreateOrderView, BulkDeleteOrdersView, ListOrdersView, DeleteOrderView
+from django.urls import path
+from .views import CreateOrderView, ListOrdersView, DeleteOrderView, BulkDeleteOrdersView
 
-router = DefaultRouter()
-# # localhost:8000/api/orders/
-# router.register(r'orders', CreateOrderView, basename='order')
 
 urlpatterns = [
+    path("get/", ListOrdersView.as_view(),
+         name="list_orders"),
     path('create/', CreateOrderView.as_view(), name='create_order'),
-    path('bulk-delete/', BulkDeleteOrdersView.as_view(), name='bulk_delete_orders'),
-    path("", ListOrdersView.as_view(),
-         name="list_orders"),  # Add this line
-    path("<int:order_id>/delete/",
+    path("delete/<int:order_id>/",
          DeleteOrderView.as_view(), name="delete_order"),
+    path('bulk-delete/', BulkDeleteOrdersView.as_view(), name='bulk_delete_orders'),
 ]

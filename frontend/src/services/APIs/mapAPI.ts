@@ -1,18 +1,33 @@
-import api from "@/utils/axiosCustomize";
+import { apiService } from "./apiService";
+import { API_ENDPOINTS } from "./apiEndpoints";
+import { AxiosResponse } from "axios";
 
-export const importConnections = async (csvData: string) => {
-  return api.post("import-connections/", csvData, {
-    headers: { "Content-Type": "text/csv" },
-  });
+export const importConnections = async (
+  csvData: string,
+): Promise<AxiosResponse<Record<string, unknown>, unknown>> => {
+  return apiService.post(
+    API_ENDPOINTS.map.importConnections,
+    csvData,
+    { headers: { "Content-Type": "text/csv" } }, // Pass headers as config
+  );
 };
 
-export const importDirections = async (csvData: string) => {
-  return api.post("import-directions/", csvData, {
-    headers: { "Content-Type": "text/csv" },
-  });
+export const importDirections = async (
+  csvData: string,
+): Promise<AxiosResponse<Record<string, unknown>, unknown>> => {
+  return apiService.post(
+    API_ENDPOINTS.map.importDirections,
+    csvData,
+    { headers: { "Content-Type": "text/csv" } }, // Pass headers as config
+  );
 };
 
 export const fetchMapData = async () => {
-  const response = await api.get("get-map-data/");
-  return response.data;
+  return apiService.get(API_ENDPOINTS.map.fetchMapData);
+};
+
+export const deleteAllMapData = async (): Promise<
+  AxiosResponse<Record<string, unknown>, unknown>
+> => {
+  return apiService.post(API_ENDPOINTS.map.deleteAllMapData, {}); // Send a POST request with an empty payload
 };
