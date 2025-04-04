@@ -22,7 +22,7 @@ export const API_ENDPOINTS = {
   map: {
     importConnections: "map/import-connections/",
     importDirections: "map/import-directions/",
-    fetchMapData: "map/get-map-data/",
-    deleteAllMapData: "map/delete-all-map-data/", // Add this line
+    fetchMapData: "map/get/",
+    deleteAllMapData: "map/delete/", // Add this line
   },
 };
