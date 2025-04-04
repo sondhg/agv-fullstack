@@ -23,7 +23,7 @@ urlpatterns = [
         path("auth/", include("users.urls")),
         path("orders/", include("order_data.urls")),
         path("map/", include("map_data.urls")),
-        path("schedule_generate/", include("schedule_generate.urls")),
+        path("schedules/", include("schedule_generate.urls")),
         # path("api/", include("agv_data.urls")),
     ])),
 ]

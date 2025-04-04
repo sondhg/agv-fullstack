@@ -6,10 +6,10 @@ export const API_ENDPOINTS = {
     bulkDelete: "orders/bulk-delete/",
   },
   schedules: {
-    get: "schedule_generate/get/",
-    generate: "schedule_generate/generate/",
-    delete: (scheduleId: number) => `schedule_generate/delete/${scheduleId}/`,
-    bulkDelete: "schedule_generate/bulk-delete/",
+    get: "schedules/get/",
+    generate: "schedules/generate/",
+    delete: (scheduleId: number) => `schedules/delete/${scheduleId}/`,
+    bulkDelete: "schedules/bulk-delete/",
   },
   auth: {
     login: "auth/login/",
