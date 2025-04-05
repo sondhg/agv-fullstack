@@ -69,8 +69,10 @@ class GenerateSchedulesView(APIView):
                     if not path:
                         continue
 
-                    # Format the instruction set
-                    shortest_path = format_instruction_set(path)
+                    # ! Instruction set with direction guide formatting
+                    # shortest_path = format_instruction_set(path)
+                    # ! Instruction set without direction guide formatting
+                    shortest_path = path
                 except Exception as e:
                     return Response(
                         {"error": f"Failed to compute shortest path for order {order.order_id}: {str(e)}"},
