@@ -11,8 +11,6 @@ logger = logging.getLogger(__name__)
 # Define a constant for no direct connection between nodes
 NO_CONNECTION = -1
 
-...
-
 
 @csrf_exempt
 def import_connections(request):
@@ -34,10 +32,14 @@ def import_connections(request):
         # Save new connections
         for i in range(node_count):
             for j in range(node_count):
+                # Adjust indices to start from 1 instead of 0
+                node1 = i + 1
+                node2 = j + 1
+
                 # Use the constant NO_CONNECTION instead of -1
-                if i != j and int(matrix[i][j]) != NO_CONNECTION:
+                if node1 != node2 and int(matrix[i][j]) != NO_CONNECTION:
                     Connection.objects.create(
-                        node1=i, node2=j, distance=int(matrix[i][j])
+                        node1=node1, node2=node2, distance=int(matrix[i][j])
                     )
 
         logger.info(f"Imported connections: {Connection.objects.all()}")
@@ -57,9 +59,14 @@ def import_directions(request):
         # Save new directions
         for i in range(len(matrix)):
             for j in range(len(matrix[i])):
-                if int(matrix[i][j]) != 5:  # Only save valid directions
+                # Adjust indices to start from 1 instead of 0
+                node1 = i + 1
+                node2 = j + 1
+
+                # Only save valid directions (value not equal to 5)
+                if int(matrix[i][j]) != 5:
                     Direction.objects.create(
-                        node1=i, node2=j, direction=int(matrix[i][j])
+                        node1=node1, node2=node2, direction=int(matrix[i][j])
                     )
 
         logger.info(f"Imported directions: {Direction.objects.all()}")
