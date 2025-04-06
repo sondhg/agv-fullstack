@@ -1,4 +1,5 @@
 import api from "@/utils/axiosCustomize";
+import { AxiosError } from "axios"; // Import AxiosError type
 
 export const apiService = {
   get: async <T>(url: string): Promise<T> => {
@@ -6,22 +7,36 @@ export const apiService = {
       const { data } = await api.get(url);
       return data;
     } catch (error) {
-      console.error(`>>> Error fetching data from ${url}:`, error);
-      throw new Error("Failed to fetch data");
+      if (error instanceof AxiosError) {
+        // Log the backend error message
+        console.error(
+          `>>> Error fetching data from ${url}:`,
+          error.response?.data,
+        );
+        throw new Error(error.response?.data?.error || "Failed to fetch data");
+      } else {
+        console.error(`>>> Error fetching data from ${url}:`, error);
+        throw new Error("Failed to fetch data");
+      }
     }
   },
 
-  post: async <T, U>(
-    url: string,
-    payload: U,
-    config?: object, // Add this optional parameter
-  ): Promise<T> => {
+  post: async <T, U>(url: string, payload: U, config?: object): Promise<T> => {
     try {
-      const { data } = await api.post(url, payload, config); // Pass config to Axios
+      const { data } = await api.post(url, payload, config);
       return data;
     } catch (error) {
-      console.error(`>>> Error posting data to ${url}:`, error);
-      throw new Error("Failed to post data");
+      if (error instanceof AxiosError) {
+        // Log the backend error message
+        console.error(
+          `>>> Error posting data to ${url}:`,
+          error.response?.data,
+        );
+        throw new Error(error.response?.data?.error || "Failed to post data");
+      } else {
+        console.error(`>>> Error posting data to ${url}:`, error);
+        throw new Error("Failed to post data");
+      }
     }
   },
 
@@ -30,17 +45,38 @@ export const apiService = {
       const { data } = await api.put(url, payload);
       return data;
     } catch (error) {
-      console.error(`>>> Error updating data at ${url}:`, error);
-      throw new Error("Failed to update data");
+      if (error instanceof AxiosError) {
+        // Log the backend error message
+        console.error(
+          `>>> Error updating data at ${url}:`,
+          error.response?.data,
+        );
+        throw new Error(error.response?.data?.error || "Failed to update data");
+      } else {
+        console.error(`>>> Error updating data at ${url}:`, error);
+        throw new Error("Failed to update data");
+      }
     }
   },
 
-  delete: async (url: string, payload?: Record<string, unknown>): Promise<void> => {
+  delete: async (
+    url: string,
+    payload?: Record<string, unknown>,
+  ): Promise<void> => {
     try {
       await api.delete(url, { data: payload });
     } catch (error) {
-      console.error(`>>> Error deleting data at ${url}:`, error);
-      throw new Error("Failed to delete data");
+      if (error instanceof AxiosError) {
+        // Log the backend error message
+        console.error(
+          `>>> Error deleting data at ${url}:`,
+          error.response?.data,
+        );
+        throw new Error(error.response?.data?.error || "Failed to delete data");
+      } else {
+        console.error(`>>> Error deleting data at ${url}:`, error);
+        throw new Error("Failed to delete data");
+      }
     }
   },
 };

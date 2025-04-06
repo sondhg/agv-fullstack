@@ -54,25 +54,41 @@ class GenerateSchedulesView(APIView):
                     continue
 
                 # Validate order data
-                if order.start_point not in nodes or order.end_point not in nodes:
-                    continue
+                # Validate order data
+                if not order.parking_node or not order.storage_node or not order.workstation_node:
+                    print(f"Invalid order data for order {order.order_id}")
+                    continue  # Skip invalid orders
+
+                if order.parking_node not in nodes or order.storage_node not in nodes or order.workstation_node not in nodes:
+                    print(f"Order {order.order_id} contains invalid nodes")
+                    continue  # Skip orders with invalid nodes
 
                 # Compute the shortest path based on the selected algorithm
                 try:
-                    path_to_end = pathfinding_algorithm.find_shortest_path(
-                        order.start_point, order.end_point
+                    path_to_storage = pathfinding_algorithm.find_shortest_path(
+                        order.parking_node, order.storage_node
                     )
-                    path_back_to_start = pathfinding_algorithm.find_shortest_path(
-                        order.end_point, order.start_point
+                    path_to_workstation = pathfinding_algorithm.find_shortest_path(
+                        order.storage_node, order.workstation_node
                     )
-                    path = path_to_end + path_back_to_start[1:]
+                    path_back_to_parking = pathfinding_algorithm.find_shortest_path(
+                        order.workstation_node, order.parking_node
+                    )
+
+                    # Combine all paths to form the complete route
+                    path = (
+                        path_to_storage
+                        # Avoid duplicate storage_node
+                        + path_to_workstation[1:]
+                        # Avoid duplicate workstation_node
+                        + path_back_to_parking[1:]
+                    )
+
                     if not path:
                         continue
 
-                    # ! Instruction set with direction guide formatting
-                    # shortest_path = format_instruction_set(path)
-                    # ! Instruction set without direction guide formatting
-                    shortest_path = path
+                    # Format the instruction set
+                    shortest_path = path  # Keep formatting as JSON array
                 except Exception as e:
                     return Response(
                         {"error": f"Failed to compute shortest path for order {order.order_id}: {str(e)}"},
@@ -85,11 +101,9 @@ class GenerateSchedulesView(APIView):
                     "order_id": order.order_id,
                     "order_date": order.order_date,
                     "start_time": order.start_time,
-                    "start_point": order.start_point,
-                    "end_point": order.end_point,
-                    "load_name": order.load_name,
-                    "load_amount": order.load_amount,
-                    "load_weight": order.load_weight,
+                    "parking_node": order.parking_node,
+                    "storage_node": order.storage_node,
+                    "workstation_node": order.workstation_node,
                     "instruction_set": json.dumps(shortest_path),  # Store path
                 }
                 serializer = ScheduleSerializer(data=schedule_data)
@@ -97,6 +111,8 @@ class GenerateSchedulesView(APIView):
                     serializer.save()
                     schedules.append(serializer.data)
                 else:
+                    print(
+                        f"Serialization failed for order {order.order_id}: {serializer.errors}")
                     return Response(
                         {"error": f"Failed to serialize schedule for order {order.order_id}: {serializer.errors}"},
                         status=status.HTTP_400_BAD_REQUEST,

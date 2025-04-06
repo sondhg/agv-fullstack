@@ -214,7 +214,7 @@ export function DialogFormCreateOrders({
                       <Input placeholder="Enter load name" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Load name of this order's route.
+                      Storage node of this order's route.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
