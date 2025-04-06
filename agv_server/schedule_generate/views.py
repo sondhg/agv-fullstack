@@ -7,8 +7,9 @@ from order_data.models import Order
 from rest_framework.generics import ListAPIView
 from map_data.models import Direction, Connection
 import json
-from .path_utils import format_instruction_set
 from .pathfinding.factory import PathfindingFactory
+from .pathfinding.cp_scp_calculator import CpScpCalculator
+from .pathfinding.sp_calculator import SpCalculator
 
 
 class GenerateSchedulesView(APIView):
@@ -48,12 +49,13 @@ class GenerateSchedulesView(APIView):
                 )
 
             schedules = []
+            all_paths = []  # To store paths for all orders for CP/SCP calculation
+
             for order in orders:
                 # Skip existing schedules
                 if Schedule.objects.filter(schedule_id=order.order_id).exists():
                     continue
 
-                # Validate order data
                 # Validate order data
                 if not order.parking_node or not order.storage_node or not order.workstation_node:
                     print(f"Invalid order data for order {order.order_id}")
@@ -81,11 +83,14 @@ class GenerateSchedulesView(APIView):
                         # Avoid duplicate storage_node
                         + path_to_workstation[1:]
                         # Avoid duplicate workstation_node
-                        + path_back_to_parking[1:]
+                        # + path_back_to_parking[1:]
                     )
 
                     if not path:
                         continue
+
+                    # Add to all_paths for CP/SCP calculation
+                    all_paths.append(path)
 
                     # Format the instruction set
                     shortest_path = path  # Keep formatting as JSON array
@@ -117,6 +122,21 @@ class GenerateSchedulesView(APIView):
                         {"error": f"Failed to serialize schedule for order {order.order_id}: {serializer.errors}"},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+
+            # Calculate CP and SCP for all schedules
+            adjacency_matrix = pathfinding_algorithm.graph
+            cp_scp_calculator = CpScpCalculator(adjacency_matrix)
+            cp_scp_data = cp_scp_calculator.calculate_cp_and_scp(all_paths)
+
+            # Update schedules with CP, SCP, and SP
+            sp_calculator = SpCalculator()
+            for i, schedule in enumerate(Schedule.objects.all()):
+                schedule.cp = cp_scp_data["cp"].get(i, [])
+                schedule.scp = cp_scp_data["scp"].get(i, [])
+                schedule.sp = sp_calculator.calculate_sp(
+                    schedule.scp, free_points={}
+                )  # Replace free_points={} with actual free points logic
+                schedule.save()
 
             if not schedules:
                 return Response(

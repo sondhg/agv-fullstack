@@ -13,6 +13,15 @@ class Schedule(models.Model):
     instruction_set = models.TextField(
         default="[]")  # Default value as JSON string
 
+    # New fields for collision and deadlock avoidance
+    cp = models.JSONField(default=list)  # Shared points (CP)
+    scp = models.JSONField(default=list)  # Sequential shared points (SCP)
+    sp = models.JSONField(default=dict)  # Spare points (SP)
+    # Traveling info {v_c, v_n, v_r}
+    traveling_info = models.JSONField(default=dict)
+    state = models.IntegerField(default=0)  # 0: idle, 1: moving, 2: waiting
+    spare_flag = models.BooleanField(default=False)  # F^i: Spare point flag
+
     def __str__(self):
         return f"Schedule {self.schedule_id} for Order {self.order_id}"
 
