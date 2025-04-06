@@ -90,6 +90,27 @@ export const columnsTableSchedules = (
     ),
   },
   {
+    accessorKey: "cp",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="CP - Shared Points" />
+    ),
+  },
+  {
+    accessorKey: "scp",
+    header: ({ column }) => (
+      <DataTableColumnHeader
+        column={column}
+        title="SCP - Sequential Shared Points"
+      />
+    ),
+  },
+  // {
+  //   accessorKey: "sp",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="SP - Spare Points" />
+  //   ),
+  // },
+  {
     id: "actions",
     cell: ({ row }) => {
       const schedule = row.original;
