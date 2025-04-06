@@ -198,7 +198,8 @@ export function DialogFormCreateOrders({
                       <Input {...field} />
                     </FormControl>
                     <FormDescription>
-                      Parking node of this order's route.
+                      Where AGV starts its journey and returns after finishing
+                      delivery to workstation.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -214,7 +215,7 @@ export function DialogFormCreateOrders({
                       <Input placeholder="Enter load name" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Storage node of this order's route.
+                      Where AGV picks up materials.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -230,7 +231,7 @@ export function DialogFormCreateOrders({
                       <Input {...field} />
                     </FormControl>
                     <FormDescription>
-                      Workstation node of this order's route.
+                      Where AGV delivers materials picked up from storage.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

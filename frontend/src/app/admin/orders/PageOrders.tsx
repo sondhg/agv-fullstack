@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { columnsTableOrders } from "./columnsTableOrders";
 import { DialogFormCreateOrders } from "./DialogFormCreateOrders";
 import { DialogInstructionsCSV } from "./DialogInstructionsCSV";
+import { AlertTravelRoute } from "./AlertTravelRoute";
 
 export function PageOrders() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -95,6 +96,7 @@ export function PageOrders() {
     <>
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Orders</h2>
+        <AlertTravelRoute />
         <div className="space-x-5">
           <DialogFormCreateOrders
             isDialogOpen={isDialogOpen}
