@@ -6,11 +6,9 @@ export const CreateScheduleZod = z.object({
   order_date: z.string(),
   start_time: z.string(),
   est_end_time: z.string(),
-  start_point: z.number(),
-  end_point: z.number(),
-  load_name: z.string(),
-  load_amount: z.number(),
-  load_weight: z.number(),
+  parking_node: z.number(),
+  storage_node: z.number(),
+  workstation_node: z.number(),
   instruction_set: z.string(),
 });
 
@@ -22,10 +20,8 @@ export interface Schedule {
   order_date: string;
   start_time: string;
   est_end_time: string;
-  start_point: number;
-  end_point: number;
-  load_name: string;
-  load_amount: number;
-  load_weight: number;
+  parking_node: number;
+  storage_node: number;
+  workstation_node: number;
   instruction_set: string;
 }

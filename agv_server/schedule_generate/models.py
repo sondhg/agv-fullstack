@@ -7,11 +7,9 @@ class Schedule(models.Model):
     order_date = models.DateField()
     start_time = models.TimeField()
     est_end_time = models.TimeField(default="00:00:00")  # Default value
-    start_point = models.IntegerField()
-    end_point = models.IntegerField()
-    load_name = models.CharField(max_length=100)
-    load_amount = models.IntegerField(default=0)
-    load_weight = models.IntegerField(default=0)
+    parking_node = models.IntegerField()
+    storage_node = models.IntegerField()
+    workstation_node = models.IntegerField()
     instruction_set = models.TextField(
         default="[]")  # Default value as JSON string
 

@@ -66,35 +66,23 @@ export const columnsTableSchedules = (
     ),
   },
   {
-    accessorKey: "start_point",
+    accessorKey: "parking_node",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Start Point" />
+      <DataTableColumnHeader column={column} title="Parking Node" />
     ),
   },
   {
-    accessorKey: "end_point",
+    accessorKey: "storage_node",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="End Point" />
+      <DataTableColumnHeader column={column} title="Storage Node" />
     ),
   },
-  // {
-  //   accessorKey: "load_name",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Load Name" />
-  //   ),
-  // },
-  // {
-  //   accessorKey: "load_amount",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Load Amount" />
-  //   ),
-  // },
-  // {
-  //   accessorKey: "load_weight",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="Load Weight" />
-  //   ),
-  // },
+  {
+    accessorKey: "workstation_node",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Workstation Node" />
+    ),
+  },
   {
     accessorKey: "instruction_set",
     header: ({ column }) => (
