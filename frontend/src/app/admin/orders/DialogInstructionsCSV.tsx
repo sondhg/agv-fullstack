@@ -1,9 +1,3 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,10 +11,10 @@ import { CircleHelp, FileQuestion } from "lucide-react";
 
 export function DialogInstructionsCSV() {
   const handleDownloadCSV = () => {
-    const csvContent = `order_id,order_date,start_time,start_point,end_point,load_name,load_amount,load_weight
-1,2024-11-30,10:00:00,1,10,stone,10,10
-2,2024-11-30,10:00:05,2,11,wood,10,20
-3,2024-11-30,10:00:10,3,12,iron,10,30`;
+    const csvContent = `order_id,order_date,start_time,parking_node,storage_node,workstation_node
+1,2024-11-30,10:00:00,1,2,3
+2,2024-11-30,10:00:05,4,5,6
+3,2024-11-30,10:00:10,7,8,9`;
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -30,7 +24,7 @@ export function DialogInstructionsCSV() {
     a.click();
     URL.revokeObjectURL(url);
   };
-  FileQuestion;
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -53,13 +47,13 @@ export function DialogInstructionsCSV() {
               </span>
               <pre>
                 <code>
-                  order_id,order_date,start_time,start_point,end_point,load_name,load_amount,load_weight
+                  order_id,order_date,start_time,parking_node,storage_node,workstation_node
                   <br />
-                  1,2024-11-30,10:00:00,1,10,stone,10,10
+                  1,2024-11-30,10:00:00,1,2,3
                   <br />
-                  2,2024-11-30,10:00:05,2,11,wood,10,20
+                  2,2024-11-30,10:00:05,4,5,6
                   <br />
-                  3,2024-11-30,10:00:10,3,12,iron,10,30
+                  3,2024-11-30,10:00:10,7,8,9
                 </code>
               </pre>
               <Button onClick={handleDownloadCSV}>

@@ -5,12 +5,9 @@ export const handleExportCSV = (data: Order[]) => {
     "order_id",
     "order_date",
     "start_time",
-    "start_point",
-    "end_point",
-    "load_name",
-    "load_amount",
-    "load_weight",
-    "user_name",
+    "parking_node",
+    "storage_node",
+    "workstation_node",
   ];
 
   const csvRows = [
@@ -20,12 +17,9 @@ export const handleExportCSV = (data: Order[]) => {
         order.order_id,
         order.order_date,
         order.start_time,
-        order.start_point,
-        order.end_point,
-        order.load_name,
-        order.load_amount,
-        order.load_weight,
-        order.user_name,
+        order.parking_node,
+        order.storage_node,
+        order.workstation_node,
       ].join(","),
     ),
   ];

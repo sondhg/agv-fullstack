@@ -21,54 +21,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { createOrder } from "@/services/APIs/ordersAPI";
 import { CreateOrderDto } from "@/types/Order.types";
-import { loadNames, loadNamesEnum } from "@/utils/arraysUsedOften";
-import {
-  convertStringToNumber,
-  isEndPointWithinRange,
-  isLoadAmountWithinRange,
-  isLoadWeightWithinRange,
-  isOrderIdWithinRange,
-  isStartPointWithinRange,
-  MAX_END_POINT_VALUE,
-  MAX_LOAD_AMOUNT_VALUE,
-  MAX_LOAD_WEIGHT_VALUE,
-  MAX_ORDER_ID_VALUE,
-  MAX_START_POINT_VALUE,
-  MIN_END_POINT_VALUE,
-  MIN_LOAD_AMOUNT_VALUE,
-  MIN_LOAD_WEIGHT_VALUE,
-  MIN_ORDER_ID_VALUE,
-  MIN_START_POINT_VALUE,
-} from "@/utils/conversionUtils";
+import { convertStringToNumber } from "@/utils/conversionUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CirclePlus } from "lucide-react";
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 // import { vi } from "date-fns/locale";
 
-// Generate weight mapping dynamically
-// Define the weightMapping with an explicit type
-const weightMapping: { [key: string]: number } = loadNames.reduce(
-  (acc, loadName, index) => {
-    acc[loadName] = index + 1;
-    return acc;
-  },
-  {} as { [key: string]: number },
-);
-
 const formSchema = z.object({
-  order_id: z
-    .string()
-    .min(1)
-    .regex(/^\d+$/, { message: "Must be integer" })
-    .refine((value) => isOrderIdWithinRange(convertStringToNumber(value)), {
-      message: `Number should be between ${MIN_ORDER_ID_VALUE} and ${MAX_ORDER_ID_VALUE}.`,
-    }),
+  order_id: z.string().min(1).regex(/^\d+$/, { message: "Must be integer" }),
   order_date: z
     .string()
     .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
@@ -77,41 +41,18 @@ const formSchema = z.object({
   start_time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
     message: "Time must be in 23h format hh:mm:ss",
   }),
-  start_point: z
+  parking_node: z
     .string()
     .min(1)
-    .regex(/^\d+$/, { message: "Must be integer" })
-    .refine((value) => isStartPointWithinRange(convertStringToNumber(value)), {
-      message: `Number should be between ${MIN_START_POINT_VALUE} and ${MAX_START_POINT_VALUE}.`,
-    }),
-  end_point: z
+    .regex(/^\d+$/, { message: "Must be integer" }),
+  storage_node: z
     .string()
     .min(1)
-    .regex(/^\d+$/, { message: "Must be integer" })
-    .refine((value) => isEndPointWithinRange(convertStringToNumber(value)), {
-      message: `Number should be between ${MIN_END_POINT_VALUE} and ${MAX_END_POINT_VALUE}.`,
-    }),
-  load_name: z
-    .string()
-    .transform((val) => val.toLowerCase())
-    .refine((val) => loadNamesEnum.includes(val), {
-      message: `Load name must be one of: ${loadNames.join(", ")}.`,
-    }),
-  load_amount: z
+    .regex(/^\d+$/, { message: "Must be integer" }),
+  workstation_node: z
     .string()
     .min(1)
-    .regex(/^\d*$/, "Numerical characters only.")
-    .refine((value) => isLoadAmountWithinRange(convertStringToNumber(value)), {
-      message: `Number should be between ${MIN_LOAD_AMOUNT_VALUE} and ${MAX_LOAD_AMOUNT_VALUE}.`,
-    }),
-  load_weight: z
-    .string()
-    .min(1)
-    .regex(/^\d*$/, "Numerical characters only.")
-    .refine((value) => isLoadWeightWithinRange(convertStringToNumber(value)), {
-      message: `Number should be between ${MIN_LOAD_WEIGHT_VALUE} and ${MAX_LOAD_WEIGHT_VALUE}.`,
-    }),
-  user_name: z.string(),
+    .regex(/^\d+$/, { message: "Must be integer" }),
 });
 
 interface FormCreateOrdersProps {
@@ -126,7 +67,6 @@ export function DialogFormCreateOrders({
   fetchListData,
 }: FormCreateOrdersProps) {
   const { toast } = useToast();
-  const { account } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -134,12 +74,9 @@ export function DialogFormCreateOrders({
       order_id: "",
       order_date: "",
       start_time: "",
-      start_point: "",
-      end_point: "",
-      load_name: "",
-      load_amount: "",
-      load_weight: "",
-      user_name: account.name,
+      parking_node: "",
+      storage_node: "",
+      workstation_node: "",
     },
     mode: "onChange",
   });
@@ -149,12 +86,9 @@ export function DialogFormCreateOrders({
       order_id: convertStringToNumber(values.order_id),
       order_date: values.order_date,
       start_time: values.start_time,
-      start_point: convertStringToNumber(values.start_point),
-      end_point: convertStringToNumber(values.end_point),
-      load_name: values.load_name.toLowerCase(),
-      load_amount: convertStringToNumber(values.load_amount),
-      load_weight: convertStringToNumber(values.load_weight),
-      user_name: values.user_name,
+      parking_node: convertStringToNumber(values.parking_node),
+      storage_node: convertStringToNumber(values.storage_node),
+      workstation_node: convertStringToNumber(values.workstation_node),
     };
 
     try {
@@ -182,22 +116,6 @@ export function DialogFormCreateOrders({
       });
     }
   }
-
-  const { setValue, watch } = form;
-
-  // Watch for changes to load_name and load_amount
-  const loadName = watch("load_name");
-  const loadAmount = watch("load_amount");
-
-  useEffect(() => {
-    // Parse load_amount as a number
-    const amount = parseInt(loadAmount || "0", 10);
-    const weightPerUnit = weightMapping[loadName.toLowerCase()] || 0;
-    const calculatedWeight = amount * weightPerUnit;
-
-    // Update load_weight field
-    setValue("load_weight", calculatedWeight.toString());
-  }, [loadName, loadAmount, setValue]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -272,18 +190,15 @@ export function DialogFormCreateOrders({
               />
               <FormField
                 control={form.control}
-                name="start_point"
+                name="parking_node"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Point</FormLabel>
+                    <FormLabel>Parking Node</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={`Enter integer from ${MIN_START_POINT_VALUE} to ${MAX_START_POINT_VALUE}`}
-                        {...field}
-                      />
+                      <Input {...field} />
                     </FormControl>
                     <FormDescription>
-                      Start point of this order's route.
+                      Parking node of this order's route.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -291,18 +206,15 @@ export function DialogFormCreateOrders({
               />
               <FormField
                 control={form.control}
-                name="end_point"
+                name="storage_node"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Point</FormLabel>
+                    <FormLabel>Storage Node</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder={`Enter integer from ${MIN_END_POINT_VALUE} to ${MAX_END_POINT_VALUE}`}
-                        {...field}
-                      />
+                      <Input placeholder="Enter load name" {...field} />
                     </FormControl>
                     <FormDescription>
-                      End point of this order's route.
+                      Load name of this order's route.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -310,72 +222,15 @@ export function DialogFormCreateOrders({
               />
               <FormField
                 control={form.control}
-                name="load_name"
+                name="workstation_node"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Load Name</FormLabel>
+                    <FormLabel>Workstation Node</FormLabel>
                     <FormControl>
-                      <Input placeholder={`Enter load name`} {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormDescription>
-                      Material type of the load.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="load_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Load Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder={`Enter integer from ${MIN_LOAD_AMOUNT_VALUE} to ${MAX_LOAD_AMOUNT_VALUE}`}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>Number of load units.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="load_weight"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Load Weight</FormLabel>
-                    <FormControl>
-                      <Input
-                        readOnly
-                        placeholder={`Read-only field...`}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Calculated total weight of load.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="user_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input
-                        readOnly
-                        placeholder={`Read-only field...`}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      User that sent this order.
+                      Workstation node of this order's route.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

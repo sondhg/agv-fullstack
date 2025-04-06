@@ -1,5 +1,5 @@
 //from 0 to 19
-export const startPoints = Array.from({ length: 20 }, (_, index) => index);
+export const parkingNodes = Array.from({ length: 20 }, (_, index) => index);
 
 //from 0 to 19
 export const endPoints = Array.from({ length: 20 }, (_, index) => index);

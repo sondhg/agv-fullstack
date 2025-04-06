@@ -54,47 +54,21 @@ export const columnsTableOrders = (
     ),
   },
   {
-    accessorKey: "start_point",
+    accessorKey: "parking_node",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Start Point" />
+      <DataTableColumnHeader column={column} title="Parking Node" />
     ),
   },
   {
-    accessorKey: "end_point",
+    accessorKey: "storage_node",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="End Point" />
+      <DataTableColumnHeader column={column} title="Storage Node" />
     ),
   },
   {
-    accessorKey: "load_name",
+    accessorKey: "workstation_node",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Name" />
-    ),
-  },
-  {
-    accessorKey: "load_amount",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Amount" />
-    ),
-    cell: ({ row }) => {
-      const load_amount = row.getValue("load_amount");
-      return <div>{`${load_amount} units`}</div>;
-    },
-  },
-  {
-    accessorKey: "load_weight",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Load Weight" />
-    ),
-    cell: ({ row }) => {
-      const load_weight = row.getValue("load_weight");
-      return <div>{`${load_weight} kg`}</div>;
-    },
-  },
-  {
-    accessorKey: "user_name",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Username" />
+      <DataTableColumnHeader column={column} title="Workstation Node" />
     ),
   },
   {

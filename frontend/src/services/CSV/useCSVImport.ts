@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/useAuth";
 import { createMultipleOrdersBatch } from "@/services/APIs/ordersAPI";
 import { CreateOrderDto } from "@/types/Order.types";
 import Papa from "papaparse";
@@ -8,38 +7,28 @@ interface CsvRow {
   order_id: number;
   order_date: string;
   start_time: string;
-  start_point: number;
-  end_point: number;
-  load_name: string;
-  load_amount: number;
-  load_weight: number;
+  parking_node: number;
+  storage_node: number;
+  workstation_node: number;
 }
 
-const mapToOrderDto = (
-  row: CsvRow,
-  userName: string,
-): CreateOrderDto | null => {
+const mapToOrderDto = (row: CsvRow): CreateOrderDto | null => {
   if (
     row.order_id &&
     row.order_date &&
     row.start_time &&
-    row.start_point &&
-    row.end_point &&
-    row.load_name &&
-    row.load_amount &&
-    row.load_weight
+    row.parking_node &&
+    row.storage_node &&
+    row.workstation_node
   ) {
     try {
       return {
         order_id: row.order_id,
         order_date: row.order_date,
         start_time: row.start_time,
-        start_point: row.start_point,
-        end_point: row.end_point,
-        load_name: row.load_name,
-        load_amount: row.load_amount,
-        load_weight: row.load_weight,
-        user_name: userName, // Add user_name field
+        parking_node: row.parking_node,
+        storage_node: row.storage_node,
+        workstation_node: row.workstation_node,
       };
     } catch (err) {
       console.error(`Row validation failed: ${JSON.stringify(row)}`, err);
@@ -51,8 +40,6 @@ const mapToOrderDto = (
 };
 
 export const useCSVImport = () => {
-  const { account } = useAuth(); // Get account from useAuth
-  const userName = account.name; // Get user name
 
   const handleImportCSV = async (file: File, fetchListData: () => void) => {
     // Parse the CSV file
@@ -63,7 +50,7 @@ export const useCSVImport = () => {
 
         // Process each row and map to valid order
         result.data.forEach((row) => {
-          const order = mapToOrderDto(row as CsvRow, userName);
+          const order = mapToOrderDto(row as CsvRow);
           if (order) {
             validOrders.push(order);
           } else {
