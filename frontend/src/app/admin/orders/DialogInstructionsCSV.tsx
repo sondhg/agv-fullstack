@@ -12,9 +12,9 @@ import { CircleHelp, FileQuestion } from "lucide-react";
 export function DialogInstructionsCSV() {
   const handleDownloadCSV = () => {
     const csvContent = `order_id,order_date,start_time,parking_node,storage_node,workstation_node
-1,2024-11-30,10:00:00,1,2,3
-2,2024-11-30,10:00:05,4,5,6
-3,2024-11-30,10:00:10,7,8,9`;
+1,2025-11-30,10:00:00,7,15,23,
+2,2025-11-30,10:00:05,19,11,16,
+3,2025-11-30,10:00:10,13,11,9,`;
 
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -49,11 +49,11 @@ export function DialogInstructionsCSV() {
                 <code>
                   order_id,order_date,start_time,parking_node,storage_node,workstation_node
                   <br />
-                  1,2024-11-30,10:00:00,1,2,3
+                  1,2025-11-30,10:00:00,7,15,23,
                   <br />
-                  2,2024-11-30,10:00:05,4,5,6
+                  2,2025-11-30,10:00:05,19,11,16,
                   <br />
-                  3,2024-11-30,10:00:10,7,8,9
+                  3,2025-11-30,10:00:10,13,11,9,
                 </code>
               </pre>
               <Button onClick={handleDownloadCSV}>
