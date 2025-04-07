@@ -193,3 +193,31 @@ class BulkDeleteSchedulesView(APIView):
                 {"error": f"An error occurred during bulk deletion: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class UpdateScheduleView(APIView):
+    def put(self, request, schedule_id):
+        try:
+            schedule = Schedule.objects.get(schedule_id=schedule_id)
+            data = request.data
+
+            # Update the schedule fields
+            schedule.traveling_info = data.get(
+                "traveling_info", schedule.traveling_info)
+            schedule.state = data.get("state", schedule.state)
+            schedule.save()
+
+            return Response(
+                {"message": f"Schedule {schedule_id} updated successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except Schedule.DoesNotExist:
+            return Response(
+                {"error": f"Schedule {schedule_id} does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"An error occurred while updating the schedule: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GenerateSchedulesView, ListSchedulesView, DeleteScheduleView, BulkDeleteSchedulesView
+from .views import GenerateSchedulesView, ListSchedulesView, DeleteScheduleView, BulkDeleteSchedulesView, UpdateScheduleView
 
 urlpatterns = [
     path("generate/", GenerateSchedulesView.as_view(), name="generate_schedules"),
@@ -9,4 +9,6 @@ urlpatterns = [
          DeleteScheduleView.as_view(), name="delete_schedule"),
     path("bulk-delete/", BulkDeleteSchedulesView.as_view(),
          name="bulk_delete_schedules"),
+    path("update/<int:schedule_id>/", UpdateScheduleView.as_view(),
+         name="update_schedule"),  # New endpoint
 ]

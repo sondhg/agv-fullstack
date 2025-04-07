@@ -19,7 +19,7 @@ class Schedule(models.Model):
     sp = models.JSONField(default=dict)  # Spare points (SP)
     # Traveling info {v_c, v_n, v_r}
     traveling_info = models.JSONField(default=dict)
-    state = models.IntegerField(default=0)  # 0: idle, 1: moving, 2: waiting
+    state = models.IntegerField(default=1)  # 0: idle, 1: moving, 2: waiting
     spare_flag = models.BooleanField(default=False)  # F^i: Spare point flag
 
     def __str__(self):
