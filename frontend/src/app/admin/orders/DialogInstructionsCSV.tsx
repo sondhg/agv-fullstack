@@ -10,7 +10,7 @@ import {
 import { CircleHelp, FileQuestion } from "lucide-react";
 
 export function DialogInstructionsCSV() {
-  const handleDownloadCSV = () => {
+  const handleDownloadCSVexample1and2 = () => {
     const csvContent = `order_id,order_date,start_time,parking_node,storage_node,workstation_node
 1,2025-11-30,10:00:00,7,15,23,
 2,2025-11-30,10:00:05,19,11,16,
@@ -20,7 +20,22 @@ export function DialogInstructionsCSV() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "testOrders.csv";
+    a.download = "orders-example-1-2.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadCSVexample3 = () => {
+    const csvContent = `order_id,order_date,start_time,parking_node,storage_node,workstation_node,
+1,2025-11-30,10:00:00,7,5,21,
+2,2025-11-30,10:00:05,17,10,22,
+3,2025-11-30,10:00:10,32,15,19,`;
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "orders-example-3.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -41,10 +56,8 @@ export function DialogInstructionsCSV() {
           <FileQuestion className="h-4 w-4" />
           <AlertTitle>Import CSV</AlertTitle>
           <AlertDescription>
-            <div className="my-2 space-y-3">
-              <span>
-                Use a file with header row like this sample testOrders.csv file:
-              </span>
+            <div className="my-2 space-x-2 space-y-3">
+              <span>Use a file with header row like this sample file:</span>
               <pre>
                 <code>
                   order_id,order_date,start_time,parking_node,storage_node,workstation_node
@@ -56,8 +69,11 @@ export function DialogInstructionsCSV() {
                   3,2025-11-30,10:00:10,13,11,9,
                 </code>
               </pre>
-              <Button onClick={handleDownloadCSV}>
-                Download sample testOrders.csv
+              <Button onClick={handleDownloadCSVexample1and2}>
+                Download sample orders-example-1-2.csv
+              </Button>
+              <Button variant={"secondary"} onClick={handleDownloadCSVexample3}>
+                Download sample orders-example-3.csv
               </Button>
             </div>
           </AlertDescription>
