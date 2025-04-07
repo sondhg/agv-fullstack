@@ -73,17 +73,12 @@ class GenerateSchedulesView(APIView):
                     path_to_workstation = pathfinding_algorithm.find_shortest_path(
                         order.storage_node, order.workstation_node
                     )
-                    path_back_to_parking = pathfinding_algorithm.find_shortest_path(
-                        order.workstation_node, order.parking_node
-                    )
 
                     # Combine all paths to form the complete route
                     path = (
                         path_to_storage
                         # Avoid duplicate storage_node
                         + path_to_workstation[1:]
-                        # Avoid duplicate workstation_node
-                        # + path_back_to_parking[1:]
                     )
 
                     if not path:
@@ -129,13 +124,13 @@ class GenerateSchedulesView(APIView):
             cp_scp_data = cp_scp_calculator.calculate_cp_and_scp(all_paths)
 
             # Update schedules with CP, SCP, and SP
-            sp_calculator = SpCalculator()
+            sp_calculator = SpCalculator(adjacency_matrix)
             for i, schedule in enumerate(Schedule.objects.all()):
                 schedule.cp = cp_scp_data["cp"].get(i, [])
                 schedule.scp = cp_scp_data["scp"].get(i, [])
                 schedule.sp = sp_calculator.calculate_sp(
-                    schedule.scp, free_points={}
-                )  # Replace free_points={} with actual free points logic
+                    schedule.scp, residual_paths=all_paths
+                )
                 schedule.save()
 
             if not schedules:

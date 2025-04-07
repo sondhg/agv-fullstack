@@ -59,12 +59,12 @@ export const columnsTableSchedules = (
       <DataTableColumnHeader column={column} title="Start Time" />
     ),
   },
-  {
-    accessorKey: "est_end_time",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Estimated End Time" />
-    ),
-  },
+  // {
+  //   accessorKey: "est_end_time",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Estimated End Time" />
+  //   ),
+  // },
   {
     accessorKey: "parking_node",
     header: ({ column }) => (
@@ -90,26 +90,31 @@ export const columnsTableSchedules = (
     ),
   },
   {
-    accessorKey: "cp",
+    accessorKey: "cp", // Shared Points
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="CP - Shared Points" />
+      <DataTableColumnHeader column={column} title="CP" />
     ),
   },
   {
-    accessorKey: "scp",
+    accessorKey: "scp", // Sequential Shared Points
     header: ({ column }) => (
-      <DataTableColumnHeader
-        column={column}
-        title="SCP - Sequential Shared Points"
-      />
+      <DataTableColumnHeader column={column} title="SCP" />
     ),
   },
-  // {
-  //   accessorKey: "sp",
-  //   header: ({ column }) => (
-  //     <DataTableColumnHeader column={column} title="SP - Spare Points" />
-  //   ),
-  // },
+  {
+    accessorKey: "sp", // Spare Points
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="SP" />
+    ),
+    cell: ({ row }) => {
+      const spData = row.getValue("sp");
+      return (
+        <pre className="whitespace-pre-wrap text-sm">
+          {JSON.stringify(spData, null, 2)}
+        </pre>
+      );
+    },
+  },
   {
     id: "actions",
     cell: ({ row }) => {

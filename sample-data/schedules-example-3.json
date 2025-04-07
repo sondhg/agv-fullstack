@@ -1,0 +1,63 @@
+[
+  {
+    "schedule_id": 1,
+    "order_id": 1,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:00",
+    "est_end_time": "00:00:00",
+    "parking_node": 7,
+    "storage_node": 5,
+    "workstation_node": 21,
+    "instruction_set": "[7, 6, 5, 13, 21]",
+    "cp": [13],
+    "scp": [],
+    "sp": {},
+    "traveling_info": {},
+    "state": 0,
+    "spare_flag": false
+  },
+  {
+    "schedule_id": 2,
+    "order_id": 2,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:05",
+    "est_end_time": "00:00:00",
+    "parking_node": 17,
+    "storage_node": 10,
+    "workstation_node": 22,
+    "instruction_set": "[17, 18, 10, 11, 12, 13, 14, 22]",
+    "cp": [11, 12, 13, 14],
+    "scp": [11, 12, 13, 14],
+    "sp": {
+      "11": 3,
+      "12": 4,
+      "13": null,
+      "14": null
+    },
+    "traveling_info": {},
+    "state": 0,
+    "spare_flag": false
+  },
+  {
+    "schedule_id": 3,
+    "order_id": 3,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:10",
+    "est_end_time": "00:00:00",
+    "parking_node": 32,
+    "storage_node": 15,
+    "workstation_node": 19,
+    "instruction_set": "[32, 31, 23, 15, 14, 13, 12, 11, 19]",
+    "cp": [14, 13, 12, 11],
+    "scp": [14, 13, 12, 11],
+    "sp": {
+      "11": 3,
+      "12": 4,
+      "13": null,
+      "14": null
+    },
+    "traveling_info": {},
+    "state": 0,
+    "spare_flag": false
+  }
+]

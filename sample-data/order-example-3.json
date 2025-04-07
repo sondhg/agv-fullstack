@@ -1,0 +1,26 @@
+[
+  {
+    "order_id": 1,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:00",
+    "parking_node": 7,
+    "storage_node": 5,
+    "workstation_node": 21
+  },
+  {
+    "order_id": 2,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:05",
+    "parking_node": 17,
+    "storage_node": 10,
+    "workstation_node": 22
+  },
+  {
+    "order_id": 3,
+    "order_date": "2025-11-30",
+    "start_time": "10:00:10",
+    "parking_node": 32,
+    "storage_node": 15,
+    "workstation_node": 19
+  }
+]

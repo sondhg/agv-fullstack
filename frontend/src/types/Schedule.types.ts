@@ -12,7 +12,7 @@ export const CreateScheduleZod = z.object({
   instruction_set: z.string(),
   cp: z.string().optional(),
   scp: z.string().optional(),
-  sp: z.string().optional(),
+  sp: z.record(z.string(), z.number()).optional(), // Simplified SP structure
 });
 
 export type CreateScheduleDto = z.infer<typeof CreateScheduleZod>;
@@ -29,5 +29,5 @@ export interface Schedule {
   instruction_set: string;
   cp?: string;
   scp?: string;
-  sp?: string;
+  sp?: Record<string, number>; // Simplified SP structure
 }
