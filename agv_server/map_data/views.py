@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 logger = logging.getLogger(__name__)
 
 # Define a constant for no direct connection between nodes
-NO_CONNECTION = -1
+NO_CONNECTION = 10000
 
 
 @csrf_exempt
@@ -36,7 +36,7 @@ def import_connections(request):
                 node1 = i + 1
                 node2 = j + 1
 
-                # Use the constant NO_CONNECTION instead of -1
+                # Use the constant NO_CONNECTION instead of 10000
                 if node1 != node2 and int(matrix[i][j]) != NO_CONNECTION:
                     Connection.objects.create(
                         node1=node1, node2=node2, distance=int(matrix[i][j])
@@ -63,8 +63,8 @@ def import_directions(request):
                 node1 = i + 1
                 node2 = j + 1
 
-                # Only save valid directions (value not equal to 5)
-                if int(matrix[i][j]) != 5:
+                # Only save valid directions (value not equal to 10000)
+                if int(matrix[i][j]) != NO_CONNECTION:
                     Direction.objects.create(
                         node1=node1, node2=node2, direction=int(matrix[i][j])
                     )

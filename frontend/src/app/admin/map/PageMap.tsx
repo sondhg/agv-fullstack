@@ -44,6 +44,7 @@ export function PageMap() {
       setMapData(null); // Clear the map data from the UI
       setError(null); // Clear any errors
       resetFileInputs(); // Reset the file inputs
+      localStorage.removeItem("cachedMapData"); // Clear cached data
     } catch (error) {
       toast.error("Failed to delete map data.");
       console.error("Error deleting map data:", error);
@@ -64,12 +65,22 @@ export function PageMap() {
           .join("\n");
         await importFunction(csvData);
         toast.success("Import successful");
+        localStorage.removeItem("cachedMapData"); // Clear cached data after import
       },
       skipEmptyLines: true,
     });
   };
 
   const handleShowMap = async () => {
+    // Check if map data is cached
+    const cachedData = localStorage.getItem("cachedMapData");
+    if (cachedData) {
+      const parsedData = JSON.parse(cachedData) as MapData;
+      setMapData(parsedData);
+      return;
+    }
+
+    // Fetch map data from backend if not cached
     const data = (await fetchMapData()) as MapData;
     console.log("Fetched map data:", data); // Debug log
 
@@ -79,6 +90,7 @@ export function PageMap() {
       setMapData(null);
       return;
     }
+
     // Validate that connections and directions are related
     const allNodes = new Set(data.nodes);
     const invalidConnections = data.connections.some(
@@ -100,6 +112,9 @@ export function PageMap() {
 
     setError(null); // Clear any previous errors
     setMapData(data);
+
+    // Cache the map data
+    localStorage.setItem("cachedMapData", JSON.stringify(data));
   };
 
   useEffect(() => {
