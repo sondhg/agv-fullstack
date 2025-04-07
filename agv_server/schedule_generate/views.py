@@ -1,3 +1,4 @@
+from .tasks.deadlock_detector import DeadlockDetector
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,6 +11,8 @@ import json
 from .pathfinding.factory import PathfindingFactory
 from .pathfinding.cp_scp_calculator import CpScpCalculator
 from .pathfinding.sp_calculator import SpCalculator
+from .pathfinding.traveling_info_updater import TravelingInfoUpdater
+from .pathfinding.movement_conditions import MovementConditions
 
 
 class GenerateSchedulesView(APIView):
@@ -105,6 +108,8 @@ class GenerateSchedulesView(APIView):
                     "storage_node": order.storage_node,
                     "workstation_node": order.workstation_node,
                     "instruction_set": json.dumps(shortest_path),  # Store path
+                    # Initialize traveling_info
+                    "traveling_info": {"v_c": None, "v_n": None, "v_r": None},
                 }
                 serializer = ScheduleSerializer(data=schedule_data)
                 if serializer.is_valid():
@@ -201,14 +206,68 @@ class UpdateScheduleView(APIView):
             schedule = Schedule.objects.get(schedule_id=schedule_id)
             data = request.data
 
-            # Update the schedule fields
-            schedule.traveling_info = data.get(
-                "traveling_info", schedule.traveling_info)
-            schedule.state = data.get("state", schedule.state)
+            # Update traveling information
+            current_point = data.get("current_point")
+            next_point = data.get("next_point")
+            traveling_info = schedule.traveling_info or {
+                "v_c": None, "v_n": None, "v_r": None}  # Ensure initialization
+
+            if current_point is not None and next_point is not None:
+                traveling_info["v_c"] = current_point
+                traveling_info["v_n"] = next_point
+                traveling_info["v_r"] = next_point
+                schedule.traveling_info = traveling_info
+                schedule.save()
+
+            # Evaluate movement conditions
+            scp = schedule.scp
+            reserved_points = set(
+                Schedule.objects.exclude(schedule_id=schedule_id)
+                .values_list("traveling_info__v_r", flat=True)
+            )
+            reserved_by_no_spare = set(
+                Schedule.objects.filter(spare_flag=False)
+                .exclude(schedule_id=schedule_id)
+                .values_list("traveling_info__v_r", flat=True)
+            )
+            spare_points = schedule.sp
+
+            if MovementConditions.evaluate_condition_1(next_point, scp, reserved_points):
+                schedule.state = 1  # Moving
+                traveling_info["v_r"] = next_point
+            elif MovementConditions.evaluate_condition_2(next_point, scp, reserved_points, reserved_by_no_spare):
+                schedule.state = 1  # Moving
+                traveling_info["v_r"] = next_point
+            elif MovementConditions.evaluate_condition_3(next_point, scp, reserved_points, reserved_by_no_spare, spare_points):
+                schedule.state = 1  # Moving
+                traveling_info["v_r"] = next_point
+            else:
+                schedule.state = 2  # Waiting
+                traveling_info["v_r"] = current_point
+
+            schedule.traveling_info = traveling_info
             schedule.save()
 
+            # Trigger deadlock detection
+            heading_on_deadlocks = DeadlockDetector.detect_heading_on_deadlock()
+            loop_deadlocks = DeadlockDetector.detect_loop_deadlock()
+
+            if heading_on_deadlocks or loop_deadlocks:
+                return Response(
+                    {
+                        "message": "Deadlock detected.",
+                        "heading_on_deadlocks": heading_on_deadlocks,
+                        "loop_deadlocks": loop_deadlocks,
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
             return Response(
-                {"message": f"Schedule {schedule_id} updated successfully."},
+                {
+                    "message": f"Schedule {schedule_id} updated successfully.",
+                    "traveling_info": traveling_info,
+                    "state": schedule.state,
+                },
                 status=status.HTTP_200_OK,
             )
         except Schedule.DoesNotExist:
