@@ -1,5 +1,4 @@
 from .dijkstra import Dijkstra
-from .q_learning import QLearning
 
 
 class PathfindingFactory:
@@ -13,7 +12,7 @@ class PathfindingFactory:
         Get an instance of the specified pathfinding algorithm.
 
         Args:
-            algorithm_name (str): The name of the algorithm ("dijkstra", "q_learning").
+            algorithm_name (str): The name of the algorithm ("dijkstra", "q_learning", "a_star").
             nodes (list): List of all nodes in the graph.
             connections (list): List of connections between nodes.
 
@@ -22,7 +21,5 @@ class PathfindingFactory:
         """
         if algorithm_name == "dijkstra":
             return Dijkstra(nodes, connections)
-        elif algorithm_name == "q_learning":
-            return QLearning(nodes, connections)
         else:
             raise ValueError(f"Unknown algorithm: {algorithm_name}")

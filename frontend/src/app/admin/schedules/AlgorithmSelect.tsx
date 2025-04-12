@@ -29,7 +29,6 @@ export const AlgorithmSelect: React.FC<AlgorithmSelectProps> = ({
         <SelectGroup>
           <SelectLabel>Algorithms</SelectLabel>
           <SelectItem value="dijkstra">Dijkstra</SelectItem>
-          <SelectItem value="q_learning">Q-Learning</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
