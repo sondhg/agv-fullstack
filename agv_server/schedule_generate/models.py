@@ -10,7 +10,7 @@ class Schedule(models.Model):
     parking_node = models.IntegerField()
     storage_node = models.IntegerField()
     workstation_node = models.IntegerField()
-    instruction_set = models.TextField(
+    initial_path = models.TextField(
         default="[]")  # Default value as JSON string
 
     # New fields for collision and deadlock avoidance
