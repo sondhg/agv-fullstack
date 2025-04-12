@@ -11,7 +11,6 @@ import { Schedule } from "@/types/Schedule.types";
 import { CalendarPlus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlertSchedulesGuide } from "./AlertSchedulesGuide";
 import { columnsTableSchedules } from "./columnsTableSchedules";
 
 export function PageSchedules() {
@@ -103,7 +102,6 @@ export function PageSchedules() {
     <div>
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
-        <AlertSchedulesGuide />
         <div className="flex items-center space-x-4">
           {/* Use the AlgorithmSelect component */}
           <AlgorithmSelect

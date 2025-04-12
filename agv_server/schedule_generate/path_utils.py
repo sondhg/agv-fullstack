@@ -71,23 +71,23 @@ def get_action(prev_node, current_node, next_node):
 
 def format_instruction_set(path):
     """
-    Generate the instruction set for a given path.
+    Generate the initial path for a given path.
 
     Args:
         path (list): A list of nodes representing the path.
 
     Returns:
-        list: A list of tuples representing the instruction set for the path.
+        list: A list of tuples representing the initial path for the path.
               Each tuple is in the format (from_node, to_node, action).
     """
-    instruction_set = []
+    initial_path = []
     for i in range(1, len(path) - 1):
         prev_node = path[i - 1]
         current_node = path[i]
         next_node = path[i + 1]
         action = get_action(prev_node, current_node, next_node)
-        instruction_set.append((prev_node, current_node, action))
+        initial_path.append((prev_node, current_node, action))
 
-    # Add the final segment to the instruction set
-    instruction_set.append((path[-2], path[-1], "stop"))
-    return instruction_set
+    # Add the final segment to the initial path
+    initial_path.append((path[-2], path[-1], "stop"))
+    return initial_path

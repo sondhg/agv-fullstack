@@ -109,29 +109,79 @@ class UpdateScheduleView(APIView):
             next_point = data.get("next_point")
 
             if current_point is not None and next_point is not None:
+                # Log initial state for debugging
+                print(
+                    f"UpdateScheduleView: Updating schedule {schedule_id} - Move from {current_point} to {next_point}")
+                print(f"Initial state: {ScheduleSerializer(schedule).data}")
+
                 # Update schedule state
                 schedule = ScheduleService.update_schedule_state(
                     schedule, current_point, next_point
                 )
 
+                # Verify update was successful
+                updated_schedule = Schedule.objects.get(
+                    schedule_id=schedule_id)
+                print(
+                    f"After state update: {ScheduleSerializer(updated_schedule).data}")
+
+                # Check if the AGV is waiting and needs to apply for spare points
+                if updated_schedule.state == 2:  # WAITING state
+                    # Check if the next point is in SCP and current point is not
+                    scp = updated_schedule.scp
+                    if isinstance(scp, str):
+                        try:
+                            scp = json.loads(scp)
+                        except json.JSONDecodeError:
+                            scp = []
+
+                    # If the AGV is trying to enter sequential shared points
+                    # and doesn't already have spare points
+                    if next_point in scp and current_point not in scp and not updated_schedule.spare_flag:
+                        print(
+                            f"Schedule {schedule_id} needs to apply for spare points")
+                        spare_points_success = ScheduleService.apply_for_spare_points(
+                            updated_schedule)
+
+                        if spare_points_success:
+                            # Refresh schedule after spare point allocation
+                            updated_schedule = Schedule.objects.get(
+                                schedule_id=schedule_id)
+                            print(
+                                f"Spare points allocated successfully: {ScheduleSerializer(updated_schedule).data}")
+                        else:
+                            print(
+                                f"Failed to allocate spare points for schedule {schedule_id}")
+
                 # Check for deadlocks
                 resolved, deadlocks = DeadlockService.check_and_resolve_deadlocks()
+                print(
+                    f"Deadlock check results - Resolved: {resolved}, Deadlocks: {deadlocks}")
 
                 if deadlocks:
+                    # Refresh schedule one more time to get final state
+                    final_schedule = Schedule.objects.get(
+                        schedule_id=schedule_id)
+
                     return Response(
                         {
                             "message": "Deadlock detected",
                             "deadlocks": deadlocks,
                             "resolved": resolved,
-                            "schedule": ScheduleSerializer(schedule).data
+                            "schedule": ScheduleSerializer(final_schedule).data
                         },
                         status=status.HTTP_409_CONFLICT if not resolved else status.HTTP_200_OK
                     )
 
+                # Refresh schedule one more time to get final state
+                final_schedule = Schedule.objects.get(schedule_id=schedule_id)
+                print(
+                    f"Final schedule state: {ScheduleSerializer(final_schedule).data}")
+
                 return Response(
                     {
                         "message": "Schedule updated successfully",
-                        "schedule": ScheduleSerializer(schedule).data
+                        "schedule": ScheduleSerializer(final_schedule).data
                     },
                     status=status.HTTP_200_OK
                 )
@@ -147,6 +197,8 @@ class UpdateScheduleView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response(
                 {"error": f"An error occurred while updating schedule: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

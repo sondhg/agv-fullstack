@@ -23,6 +23,6 @@ export const API_ENDPOINTS = {
     importConnections: "map/import-connections/",
     importDirections: "map/import-directions/",
     fetchMapData: "map/get/",
-    deleteAllMapData: "map/delete/", // Add this line
+    deleteAllMapData: "map/delete/",
   },
 };

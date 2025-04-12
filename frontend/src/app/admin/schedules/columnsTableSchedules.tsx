@@ -84,9 +84,9 @@ export const columnsTableSchedules = (
     ),
   },
   {
-    accessorKey: "instruction_set",
+    accessorKey: "initial_path",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Instruction Set" />
+      <DataTableColumnHeader column={column} title="Initial path" />
     ),
   },
   {
