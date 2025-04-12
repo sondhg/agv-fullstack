@@ -1,110 +1,85 @@
-import csv
-import io
+"""Views for handling map data operations."""
+import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import MapData, Connection, Direction
-import logging
 from django.views.decorators.http import require_POST
+from .services.map_service import MapService
+from .constants import ErrorMessages, SuccessMessages, LogMessages
 
 logger = logging.getLogger(__name__)
 
-# Define a constant for no direct connection between nodes
-NO_CONNECTION = 10000
-
 
 @csrf_exempt
+@require_POST
 def import_connections(request):
-    if request.method == "POST":
+    """Import connection data from CSV file."""
+    try:
         data = request.body.decode("utf-8")
-        reader = csv.reader(io.StringIO(data))
-        matrix = list(reader)
+        result = MapService.import_connections(data)
 
-        node_count = len(matrix)
-
-        # Update or create map data entry
-        map_data, _ = MapData.objects.get_or_create(id=1)
-        map_data.node_count = node_count
-        map_data.save()
-
-        # Clear old connections
-        Connection.objects.all().delete()
-
-        # Save new connections
-        for i in range(node_count):
-            for j in range(node_count):
-                # Adjust indices to start from 1 instead of 0
-                node1 = i + 1
-                node2 = j + 1
-
-                # Use the constant NO_CONNECTION instead of 10000
-                if node1 != node2 and int(matrix[i][j]) != NO_CONNECTION:
-                    Connection.objects.create(
-                        node1=node1, node2=node2, distance=int(matrix[i][j])
-                    )
-
-        logger.info(f"Imported connections: {Connection.objects.all()}")
-        return JsonResponse({"message": "Connection data imported successfully"}, status=200)
+        if result["success"]:
+            logger.info(LogMessages.IMPORT_CONNECTIONS.format(
+                result["connection_count"]))
+            return JsonResponse({"message": result["message"]}, status=200)
+        else:
+            logger.error(result["message"])
+            return JsonResponse({"error": result["message"]}, status=400)
+    except Exception as e:
+        logger.error(ErrorMessages.IMPORT_ERROR.format(str(e)))
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
+@require_POST
 def import_directions(request):
-    if request.method == "POST":
+    """Import direction data from CSV file."""
+    try:
         data = request.body.decode("utf-8")
-        reader = csv.reader(io.StringIO(data))
-        matrix = list(reader)
+        result = MapService.import_directions(data)
 
-        # Clear old directions
-        Direction.objects.all().delete()
-
-        # Save new directions
-        for i in range(len(matrix)):
-            for j in range(len(matrix[i])):
-                # Adjust indices to start from 1 instead of 0
-                node1 = i + 1
-                node2 = j + 1
-
-                # Only save valid directions (value not equal to 10000)
-                if int(matrix[i][j]) != NO_CONNECTION:
-                    Direction.objects.create(
-                        node1=node1, node2=node2, direction=int(matrix[i][j])
-                    )
-
-        logger.info(f"Imported directions: {Direction.objects.all()}")
-        return JsonResponse({"message": "Direction data imported successfully"}, status=200)
+        if result["success"]:
+            logger.info(LogMessages.IMPORT_DIRECTIONS.format(
+                result["direction_count"]))
+            return JsonResponse({"message": result["message"]}, status=200)
+        else:
+            logger.error(result["message"])
+            return JsonResponse({"error": result["message"]}, status=400)
+    except Exception as e:
+        logger.error(ErrorMessages.IMPORT_ERROR.format(str(e)))
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 def get_map_data(request):
+    """Get all map data including nodes, connections, and directions."""
     try:
-        nodes = list(Direction.objects.values_list(
-            "node1", flat=True).distinct())
-        connections = list(Connection.objects.values())
-        directions = list(Direction.objects.values())
+        result = MapService.get_map_data()
 
-        if not nodes or not connections:
-            return JsonResponse(
-                {"message": "Map data is incomplete or missing."}, status=400
-            )
+        if result["success"]:
+            return JsonResponse(result["data"], status=200)
+        else:
+            # Return a 206 Partial Content status if we have partial data
+            status_code = 206 if "available" in result else 404
+            return JsonResponse(result, status=status_code)
 
-        return JsonResponse(
-            {"nodes": nodes, "connections": connections, "directions": directions},
-            status=200,
-        )
     except Exception as e:
+        logger.error(str(e))
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @require_POST
 def delete_all_map_data(request):
+    """Delete all map data."""
     try:
-        # Delete all map data
-        Connection.objects.all().delete()
-        Direction.objects.all().delete()
-        MapData.objects.all().delete()
+        result = MapService.delete_all_data()
 
-        logger.info("All map data deleted successfully.")
-        return JsonResponse({"message": "All map data deleted successfully"}, status=200)
+        if result["success"]:
+            logger.info(LogMessages.DELETE_SUCCESS)
+            return JsonResponse(result, status=200)
+        else:
+            logger.error(result["message"])
+            return JsonResponse({"error": result["message"]}, status=500)
     except Exception as e:
-        logger.error(f"Error deleting map data: {str(e)}")
+        logger.error(LogMessages.DELETE_ERROR.format(str(e)))
         return JsonResponse({"error": str(e)}, status=500)
