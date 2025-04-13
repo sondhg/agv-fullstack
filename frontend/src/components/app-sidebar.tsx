@@ -12,7 +12,6 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import {
   CalendarDays,
-  Car,
   ChartLine,
   FlaskConical,
   GalleryThumbnails,
@@ -48,11 +47,6 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "Dashboard",
-          url: "/admin/dashboard",
-          icon: ChartLine,
-        },
-        {
           title: "Orders",
           url: "/admin/orders",
           icon: ListOrdered,
@@ -63,14 +57,14 @@ const data = {
           icon: CalendarDays,
         },
         {
-          title: "AGVs",
-          url: "/admin/agvs",
-          icon: Car,
-        },
-        {
           title: "Map",
           url: "/admin/map",
           icon: Map,
+        },
+        {
+          title: "Dashboard",
+          url: "/admin/dashboard",
+          icon: ChartLine,
         },
       ],
     },

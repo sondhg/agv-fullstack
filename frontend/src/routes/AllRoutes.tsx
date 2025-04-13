@@ -1,4 +1,3 @@
-import { PageAGVs } from "@/app/admin/AGVs/PageAGVs";
 import { PageDashboard } from "@/app/admin/dashboard/PageDashboard";
 import { PageMap } from "@/app/admin/map/PageMap";
 import { PageOrders } from "@/app/admin/orders/PageOrders";
@@ -25,7 +24,6 @@ export function AllRoutes() {
               <Route path="dashboard-demo" element={<PageDashboardDemo />} />
             </Route>
             <Route path="/admin" element={<PrivateRoute />}>
-              <Route path="agvs" element={<PageAGVs />} />
               <Route path="orders" element={<PageOrders />} />
               <Route path="schedules" element={<PageSchedules />} />
               <Route path="dashboard" element={<PageDashboard />} />
