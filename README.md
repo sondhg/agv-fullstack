@@ -1,45 +1,52 @@
-# How to run AGV web app
+# AGV System Web Application
 
-Pre-requisite: [Docker Desktop](https://www.docker.com/products/docker-desktop) must be installed on your machine.
+This web application implements scheduling of a multi-AGV (Automated Guided Vehicle) coordination system for a fixed map layout, based on the Dynamic Spare Point Application (DSPA) algorithm.
 
-## 1. Steps to run the app using Docker
+## Overview
 
-### 1.1. First time setup
+The system coordinates multiple AGVs to efficiently deliver materials from storage locations to workstations while avoiding collisions and deadlocks. Key features include:
 
-Clone my code
+- Task assignment and dispatching by a central controller. In other words, users send orders, and the server generates smart schedules for AGVs. Schedules can be updated in real-time if needed.
+- Local control of individual AGVs. Since I do not have physical AGVs, I will eventually create a simple simulation to represent the AGVs for testing position updates.
+- Collision avoidance through point reservation
+- Deadlock resolution using dynamic spare points
+- Real-time monitoring and visualization of AGV movements
 
-```bash
-git clone https://github.com/sondhg/agv-fullstack.git
-cd agv-fullstack
-```
+## Core Concepts
 
-All later steps should be run in the `agv-fullstack` directory.
+The system implements several key algorithms from the research paper:
 
-Run the app
+1. Task Dispatching (Algorithm 1) - Central controller assigns tasks and calculates paths
+2. Local Control Policy (Algorithm 2) - Individual AGV movement control and collision avoidance
+3. Deadlock Resolution (Algorithm 3) - Central controller detects and resolves deadlocks
+4. Spare Point Allocation (Algorithm 4) - Assigns temporary detour points to resolve conflicts
 
-```bash
-docker compose up --build -d
-```
+## System Architecture
 
-The first time you run this web app, it will take a few minutes. Just wait until the app is up and running. If you wait for a while and error messages are shown in the terminal, press `Ctrl+C` to stop the process and run `docker compose up -d` again.
+The application consists of:
 
-### 1.2. Stop the app
+- Frontend UI for visualization and control
+- Backend server implementing the control algorithms
+- Database for storing system state and configuration
+- HTTP and WebSocket for communication between the frontend and backend.
+- MQTT for communication between the AGV simulation and the backend.
 
-```bash
-docker compose down
-```
+## Key Features
 
-Later, if you want to run the app again, just run `docker compose up -d`.
+- Map layout
+- Task creation and assignment interface
+- Real-time status monitoring
+- Configuration of warehouse layout and AGV parameters
+- Visualization of collision/deadlock resolution
 
-### 1.3. Get code changes from GitHub and rebuild the app
+## Implementation Details
 
-```bash
-git pull origin main
-docker compose down
-docker compose up --build -d
-```
+The system models the warehouse as a graph where:
 
-## 2. Access the app
+- Nodes represent storage locations, workstations, and guide points
+- Edges represent valid paths between nodes
+- AGVs move along edges between nodes
+- Point reservation prevents collisions
+- Spare points provide temporary detour locations
 
-- Open your browser and go to [http://localhost:5173](http://localhost:5173)
-- Follow instructions on the Home page to use the app.
+This implementation aims to demonstrate the practical application of the DSPA algorithm in a real warehouse environment while providing an intuitive interface for monitoring and control.
