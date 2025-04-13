@@ -2,6 +2,8 @@
 
 This web application implements scheduling of a multi-AGV (Automated Guided Vehicle) coordination system for a fixed map layout, based on the Dynamic Spare Point Application (DSPA) algorithm.
 
+The main purpose is to implement ideas in the paper "A Dynamic Spare Point Application Based Coordination for Multi-AGV Systems in a WIP Warehouse Environment" as in file `algorithms-pseudocode.tex` to the web application.
+
 ## Overview
 
 The system coordinates multiple AGVs to efficiently deliver materials from storage locations to workstations while avoiding collisions and deadlocks. Key features include:

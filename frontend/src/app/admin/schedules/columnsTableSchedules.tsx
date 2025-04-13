@@ -90,6 +90,12 @@ export const columnsTableSchedules = (
     ),
   },
   {
+    accessorKey: "residual_path",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Residual Path" />
+    ),
+  },
+  {
     accessorKey: "cp", // Shared Points
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="CP" />
@@ -111,6 +117,20 @@ export const columnsTableSchedules = (
       return (
         <pre className="whitespace-pre-wrap text-sm">
           {JSON.stringify(spData, null, 2)}
+        </pre>
+      );
+    },
+  },
+  {
+    accessorKey: "traveling_info",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Traveling Info" />
+    ),
+    cell: ({ row }) => {
+      const travelingInfo = row.getValue("traveling_info");
+      return (
+        <pre className="whitespace-pre-wrap text-sm">
+          {JSON.stringify(travelingInfo, null, 2)}
         </pre>
       );
     },

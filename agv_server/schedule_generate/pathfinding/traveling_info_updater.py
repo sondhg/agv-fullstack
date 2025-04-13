@@ -1,29 +1,32 @@
 class TravelingInfoUpdater:
-    """Handles updates to the traveling information of AGVs."""
+    """Updates traveling info for AGVs based on their current and next positions."""
 
     @staticmethod
-    def update_traveling_info(schedule, current_point, next_point):
+    def update_traveling_info(current_point: int, next_point: int, residual_path: list) -> tuple:
         """
-        Update the traveling information for a given schedule.
-
+        Update the traveling info and residual path for an AGV.
+        
         Args:
-            schedule (Schedule): The schedule object to update.
-            current_point (int): The current point of the AGV.
-            next_point (int): The next point the AGV will visit.
-
+            current_point (int): The current point of the AGV
+            next_point (int): The next point the AGV wants to move to
+            residual_path (list): The current residual path
+            
         Returns:
-            dict: The updated traveling information.
+            tuple: (new_traveling_info, new_residual_path)
         """
-        traveling_info = schedule.traveling_info or {}
-
-        # Update traveling information
-        traveling_info["v_c"] = current_point  # Current point
-        traveling_info["v_n"] = next_point  # Next point
-        # Reserved point (default to next point)
-        traveling_info["v_r"] = next_point
-
-        # Save the updated traveling information to the schedule
-        schedule.traveling_info = traveling_info
-        schedule.save()
-
-        return traveling_info
+        # Create new traveling info
+        new_traveling_info = {
+            "v_c": current_point,
+            "v_n": next_point,
+            "v_r": next_point  # Initially set v_r = v_n, may be updated later
+        }
+        
+        # Update residual path - remove all points up to and including current_point
+        try:
+            current_idx = residual_path.index(current_point)
+            new_residual_path = residual_path[current_idx + 1:]
+        except ValueError:
+            # If current_point not found in path, keep existing path
+            new_residual_path = residual_path
+            
+        return new_traveling_info, new_residual_path

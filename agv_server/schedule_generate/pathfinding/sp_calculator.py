@@ -39,16 +39,14 @@ class SpCalculator:
         
         # For each sequential shared point
         for point in scp:
-            # Find free points for this shared point
-            free_points = self._get_free_points(point, occupied_points)
-            
-            if free_points:
-                # Choose the nearest free point (minimum distance)
-                nearest_free_point = self._find_nearest_free_point(point, free_points)
-                sp[str(point)] = nearest_free_point
-            else:
+            # Find free points for this shared point using BFS
+            nearest_free = self.find_nearest_free_point(point, occupied_points)
+            if nearest_free is None:
                 # If any point doesn't have free points, return empty set (allocation failed)
                 return {}
+            
+            free_point, _ = nearest_free
+            sp[str(point)] = free_point
                 
         return sp
         
@@ -66,7 +64,7 @@ class SpCalculator:
         """
         free_points = []
         
-        # Get all neighboring points
+        # Get all neighboring points from adjacency matrix
         neighbors = self.adjacency_matrix.get(point, {})
         
         # Filter out occupied points
@@ -146,21 +144,40 @@ class SpCalculator:
         if point not in occupied_points and point not in visited:
             return (point, 0)
         
+        # Get immediate neighbors first
+        direct_neighbors = []
+        for neighbor, distance in self.adjacency_matrix.get(point, {}).items():
+            if neighbor not in occupied_points and neighbor not in visited:
+                direct_neighbors.append((neighbor, distance))
+        
+        # If we have direct free neighbors, return the closest one
+        if direct_neighbors:
+            return min(direct_neighbors, key=lambda x: x[1])
+        
+        # If no direct free neighbors, do a full BFS
         visited.add(point)
-        queue = [(point, 0)]  # (node, distance)
+        queue = [(point, 0)]
+        visited_with_distance = {point: 0}
+        
         while queue:
-            current, distance = queue.pop(0)
+            current, curr_distance = queue.pop(0)
             
-            # Check neighbors
-            for neighbor in self.adjacency_matrix[current]:
-                if neighbor not in visited:
-                    visited.add(neighbor)
+            # Check all neighbors
+            for neighbor, edge_distance in self.adjacency_matrix.get(current, {}).items():
+                total_distance = curr_distance + edge_distance
+                
+                # Only process if we haven't seen this point or found a shorter path
+                if neighbor not in visited_with_distance or total_distance < visited_with_distance[neighbor]:
+                    visited_with_distance[neighbor] = total_distance
                     
-                    # If neighbor is free, return it
+                    # If neighbor is free, add to candidates
                     if neighbor not in occupied_points:
-                        return (neighbor, distance + 1)
+                        return (neighbor, total_distance)
                     
                     # Otherwise, add to queue for further exploration
-                    queue.append((neighbor, distance + 1))
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        queue.append((neighbor, total_distance))
+                        queue.sort(key=lambda x: x[1])  # Keep queue sorted by distance
         
         return None  # No free point found

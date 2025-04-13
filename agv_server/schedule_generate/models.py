@@ -12,6 +12,8 @@ class Schedule(models.Model):
     workstation_node = models.IntegerField()
     initial_path = models.TextField(
         default="[]")  # Default value as JSON string
+    residual_path = models.TextField(
+        default="[]")  # Remaining path to traverse
 
     # New fields for collision and deadlock avoidance
     cp = models.JSONField(default=list)  # Shared points (CP)

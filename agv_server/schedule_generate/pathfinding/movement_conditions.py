@@ -58,13 +58,13 @@ class MovementConditions:
         # The next point should be in the sequential shared points set
         in_scp = next_point in scp
         
-        # No point in SCP should be reserved by an AGV without spare points (F^j = 0)
-        no_scp_point_reserved_by_no_spare = all(point not in reserved_by_no_spare for point in scp)
+        # The next point should not be reserved by an AGV without spare points
+        next_point_not_reserved_by_no_spare = next_point not in reserved_by_no_spare
         
         # The next point should not be reserved by any other AGV
         not_reserved = next_point not in reserved_points
         
-        return in_scp and no_scp_point_reserved_by_no_spare and not_reserved
+        return in_scp and next_point_not_reserved_by_no_spare and not_reserved
 
     @staticmethod
     def evaluate_condition_3(next_point, scp, reserved_points, reserved_by_no_spare, spare_points):

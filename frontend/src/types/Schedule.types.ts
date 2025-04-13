@@ -10,6 +10,7 @@ export const CreateScheduleZod = z.object({
   storage_node: z.number(),
   workstation_node: z.number(),
   initial_path: z.string(),
+  residual_path: z.string(),
   cp: z.string().optional(),
   scp: z.string().optional(),
   sp: z.record(z.string(), z.number()).optional(), // Simplified SP structure
@@ -36,6 +37,7 @@ export interface Schedule {
   storage_node: number;
   workstation_node: number;
   initial_path: string;
+  residual_path: string;
   cp?: string;
   scp?: string;
   sp?: Record<string, number>; // Simplified SP structure

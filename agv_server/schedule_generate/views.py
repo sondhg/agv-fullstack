@@ -15,7 +15,7 @@ from .pathfinding.traveling_info_updater import TravelingInfoUpdater
 from .pathfinding.movement_conditions import MovementConditions
 from .services.schedule_service import ScheduleService
 from .services.deadlock_service import DeadlockService
-from .constants import ErrorMessages, SuccessMessages, DefaultValues
+from .constants import ErrorMessages, SuccessMessages, DefaultValues, AGVState
 
 
 class GenerateSchedulesView(APIView):
@@ -109,25 +109,14 @@ class UpdateScheduleView(APIView):
             next_point = data.get("next_point")
 
             if current_point is not None and next_point is not None:
-                # Log initial state for debugging
-                print(
-                    f"UpdateScheduleView: Updating schedule {schedule_id} - Move from {current_point} to {next_point}")
-                print(f"Initial state: {ScheduleSerializer(schedule).data}")
-
                 # Update schedule state
-                schedule = ScheduleService.update_schedule_state(
+                updated_schedule = ScheduleService.update_schedule_state(
                     schedule, current_point, next_point
                 )
 
-                # Verify update was successful
-                updated_schedule = Schedule.objects.get(
-                    schedule_id=schedule_id)
-                print(
-                    f"After state update: {ScheduleSerializer(updated_schedule).data}")
-
-                # Check if the AGV is waiting and needs to apply for spare points
-                if updated_schedule.state == 2:  # WAITING state
-                    # Check if the next point is in SCP and current point is not
+                # If the AGV is waiting and trying to enter sequential shared points,
+                # try to allocate spare points
+                if updated_schedule.state == AGVState.WAITING:
                     scp = updated_schedule.scp
                     if isinstance(scp, str):
                         try:
@@ -137,9 +126,7 @@ class UpdateScheduleView(APIView):
 
                     # If the AGV is trying to enter sequential shared points
                     # and doesn't already have spare points
-                    if next_point in scp and current_point not in scp and not updated_schedule.spare_flag:
-                        print(
-                            f"Schedule {schedule_id} needs to apply for spare points")
+                    if next_point in scp and not updated_schedule.spare_flag:
                         spare_points_success = ScheduleService.apply_for_spare_points(
                             updated_schedule)
 
@@ -147,41 +134,30 @@ class UpdateScheduleView(APIView):
                             # Refresh schedule after spare point allocation
                             updated_schedule = Schedule.objects.get(
                                 schedule_id=schedule_id)
-                            print(
-                                f"Spare points allocated successfully: {ScheduleSerializer(updated_schedule).data}")
-                        else:
-                            print(
-                                f"Failed to allocate spare points for schedule {schedule_id}")
 
                 # Check for deadlocks
                 resolved, deadlocks = DeadlockService.check_and_resolve_deadlocks()
-                print(
-                    f"Deadlock check results - Resolved: {resolved}, Deadlocks: {deadlocks}")
 
                 if deadlocks:
-                    # Refresh schedule one more time to get final state
-                    final_schedule = Schedule.objects.get(
-                        schedule_id=schedule_id)
-
+                    # Refresh schedule one more time to get final state after deadlock resolution
+                    final_schedule = Schedule.objects.get(schedule_id=schedule_id)
+                    
+                    # Return minimal required data for AGV
                     return Response(
                         {
-                            "message": "Deadlock detected",
-                            "deadlocks": deadlocks,
-                            "resolved": resolved,
-                            "schedule": ScheduleSerializer(final_schedule).data
+                            "can_move": final_schedule.state == AGVState.MOVING,
+                            "next_position": final_schedule.traveling_info["v_r"],
+                            "state": final_schedule.state
                         },
-                        status=status.HTTP_409_CONFLICT if not resolved else status.HTTP_200_OK
+                        status=status.HTTP_200_OK
                     )
 
-                # Refresh schedule one more time to get final state
-                final_schedule = Schedule.objects.get(schedule_id=schedule_id)
-                print(
-                    f"Final schedule state: {ScheduleSerializer(final_schedule).data}")
-
+                # Return minimal required data for AGV
                 return Response(
                     {
-                        "message": "Schedule updated successfully",
-                        "schedule": ScheduleSerializer(final_schedule).data
+                        "can_move": updated_schedule.state == AGVState.MOVING,
+                        "next_position": updated_schedule.traveling_info["v_r"],
+                        "state": updated_schedule.state
                     },
                     status=status.HTTP_200_OK
                 )
