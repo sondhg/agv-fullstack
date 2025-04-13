@@ -1,5 +1,4 @@
-from typing import List, Dict, Any, Optional
-from django.db.models import QuerySet
+from typing import List, Dict, Any
 from order_data.models import Order
 from map_data.models import Direction, Connection
 from ..models import Schedule
