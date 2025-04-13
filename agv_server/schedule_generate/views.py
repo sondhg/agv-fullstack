@@ -1,21 +1,11 @@
-from .tasks.deadlock_detector import DeadlockDetector
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Schedule
 from .serializers import ScheduleSerializer
-from order_data.models import Order
 from rest_framework.generics import ListAPIView
-from map_data.models import Direction, Connection
-import json
-from .pathfinding.factory import PathfindingFactory
-from .pathfinding.cp_scp_calculator import CpScpCalculator
-from .pathfinding.sp_calculator import SpCalculator
-from .pathfinding.traveling_info_updater import TravelingInfoUpdater
-from .pathfinding.movement_conditions import MovementConditions
 from .services.schedule_service import ScheduleService
-from .services.deadlock_service import DeadlockService
-from .constants import ErrorMessages, SuccessMessages, DefaultValues, AGVState
+from .constants import ErrorMessages, SuccessMessages, DefaultValues
 
 
 class GenerateSchedulesView(APIView):
@@ -100,82 +90,4 @@ class BulkDeleteSchedulesView(APIView):
 
 
 class UpdateScheduleView(APIView):
-    def put(self, request, schedule_id):
-        try:
-            schedule = Schedule.objects.get(schedule_id=schedule_id)
-            data = request.data
-
-            current_point = data.get("current_point")
-            next_point = data.get("next_point")
-
-            if current_point is not None and next_point is not None:
-                # Update schedule state
-                updated_schedule = ScheduleService.update_schedule_state(
-                    schedule, current_point, next_point
-                )
-
-                # If the AGV is waiting and trying to enter sequential shared points,
-                # try to allocate spare points
-                if updated_schedule.state == AGVState.WAITING:
-                    scp = updated_schedule.scp
-                    if isinstance(scp, str):
-                        try:
-                            scp = json.loads(scp)
-                        except json.JSONDecodeError:
-                            scp = []
-
-                    # If the AGV is trying to enter sequential shared points
-                    # and doesn't already have spare points
-                    if next_point in scp and not updated_schedule.spare_flag:
-                        spare_points_success = ScheduleService.apply_for_spare_points(
-                            updated_schedule)
-
-                        if spare_points_success:
-                            # Refresh schedule after spare point allocation
-                            updated_schedule = Schedule.objects.get(
-                                schedule_id=schedule_id)
-
-                # Check for deadlocks
-                resolved, deadlocks = DeadlockService.check_and_resolve_deadlocks()
-
-                if deadlocks:
-                    # Refresh schedule one more time to get final state after deadlock resolution
-                    final_schedule = Schedule.objects.get(schedule_id=schedule_id)
-                    
-                    # Return minimal required data for AGV
-                    return Response(
-                        {
-                            "can_move": final_schedule.state == AGVState.MOVING,
-                            "next_position": final_schedule.traveling_info["v_r"],
-                            "state": final_schedule.state
-                        },
-                        status=status.HTTP_200_OK
-                    )
-
-                # Return minimal required data for AGV
-                return Response(
-                    {
-                        "can_move": updated_schedule.state == AGVState.MOVING,
-                        "next_position": updated_schedule.traveling_info["v_r"],
-                        "state": updated_schedule.state
-                    },
-                    status=status.HTTP_200_OK
-                )
-            else:
-                return Response(
-                    {"error": "Missing current_point or next_point in request"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-        except Schedule.DoesNotExist:
-            return Response(
-                {"error": f"Schedule {schedule_id} does not exist."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return Response(
-                {"error": f"An error occurred while updating schedule: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+    pass

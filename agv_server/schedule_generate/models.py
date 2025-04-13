@@ -11,9 +11,11 @@ class Schedule(models.Model):
     storage_node = models.IntegerField()
     workstation_node = models.IntegerField()
     initial_path = models.TextField(
-        default="[]")  # Default value as JSON string
+        # P_i^j: Path of AGV i performing task j from origin parking point through pickup/delivery to final parking point. Once generated, it will not be changed.
+        default="[]")
     residual_path = models.TextField(
-        default="[]")  # Remaining path to traverse
+        # Pi_i: Sequence of remaining points to be visited by AGV i before finishing current task. It will be updated as the AGV moves.
+        default="[]")
 
     # New fields for collision and deadlock avoidance
     cp = models.JSONField(default=list)  # Shared points (CP)
