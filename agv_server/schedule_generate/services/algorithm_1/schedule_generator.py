@@ -100,7 +100,8 @@ class ScheduleGenerator:
             serializer.save()
             return serializer.data
         else:
-            print(f"Failed to serialize schedule for task {schedule_data['schedule_id']}: {serializer.errors}")
+            print(
+                f"Failed to serialize schedule for task {schedule_data['schedule_id']}: {serializer.errors}")
             return None
 
     def validate_task_data(self, task: Order, valid_nodes: List[int]) -> bool:
