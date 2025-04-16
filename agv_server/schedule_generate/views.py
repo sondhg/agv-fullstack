@@ -4,7 +4,7 @@ from rest_framework import status
 from .models import Schedule
 from .serializers import ScheduleSerializer
 from rest_framework.generics import ListAPIView
-from .services.schedule_service import ScheduleService
+from .services.algorithm1 import TaskDispatcher  # Import new TaskDispatcher
 from .constants import ErrorMessages, SuccessMessages, DefaultValues
 
 
@@ -15,8 +15,9 @@ class GenerateSchedulesView(APIView):
             algorithm = request.data.get(
                 "algorithm", DefaultValues.DEFAULT_ALGORITHM).lower()
 
-            # Generate schedules using the service
-            schedules = ScheduleService.generate_schedules(algorithm)
+            # Use TaskDispatcher instead of ScheduleService to generate schedules
+            dispatcher = TaskDispatcher()
+            schedules = dispatcher.dispatch_tasks(algorithm)
 
             if not schedules:
                 return Response(
