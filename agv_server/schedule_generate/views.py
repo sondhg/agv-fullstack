@@ -4,7 +4,7 @@ from rest_framework import status
 from .models import Schedule
 from .serializers import ScheduleSerializer
 from rest_framework.generics import ListAPIView
-from .services.algorithm1 import TaskDispatcher  # Import new TaskDispatcher
+from .services.algorithm_1 import TaskDispatcher  # Updated import path
 from .constants import ErrorMessages, SuccessMessages, DefaultValues
 
 
