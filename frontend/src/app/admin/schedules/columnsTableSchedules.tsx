@@ -41,48 +41,48 @@ export const columnsTableSchedules = (
       return <div className="font-medium">{schedule_id}</div>;
     },
   },
-  {
-    accessorKey: "order_id",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Order ID" />
-    ),
-  },
-  {
-    accessorKey: "order_date",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Order Date" />
-    ),
-  },
-  {
-    accessorKey: "start_time",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Start Time" />
-    ),
-  },
+  // {
+  //   accessorKey: "order_id",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Order ID" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "order_date",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Order Date" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "start_time",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Start Time" />
+  //   ),
+  // },
   // {
   //   accessorKey: "est_end_time",
   //   header: ({ column }) => (
   //     <DataTableColumnHeader column={column} title="Estimated End Time" />
   //   ),
   // },
-  {
-    accessorKey: "parking_node",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Parking Node" />
-    ),
-  },
-  {
-    accessorKey: "storage_node",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Storage Node" />
-    ),
-  },
-  {
-    accessorKey: "workstation_node",
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Workstation Node" />
-    ),
-  },
+  // {
+  //   accessorKey: "parking_node",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Parking Node" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "storage_node",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Storage Node" />
+  //   ),
+  // },
+  // {
+  //   accessorKey: "workstation_node",
+  //   header: ({ column }) => (
+  //     <DataTableColumnHeader column={column} title="Workstation Node" />
+  //   ),
+  // },
   {
     accessorKey: "initial_path",
     header: ({ column }) => (

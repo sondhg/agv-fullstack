@@ -90,5 +90,5 @@ class BulkDeleteSchedulesView(APIView):
             )
 
 
-class UpdateScheduleView(APIView):
+class SimulateAgvUpdateCurrentNodeView(APIView):
     pass
