@@ -13,6 +13,8 @@ class Agv(models.Model):
     """
     # Basic AGV information
     agv_id = models.BigIntegerField(primary_key=True)
+    preferred_parking_node = models.IntegerField(default=1,
+                                                 help_text="Preferred parking point (v_p^i)")
 
     # Current physical state
     current_node = models.IntegerField(help_text="Current position (v_c^i)")
