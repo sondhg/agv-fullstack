@@ -1,6 +1,8 @@
 import { AlgorithmSelect } from "@/app/admin/schedules/AlgorithmSelect";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { MassDeleteButton } from "@/components/ui/mass-delete-button";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   deleteSchedule,
   generateSchedules,
@@ -8,7 +10,7 @@ import {
   bulkDeleteSchedules,
 } from "@/services/APIs/schedulesAPI";
 import { Schedule } from "@/types/Schedule.types";
-import { CalendarPlus, Trash2 } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableSchedules } from "./columnsTableSchedules";
@@ -16,20 +18,10 @@ import { columnsTableSchedules } from "./columnsTableSchedules";
 export function PageSchedules() {
   const [listData, setListData] = useState<Schedule[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedAlgorithm, setSelectedAlgorithm] =
-    useState<string>("dijkstra"); // Default algorithm
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>("dijkstra");
+  const { rowSelection, setRowSelection, selectedIds: selectedScheduleIds, resetSelection } = 
+    useTableSelection<Schedule>(listData, "schedule_id");
 
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedScheduleIds, setSelectedScheduleIds] = useState<number[]>([]);
-
-  // Add this effect to convert row selection to IDs
-  useEffect(() => {
-    const selectedIds = Object.keys(rowSelection)
-      .filter((key) => rowSelection[key])
-      .map((rowIndex) => listData[parseInt(rowIndex)].schedule_id);
-
-    setSelectedScheduleIds(selectedIds);
-  }, [rowSelection, listData]);
   const fetchListData = async () => {
     const data = await getSchedules();
     setListData(data);
@@ -38,9 +30,9 @@ export function PageSchedules() {
   const handleCreateSchedule = async () => {
     try {
       setIsCreating(true);
-      await generateSchedules(selectedAlgorithm); // Pass the selected algorithm
+      await generateSchedules(selectedAlgorithm);
       toast.success("Schedules generated successfully");
-      await fetchListData(); // Refresh the list after generating
+      await fetchListData();
     } catch (error) {
       if (error instanceof Response) {
         const errorData = await error.json();
@@ -58,7 +50,7 @@ export function PageSchedules() {
     try {
       await deleteSchedule(schedule_id);
       toast.success("Schedule deleted successfully");
-      await fetchListData(); // Refresh the list after deletion
+      await fetchListData();
     } catch (error) {
       if (error instanceof Response) {
         const errorData = await error.json();
@@ -67,30 +59,6 @@ export function PageSchedules() {
         toast.error("Failed to delete schedule. Please try again.");
       }
       console.error("Failed to delete schedule:", error);
-    }
-  };
-
-  const handleMassDelete = async () => {
-    if (selectedScheduleIds.length === 0) {
-      toast.error("Please select at least one schedule to delete");
-      return;
-    }
-
-    try {
-      await bulkDeleteSchedules(selectedScheduleIds);
-      toast.success(
-        `${selectedScheduleIds.length} schedules deleted successfully`,
-      );
-      await fetchListData();
-      setRowSelection({});
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json();
-        toast.error(errorData.error || "Failed to delete schedules");
-      } else {
-        toast.error("Failed to delete schedules");
-      }
-      console.error("Mass delete error:", error);
     }
   };
 
@@ -103,7 +71,6 @@ export function PageSchedules() {
       <div className="space-y-5">
         <h2 className="text-3xl font-bold">Schedules</h2>
         <div className="flex items-center space-x-4">
-          {/* Use the AlgorithmSelect component */}
           <AlgorithmSelect
             selectedAlgorithm={selectedAlgorithm}
             onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
@@ -113,21 +80,21 @@ export function PageSchedules() {
             <CalendarPlus className="mr-2 h-4 w-4" />
             {isCreating ? "Generating Schedules..." : "Create Schedules"}
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleMassDelete}
-            disabled={selectedScheduleIds.length === 0}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Mass Delete Schedules
-          </Button>
+          
+          <MassDeleteButton
+            selectedIds={selectedScheduleIds}
+            onDelete={bulkDeleteSchedules}
+            itemName="Schedules"
+            onSuccess={fetchListData}
+            resetSelection={resetSelection}
+          />
         </div>
         <DataTable
           data={listData}
           columns={columnsTableSchedules(handleClickBtnDelete)}
           filterSearchByColumn="order_date"
-          onRowSelectionChange={setRowSelection} // Add this
-          rowSelection={rowSelection} // Add this
+          onRowSelectionChange={setRowSelection}
+          rowSelection={rowSelection}
         />
       </div>
     </div>

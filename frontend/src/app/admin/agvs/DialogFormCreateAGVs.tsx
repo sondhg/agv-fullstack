@@ -19,13 +19,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useFormDialog } from "@/hooks/useFormDialog";
 import { createAGV } from "@/services/APIs/agvsAPI";
 import { CreateAGVDto } from "@/types/AGV.types";
 import { convertStringToNumber } from "@/utils/conversionUtils";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CirclePlus } from "lucide-react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -47,49 +45,26 @@ export function DialogFormCreateAGVs({
   setIsDialogOpen,
   fetchListData,
 }: FormCreateAGVsProps) {
-  const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const { form, handleSubmit } = useFormDialog({
     defaultValues: {
       agv_id: "",
       preferred_parking_node: "",
     },
-    mode: "onChange",
+    schema: formSchema,
+    onSubmit: async (values) => {
+      const createDto: CreateAGVDto = {
+        agv_id: convertStringToNumber(values.agv_id),
+        preferred_parking_node: convertStringToNumber(values.preferred_parking_node),
+      };
+      await createAGV(createDto);
+    },
+    successMessage: "AGV created successfully",
+    errorMessage: "AGV creation failed",
+    onSuccess: () => {
+      fetchListData();
+      setIsDialogOpen(false);
+    },
   });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const createDto: CreateAGVDto = {
-      agv_id: convertStringToNumber(values.agv_id),
-      preferred_parking_node: convertStringToNumber(
-        values.preferred_parking_node,
-      ),
-    };
-
-    try {
-      const data = await createAGV(createDto);
-      if (data) {
-        toast({
-          title: "AGV created successfully",
-          description: (
-            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-              <code className="text-white">
-                {JSON.stringify(data, null, 2)}
-              </code>
-            </pre>
-          ),
-        });
-        fetchListData();
-        setIsDialogOpen(false);
-      }
-    } catch (error) {
-      console.error("Error creating AGV:", error);
-      toast({
-        title: "AGV creation failed",
-        description: "That AGV ID already exists.",
-      });
-    }
-  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -107,7 +82,7 @@ export function DialogFormCreateAGVs({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <FormField
               control={form.control}
               name="agv_id"

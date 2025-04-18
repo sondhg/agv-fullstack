@@ -20,16 +20,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useFormDialog } from "@/hooks/useFormDialog";
 import { createOrder } from "@/services/APIs/ordersAPI";
 import { CreateOrderDto } from "@/types/Order.types";
 import { convertStringToNumber } from "@/utils/conversionUtils";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CirclePlus } from "lucide-react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-// import { vi } from "date-fns/locale";
 
 const formSchema = z.object({
   order_id: z.string().min(1).regex(/^\d+$/, { message: "Must be integer" }),
@@ -66,10 +62,7 @@ export function DialogFormCreateOrders({
   setIsDialogOpen,
   fetchListData,
 }: FormCreateOrdersProps) {
-  const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const { form, handleSubmit } = useFormDialog({
     defaultValues: {
       order_id: "",
       order_date: "",
@@ -78,44 +71,25 @@ export function DialogFormCreateOrders({
       storage_node: "",
       workstation_node: "",
     },
-    mode: "onChange",
+    schema: formSchema,
+    onSubmit: async (values) => {
+      const createDto: CreateOrderDto = {
+        order_id: convertStringToNumber(values.order_id),
+        order_date: values.order_date,
+        start_time: values.start_time,
+        parking_node: convertStringToNumber(values.parking_node),
+        storage_node: convertStringToNumber(values.storage_node),
+        workstation_node: convertStringToNumber(values.workstation_node),
+      };
+      await createOrder(createDto);
+    },
+    successMessage: "Order created successfully",
+    errorMessage: "Order creation failed",
+    onSuccess: () => {
+      fetchListData();
+      setIsDialogOpen(false);
+    },
   });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const createDto: CreateOrderDto = {
-      order_id: convertStringToNumber(values.order_id),
-      order_date: values.order_date,
-      start_time: values.start_time,
-      parking_node: convertStringToNumber(values.parking_node),
-      storage_node: convertStringToNumber(values.storage_node),
-      workstation_node: convertStringToNumber(values.workstation_node),
-    };
-
-    try {
-      const data = await createOrder(createDto);
-      if (data) {
-        console.log("data", data);
-        toast({
-          title: "Order created successfully",
-          description: (
-            <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-              <code className="text-white">
-                {JSON.stringify(data, null, 2)}
-              </code>
-            </pre>
-          ),
-        });
-        fetchListData();
-        setIsDialogOpen(false);
-      }
-    } catch (error) {
-      console.log("Error creating order:", error);
-      toast({
-        title: "Order creation failed",
-        description: "That order_id already exist.",
-      });
-    }
-  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -131,7 +105,7 @@ export function DialogFormCreateOrders({
           <DialogDescription>Add inputs for your AGV here.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-4">
               <FormField
                 control={form.control}

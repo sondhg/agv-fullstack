@@ -1,27 +1,18 @@
 import { DataTable } from "@/components/ui/data-table";
+import { MassDeleteButton } from "@/components/ui/mass-delete-button";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import { bulkDeleteAGVs, deleteAGV, getAGVs } from "@/services/APIs/agvsAPI";
 import { AGV } from "@/types/AGV.types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { columnsTableAGVs } from "./columnsTableAGVs";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
 
 export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedAgvIds, setSelectedAgvIds] = useState<number[]>([]);
-
-  // Add effect to convert row selection to IDs
-  useEffect(() => {
-    const selectedIds = Object.keys(rowSelection)
-      .filter((key) => rowSelection[key])
-      .map((rowIndex) => listData[parseInt(rowIndex)].agv_id);
-
-    setSelectedAgvIds(selectedIds);
-  }, [rowSelection, listData]);
+  const { rowSelection, setRowSelection, selectedIds: selectedAgvIds, resetSelection } = 
+    useTableSelection<AGV>(listData, "agv_id");
 
   const fetchListData = async () => {
     const data = await getAGVs();
@@ -39,28 +30,6 @@ export function PageAGVs() {
     }
   };
 
-  const handleMassDelete = async () => {
-    if (selectedAgvIds.length === 0) {
-      toast.error("Please select at least one AGV to delete");
-      return;
-    }
-
-    try {
-      await bulkDeleteAGVs(selectedAgvIds);
-      toast.success(`${selectedAgvIds.length} AGVs deleted successfully`);
-      await fetchListData();
-      setRowSelection({});
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json();
-        toast.error(errorData.error || "Failed to delete AGVs");
-      } else {
-        toast.error("Failed to delete AGVs");
-      }
-      console.error("Mass delete error:", error);
-    }
-  };
-
   useEffect(() => {
     fetchListData();
   }, []);
@@ -74,14 +43,13 @@ export function PageAGVs() {
           setIsDialogOpen={setIsDialogOpen}
           fetchListData={fetchListData}
         />
-        <Button
-          variant="destructive"
-          onClick={handleMassDelete}
-          disabled={selectedAgvIds.length === 0}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Mass Delete AGVs
-        </Button>
+        <MassDeleteButton
+          selectedIds={selectedAgvIds}
+          onDelete={bulkDeleteAGVs}
+          itemName="AGVs"
+          onSuccess={fetchListData}
+          resetSelection={resetSelection}
+        />
       </div>
       <DataTable
         data={listData}

@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
+import { MassDeleteButton } from "@/components/ui/mass-delete-button";
+import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   deleteOrder,
   getOrders,
@@ -8,7 +10,7 @@ import {
 import { handleExportCSV } from "@/services/CSV/csvExport";
 import { useCSVImport } from "@/services/CSV/useCSVImport";
 import { Order } from "@/types/Order.types";
-import { FileDown, FileUp, Trash2 } from "lucide-react";
+import { FileDown, FileUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableOrders } from "./columnsTableOrders";
@@ -19,22 +21,14 @@ import { AlertTravelRoute } from "./AlertTravelRoute";
 export function PageOrders() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<Order[]>([]);
-
-  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-  const [selectedOrderIds, setSelectedOrderIds] = useState<number[]>([]);
-
+  const {
+    rowSelection,
+    setRowSelection,
+    selectedIds: selectedOrderIds,
+    resetSelection,
+  } = useTableSelection<Order>(listData, "order_id");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
   const { handleImportCSV } = useCSVImport();
-
-  // Add this effect to convert row selection to IDs
-  useEffect(() => {
-    const selectedIds = Object.keys(rowSelection)
-      .filter((key) => rowSelection[key])
-      .map((rowIndex) => listData[parseInt(rowIndex)].order_id);
-
-    setSelectedOrderIds(selectedIds);
-  }, [rowSelection, listData]);
 
   const fetchListData = async () => {
     const data = await getOrders();
@@ -42,8 +36,6 @@ export function PageOrders() {
   };
 
   const handleClickBtnDelete = async (order_id: number) => {
-    console.log(">>> delete order with id: ", order_id);
-
     try {
       await deleteOrder(order_id);
       toast.success("Delete order successfully");
@@ -62,29 +54,6 @@ export function PageOrders() {
           fileInputRef.current.value = "";
         }
       });
-    }
-  };
-
-  // Add the mass delete handler (same as before)
-  const handleMassDelete = async () => {
-    if (selectedOrderIds.length === 0) {
-      toast.error("Please select at least one order to delete");
-      return;
-    }
-
-    try {
-      await bulkDeleteOrders(selectedOrderIds);
-      toast.success(`${selectedOrderIds.length} orders deleted successfully`);
-      await fetchListData();
-      setRowSelection({});
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json();
-        toast.error(errorData.error || "Failed to delete orders");
-      } else {
-        toast.error("Failed to delete orders");
-      }
-      console.error("Mass delete error:", error);
     }
   };
 
@@ -122,22 +91,21 @@ export function PageOrders() {
             Export CSV
           </Button>
           <DialogInstructionsCSV />
-          <Button
-            variant="destructive"
-            onClick={handleMassDelete}
-            disabled={selectedOrderIds.length === 0}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Mass Delete Orders
-          </Button>
+          <MassDeleteButton
+            selectedIds={selectedOrderIds}
+            onDelete={bulkDeleteOrders}
+            itemName="Orders"
+            onSuccess={fetchListData}
+            resetSelection={resetSelection}
+          />
         </div>
 
         <DataTable
           data={listData}
           columns={columnsTableOrders(handleClickBtnDelete)}
           filterSearchByColumn="order_date"
-          onRowSelectionChange={setRowSelection} // Add this
-          rowSelection={rowSelection} // Add this
+          onRowSelectionChange={setRowSelection}
+          rowSelection={rowSelection}
         />
       </div>
     </>
