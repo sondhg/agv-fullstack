@@ -11,6 +11,7 @@ import { Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./NotFound";
 import { PrivateRoute } from "./PrivateRoute";
+import { PageAGVs } from "@/app/admin/agvs/PageAGVs";
 
 export function AllRoutes() {
   return (
@@ -28,6 +29,7 @@ export function AllRoutes() {
               <Route path="schedules" element={<PageSchedules />} />
               <Route path="dashboard" element={<PageDashboard />} />
               <Route path="map" element={<PageMap />} />
+              <Route path="agvs" element={<PageAGVs />} />
             </Route>
           </Route>
 

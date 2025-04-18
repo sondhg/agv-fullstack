@@ -23,6 +23,7 @@ import {
   PlaneLanding,
   University,
   UserPlus,
+  Car,
 } from "lucide-react";
 
 // This is sample data.
@@ -65,6 +66,11 @@ const data = {
           title: "Dashboard",
           url: "/admin/dashboard",
           icon: ChartLine,
+        },
+        {
+          title: "AGVs",
+          url: "/admin/agvs",
+          icon: Car,
         },
       ],
     },
