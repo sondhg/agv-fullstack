@@ -24,6 +24,6 @@ urlpatterns = [
         path("orders/", include("order_data.urls")),
         path("map/", include("map_data.urls")),
         path("schedules/", include("schedule_generate.urls")),
-        # path("api/", include("agv_data.urls")),
+        # path("agvs/", include("agv_data.urls")),
     ])),
 ]

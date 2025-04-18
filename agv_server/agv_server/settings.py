@@ -46,9 +46,9 @@ INSTALLED_APPS = [
     'channels',
     'users',
     'order_data',
-    'map_data',  # Add this line
-    'schedule_generate',  # Add this line
-
+    'map_data',
+    'schedule_generate',
+    'agv_data',
 ]
 
 MIDDLEWARE = [
