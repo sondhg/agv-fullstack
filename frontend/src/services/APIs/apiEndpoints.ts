@@ -17,7 +17,10 @@ export const API_ENDPOINTS = {
     logout: "auth/logout/",
   },
   agvs: {
-    base: "agvs/",
+    create: "agvs/create/",
+    get: "agvs/get/",
+    delete: (agvId: number) => `agvs/delete/${agvId}/`,
+    bulkDelete: "agvs/bulk-delete/",
   },
   map: {
     importConnections: "map/import-connections/",

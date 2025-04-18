@@ -17,7 +17,7 @@ class Agv(models.Model):
                                                  help_text="Preferred parking point (v_p^i)")
 
     # Current physical state
-    current_node = models.IntegerField(help_text="Current position (v_c^i)")
+    current_node = models.IntegerField(null=True, help_text="Current position (v_c^i)")
     next_node = models.IntegerField(
         null=True, help_text="Next point to visit (v_n^i)")
     reserved_node = models.IntegerField(
@@ -66,9 +66,16 @@ class Agv(models.Model):
         help_text="Last spare point used to resolve deadlock"
     )
 
+    def save(self, *args, **kwargs):
+        # Set current_node to preferred_parking_node when creating a new AGV
+        if not self.pk and self.current_node is None:  # Only on creation
+            self.current_node = self.preferred_parking_node
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "AGV"
         verbose_name_plural = "AGVs"
+        ordering = ['agv_id']  # Ensure ascending order by agv_id
 
     def __str__(self):
-        return f"AGV {self.agv_id}"
+        return f"AGV {self.agv_id} has been created"
