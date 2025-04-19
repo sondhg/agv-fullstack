@@ -87,10 +87,10 @@ class BulkDeleteSchedulesView(APIView):
                     {"error": ErrorMessages.BULK_DELETE_NO_IDS},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            
+
             # Get all schedules with their assigned AGVs that will be deleted
             schedules = Schedule.objects.filter(schedule_id__in=schedule_ids)
-            
+
             # Reset AGV states for all affected AGVs
             for schedule in schedules:
                 agv = schedule.assigned_agv
@@ -115,7 +115,3 @@ class BulkDeleteSchedulesView(APIView):
                 {"error": f"An error occurred during bulk deletion: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-
-class SimulateAgvUpdateCurrentNodeView(APIView):
-    pass

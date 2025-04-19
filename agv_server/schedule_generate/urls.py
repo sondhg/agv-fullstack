@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import GenerateSchedulesView, ListSchedulesView, DeleteScheduleView, BulkDeleteSchedulesView, SimulateAgvUpdateCurrentNodeView
+from .views import GenerateSchedulesView, ListSchedulesView, DeleteScheduleView, BulkDeleteSchedulesView
 
 urlpatterns = [
     path("generate/", GenerateSchedulesView.as_view(), name="generate_schedules"),
@@ -9,5 +9,5 @@ urlpatterns = [
          DeleteScheduleView.as_view(), name="delete_schedule"),
     path("bulk-delete/", BulkDeleteSchedulesView.as_view(),
          name="bulk_delete_schedules"),
-    
+
 ]
