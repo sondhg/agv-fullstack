@@ -10,20 +10,10 @@ export const CreateScheduleZod = z.object({
   parking_node: z.number(),
   storage_node: z.number(),
   workstation_node: z.number(),
-  initial_path: z.string(),
-  residual_path: z.string(),
-  cp: z.string().optional(),
-  scp: z.string().optional(),
-  sp: z.record(z.string(), z.number()).optional(), // Simplified SP structure
-  state: z.number().optional(),
-  spare_flag: z.boolean().optional(),
-  traveling_info: z
-    .object({
-      v_c: z.number().nullable().optional(),
-      v_n: z.number().nullable().optional(),
-      v_r: z.number().nullable().optional(),
-    })
-    .optional(),
+  initial_path: z.array(z.number()),
+  residual_path: z.array(z.number()),
+  cp: z.array(z.number()),
+  scp: z.array(z.number()),
 });
 
 export type CreateScheduleDto = z.infer<typeof CreateScheduleZod>;
@@ -38,16 +28,8 @@ export interface Schedule {
   storage_node: number;
   workstation_node: number;
   assigned_agv: AGV | null;
-  initial_path: string;
-  residual_path: string;
-  cp?: string;
-  scp?: string;
-  sp?: Record<string, number>; // Simplified SP structure
-  state?: number; // 0: idle, 1: moving, 2: waiting
-  spare_flag?: boolean; // Indicates if AGV has spare points
-  traveling_info?: {
-    v_c: number | null; // Current position
-    v_n: number | null; // Next position
-    v_r: number | null; // Reserved position
-  };
+  initial_path: number[];
+  residual_path: number[];
+  cp: number[];
+  scp: number[];
 }

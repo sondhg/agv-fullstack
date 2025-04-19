@@ -58,14 +58,7 @@ class ScheduleGenerator:
         if not path:
             return None
 
-        # Create traveling info with initial positions
-        traveling_info = {
-            "v_c": task.parking_node,  # Current position (at parking node)
-            "v_n": path[1] if len(path) > 1 else None,  # Next position
-            "v_r": path[1] if len(path) > 1 else None  # Reserved position
-        }
-
-        # Prepare schedule data
+        # Prepare schedule data according to updated Schedule model
         schedule_data = {
             "schedule_id": task.order_id,
             "order_id": task.order_id,
@@ -76,11 +69,8 @@ class ScheduleGenerator:
             "workstation_node": task.workstation_node,
             "initial_path": path,
             "residual_path": path,
-            "traveling_info": traveling_info,
-            "state": AGVState.WAITING,  # Default state is WAITING per Algorithm 2
             "cp": [],  # Will be calculated later in dispatch_tasks
-            "scp": [],  # Will be calculated later in dispatch_tasks
-            "sp": {}  # Empty dict for spare points initially
+            "scp": []  # Will be calculated later in dispatch_tasks
         }
 
         return schedule_data

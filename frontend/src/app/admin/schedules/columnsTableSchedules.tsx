@@ -49,34 +49,6 @@ export const columnsTableSchedules = (
       ),
     },
     {
-      accessorKey: "sp",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="SP" />
-      ),
-      cell: ({ row }) => {
-        const spData = row.getValue("sp");
-        return (
-          <pre className="whitespace-pre-wrap text-sm">
-            {JSON.stringify(spData, null, 2)}
-          </pre>
-        );
-      },
-    },
-    {
-      accessorKey: "traveling_info",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Traveling Info" />
-      ),
-      cell: ({ row }) => {
-        const travelingInfo = row.getValue("traveling_info");
-        return (
-          <pre className="whitespace-pre-wrap text-sm">
-            {JSON.stringify(travelingInfo, null, 2)}
-          </pre>
-        );
-      },
-    },
-    {
       accessorKey: "assigned_agv",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Assigned AGV" />

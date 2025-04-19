@@ -23,6 +23,5 @@ class SuccessMessages:
 
 class DefaultValues:
     """Default values used in the application"""
-    EMPTY_TRAVELING_INFO = {"v_c": None, "v_n": None, "v_r": None}
     DEFAULT_ALGORITHM = "dijkstra"
     DEFAULT_INSTRUCTION_SET = "[]"
