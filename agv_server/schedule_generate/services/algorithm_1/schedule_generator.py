@@ -95,9 +95,22 @@ class ScheduleGenerator:
         Returns:
             Optional[Dict]: Saved schedule data or None if validation fails.
         """
+        # Get the assigned AGV from schedule data and remove it before serialization
+        assigned_agv = schedule_data.pop('assigned_agv', None)
+
         serializer = ScheduleSerializer(data=schedule_data)
         if serializer.is_valid():
-            serializer.save()
+            schedule = serializer.save()
+            
+            if assigned_agv:
+                # Set the AGV relationship after saving
+                schedule.assigned_agv = assigned_agv
+                schedule.save()
+                
+                # Update AGV's current schedule
+                assigned_agv.active_schedule = schedule
+                assigned_agv.save()
+
             return serializer.data
         else:
             print(
@@ -106,21 +119,16 @@ class ScheduleGenerator:
 
     def validate_task_data(self, task: Order, valid_nodes: List[int]) -> bool:
         """
-        Validate task data has valid nodes that exist in the map.
+        Validate task data against valid nodes.
 
         Args:
-            task (Order): The task/order to validate.
-            valid_nodes (List[int]): List of valid nodes in the map.
+            task (Order): The task to validate
+            valid_nodes (List[int]): List of valid node IDs in the map
 
         Returns:
-            bool: True if task data is valid, False otherwise.
+            bool: True if task data is valid, False otherwise
         """
-        if not all([task.parking_node, task.storage_node, task.workstation_node]):
-            print(f"Invalid task data for task {task.order_id}")
-            return False
-
-        if not all(node in valid_nodes for node in [task.parking_node, task.storage_node, task.workstation_node]):
-            print(f"Task {task.order_id} contains invalid nodes")
-            return False
-
-        return True
+        # Check if all required nodes exist in the map
+        return (task.parking_node in valid_nodes and
+                task.storage_node in valid_nodes and
+                task.workstation_node in valid_nodes)

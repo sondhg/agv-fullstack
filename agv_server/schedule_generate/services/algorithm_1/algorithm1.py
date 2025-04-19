@@ -1,7 +1,7 @@
 """
 Implementation of Algorithm 1: Task Dispatching of the Central Controller
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from order_data.models import Order
 from map_data.models import Direction, Connection
 from ...models import Schedule
@@ -9,6 +9,7 @@ from ...constants import ErrorMessages, AGVState
 from ...pathfinding.factory import PathfindingFactory
 from .shared_points import SharedPointsCalculator
 from .schedule_generator import ScheduleGenerator
+from agv_data.models import Agv, AGV_STATE_IDLE
 
 
 class TaskDispatcher:
@@ -42,6 +43,31 @@ class TaskDispatcher:
         if not nodes or not connections:
             raise ValueError(ErrorMessages.INVALID_MAP_DATA)
         return nodes, connections
+
+    def _find_idle_agv_for_task(self, parking_node: int) -> Optional[Agv]:
+        """
+        Find an idle AGV that can handle a task with the given parking node.
+        According to Algorithm 1 line 4, we need to find an AGV that:
+        1. Is idle (SA^i = 0)
+        2. Has preferred_parking_node matching the task's parking_node
+
+        Args:
+            parking_node (int): The parking node required for the task
+
+        Returns:
+            Optional[Agv]: An idle AGV that can handle the task, or None if no suitable AGV found
+        """
+        try:
+            # Find an idle AGV with matching preferred parking node
+            agv = Agv.objects.filter(
+                motion_state=AGV_STATE_IDLE,
+                preferred_parking_node=parking_node,
+                active_schedule__isnull=True  # Extra check to ensure AGV is truly idle
+            ).first()
+            return agv
+        except Exception as e:
+            print(f"Error finding idle AGV: {str(e)}")
+            return None
 
     def dispatch_tasks(self, algorithm: str = "dijkstra") -> List[Dict]:
         """
@@ -84,11 +110,22 @@ class TaskDispatcher:
                 continue
 
             try:
+                # Find an idle AGV for this task (line 4)
+                assigned_agv = self._find_idle_agv_for_task(task.parking_node)
+                if not assigned_agv:
+                    print(f"No idle AGV available for task {task.order_id} at parking node {task.parking_node}")
+                    continue
+
                 # Generate schedule data for task (without CP calculation yet)
-                schedule_data = self.schedule_generator.generate_schedule_data(
-                    task)
+                schedule_data = self.schedule_generator.generate_schedule_data(task)
                 if schedule_data:
+                    # Add AGV assignment to schedule data
+                    schedule_data['assigned_agv'] = assigned_agv
                     schedule_data_list.append(schedule_data)
+
+                    # Update AGV state to moving
+                    assigned_agv.motion_state = AGVState.MOVING
+                    assigned_agv.save()
             except Exception as e:
                 print(f"Failed to process task {task.order_id}: {str(e)}")
                 continue

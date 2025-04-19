@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { AGV } from "@/types/AGV.types";
+import { Schedule } from "@/types/Schedule.types";
 import { createBaseColumns } from "@/components/ui/base-table-columns";
 
 export const columnsTableAGVs = (
@@ -101,8 +102,21 @@ export const columnsTableAGVs = (
     {
       accessorKey: "active_schedule",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Active Schedule ID" />
+        <DataTableColumnHeader column={column} title="Active Schedule" />
       ),
+      cell: ({ row }) => {
+        const schedule = row.getValue("active_schedule");
+        if (!schedule) return <div className="text-gray-500">No Active Schedule</div>;
+        return (
+          <div>
+            <div className="font-medium">Schedule {(schedule as Schedule).schedule_id}</div>
+            <div className="text-sm text-gray-500">
+              Storage: {(schedule as Schedule).storage_node} → 
+              Workstation: {(schedule as Schedule).workstation_node}
+            </div>
+          </div>
+        );
+      },
     },
     actionsColumn,
   ];

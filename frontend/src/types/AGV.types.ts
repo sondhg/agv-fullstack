@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Schedule } from "./Schedule.types";
 
 // Define motion state enum to match Python constants
 export enum AGVMotionState {
@@ -28,7 +29,7 @@ export interface AGV {
   in_sequential_shared_points: boolean;
   is_deadlocked: boolean;
   last_spare_point: number | null;
-  active_schedule: number | null;  // We'll store the schedule ID
+  active_schedule: Schedule | null;  // We'll store the schedule ID
 }
 
 export interface CreateAGVDto {

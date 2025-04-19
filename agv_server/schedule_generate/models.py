@@ -10,6 +10,7 @@ class Schedule(models.Model):
     parking_node = models.IntegerField()
     storage_node = models.IntegerField()
     workstation_node = models.IntegerField()
+    assigned_agv = models.ForeignKey('agv_data.Agv', on_delete=models.SET_NULL, null=True, blank=True)
     initial_path = models.JSONField(
         # P_i^j: Path of AGV i performing task j from origin parking point through pickup/delivery to final parking point. Once generated, it will not be changed.
         default=list)
@@ -22,7 +23,7 @@ class Schedule(models.Model):
     scp = models.JSONField(default=list)  # Sequential shared points (SCP)
     sp = models.JSONField(default=dict)  # Spare points (SP)
 
-   # Add comments explaining the variables from the algorithm
+    # Add comments explaining the variables from the algorithm
     state = models.IntegerField(default=1)  # SA^i: 0=idle, 1=moving, 2=waiting
     # F^i: Spare point flag (1=has spare points)
     spare_flag = models.BooleanField(default=False)

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AGV } from "./AGV.types";
 
 export const CreateScheduleZod = z.object({
   schedule_id: z.number(),
@@ -36,6 +37,7 @@ export interface Schedule {
   parking_node: number;
   storage_node: number;
   workstation_node: number;
+  assigned_agv: AGV | null;
   initial_path: string;
   residual_path: string;
   cp?: string;
