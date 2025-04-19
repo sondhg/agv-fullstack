@@ -9,7 +9,10 @@ import { createBaseColumns } from "@/components/ui/base-table-columns";
 export const columnsTableSchedules = (
   handleClickBtnDelete: (scheduleId: number) => void,
 ): ColumnDef<Schedule>[] => {
-  const baseColumns = createBaseColumns<Schedule>(handleClickBtnDelete, "schedule_id");
+  const baseColumns = createBaseColumns<Schedule>(
+    handleClickBtnDelete,
+    "schedule_id",
+  );
   const [selectColumn, actionsColumn] = baseColumns;
 
   return [
@@ -57,21 +60,10 @@ export const columnsTableSchedules = (
         const agv = row.getValue("assigned_agv") as AGV | null;
         if (!agv) return <div className="text-gray-500">No AGV Assigned</div>;
 
-        const stateColor = {
-          0: "bg-gray-200", // Idle
-          1: "bg-green-200", // Moving
-          2: "bg-yellow-200", // Waiting
-        };
-
         return (
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${stateColor[agv.motion_state]}`} />
             <div>
               <div className="font-medium">AGV {agv.agv_id}</div>
-              <div className="text-sm text-gray-500">
-                Parking Node: {agv.preferred_parking_node}
-                {agv.current_node !== null && ` • Current: ${agv.current_node}`}
-              </div>
             </div>
           </div>
         );

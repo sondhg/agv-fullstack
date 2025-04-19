@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Agv
-from schedule_generate.models import Schedule
 
 
 class AGVSerializer(serializers.ModelSerializer):
