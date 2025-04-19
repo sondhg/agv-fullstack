@@ -11,7 +11,7 @@ export const columnsTableAGVs = (
 ): ColumnDef<AGV>[] => {
   const baseColumns = createBaseColumns<AGV>(handleClickBtnDelete, "agv_id");
   const [selectColumn, actionsColumn] = baseColumns;
-  
+
   return [
     selectColumn,
     {
@@ -58,7 +58,7 @@ export const columnsTableAGVs = (
         const stateMap = {
           0: "Idle",
           1: "Moving",
-          2: "Waiting"
+          2: "Waiting",
         };
         return <div>{stateMap[state as keyof typeof stateMap]}</div>;
       },
@@ -74,30 +74,20 @@ export const columnsTableAGVs = (
       },
     },
     {
-      accessorKey: "in_sequential_shared_points",
+      accessorKey: "spare_points",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="In Sequential Shared Points" />
+        <DataTableColumnHeader column={column} title="Spare Points" />
       ),
       cell: ({ row }) => {
-        const value = row.getValue("in_sequential_shared_points") as boolean;
-        return <div>{value ? "Yes" : "No"}</div>;
+        const value = row.getValue("spare_points") as Record<string, number>;
+        return (
+          <div>
+            {Object.keys(value).length > 0
+              ? "Has spare points"
+              : "No spare points"}
+          </div>
+        );
       },
-    },
-    {
-      accessorKey: "is_deadlocked",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Is Deadlocked" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue("is_deadlocked") as boolean;
-        return <div>{value ? "Yes" : "No"}</div>;
-      },
-    },
-    {
-      accessorKey: "last_spare_point",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Last Spare Point" />
-      ),
     },
     {
       accessorKey: "active_schedule",
@@ -106,13 +96,17 @@ export const columnsTableAGVs = (
       ),
       cell: ({ row }) => {
         const schedule = row.getValue("active_schedule");
-        if (!schedule) return <div className="text-gray-500">No Active Schedule</div>;
+        if (!schedule)
+          return <div className="text-gray-500">No Active Schedule</div>;
         return (
           <div>
-            <div className="font-medium">Schedule {(schedule as Schedule).schedule_id}</div>
+            <div className="font-medium">
+              Schedule {(schedule as Schedule).schedule_id}
+            </div>
             <div className="text-sm text-gray-500">
-              Storage: {(schedule as Schedule).storage_node} → 
-              Workstation: {(schedule as Schedule).workstation_node}
+              Parking: {(schedule as Schedule).parking_node} → Storage:{" "}
+              {(schedule as Schedule).storage_node} → Workstation:{" "}
+              {(schedule as Schedule).workstation_node}
             </div>
           </div>
         );
