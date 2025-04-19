@@ -24,7 +24,7 @@ class Schedule(models.Model):
     sp = models.JSONField(default=dict)  # Spare points (SP)
 
     # Add comments explaining the variables from the algorithm
-    state = models.IntegerField(default=1)  # SA^i: 0=idle, 1=moving, 2=waiting
+    state = models.IntegerField(default=2)  # SA^i: 0=idle, 1=moving, 2=waiting (default waiting per Algorithm 2)
     # F^i: Spare point flag (1=has spare points)
     spare_flag = models.BooleanField(default=False)
     traveling_info = models.JSONField(

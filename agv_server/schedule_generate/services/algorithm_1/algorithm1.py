@@ -123,8 +123,8 @@ class TaskDispatcher:
                     schedule_data['assigned_agv'] = assigned_agv
                     schedule_data_list.append(schedule_data)
 
-                    # Update AGV state to moving
-                    assigned_agv.motion_state = AGVState.MOVING
+                    # Update AGV state to waiting (according to Algorithm 2 in paper)
+                    assigned_agv.motion_state = AGVState.WAITING
                     assigned_agv.save()
             except Exception as e:
                 print(f"Failed to process task {task.order_id}: {str(e)}")

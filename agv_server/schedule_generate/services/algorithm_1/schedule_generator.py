@@ -77,7 +77,7 @@ class ScheduleGenerator:
             "initial_path": path,
             "residual_path": path,
             "traveling_info": traveling_info,
-            "state": AGVState.MOVING,
+            "state": AGVState.WAITING,  # Default state is WAITING per Algorithm 2
             "cp": [],  # Will be calculated later in dispatch_tasks
             "scp": [],  # Will be calculated later in dispatch_tasks
             "sp": {}  # Empty dict for spare points initially

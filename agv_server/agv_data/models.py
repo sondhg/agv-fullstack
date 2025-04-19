@@ -26,11 +26,11 @@ class Agv(models.Model):
     # Algorithm states
     motion_state = models.IntegerField(
         choices=[
-            (AGV_STATE_IDLE, 'Idle'),
-            (AGV_STATE_MOVING, 'Moving'),
-            (AGV_STATE_WAITING, 'Waiting')
+            (AGV_STATE_IDLE, 'Idle'),    # No task assigned
+            (AGV_STATE_MOVING, 'Moving'), # On way to next reserved point
+            (AGV_STATE_WAITING, 'Waiting')  # Stopped at current point
         ],
-        default=AGV_STATE_IDLE,
+        default=AGV_STATE_IDLE,  # Initially IDLE until assigned a task, then will be WAITING per Algorithm 2
         help_text="AGV state (SA^i)"
     )
 
