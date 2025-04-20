@@ -57,13 +57,15 @@ class DeleteScheduleView(APIView):
             # Get associated AGV before deleting the schedule
             agv = schedule.assigned_agv
             if agv:
-                # Reset all AGV state fields
+                # Reset all AGV state fields to their default values,
+                # except for preferred_parking_node and agv_id
                 agv.motion_state = AGV_STATE_IDLE
                 agv.active_schedule = None
                 agv.spare_flag = False
-                agv.in_sequential_shared_points = False
-                agv.is_deadlocked = False
-                agv.last_spare_point = None
+                agv.spare_points = dict()  # Reset to default empty dict
+                agv.current_node = agv.preferred_parking_node  # Set to preferred parking node as default
+                agv.next_node = None
+                agv.reserved_node = None
                 agv.save()
             schedule.delete()
             return Response(
@@ -95,12 +97,15 @@ class BulkDeleteSchedulesView(APIView):
             for schedule in schedules:
                 agv = schedule.assigned_agv
                 if agv:
+                    # Reset all AGV state fields to their default values,
+                    # except for preferred_parking_node and agv_id
                     agv.motion_state = AGV_STATE_IDLE
                     agv.active_schedule = None
                     agv.spare_flag = False
-                    agv.in_sequential_shared_points = False
-                    agv.is_deadlocked = False
-                    agv.last_spare_point = None
+                    agv.spare_points = dict()  # Reset to default empty dict
+                    agv.current_node = agv.preferred_parking_node  # Set to preferred parking node as default
+                    agv.next_node = None
+                    agv.reserved_node = None
                     agv.save()
 
             # Now delete the schedules

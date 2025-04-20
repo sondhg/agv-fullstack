@@ -3,8 +3,9 @@ from schedule_generate.models import Schedule
 
 # AGV States from Algorithm 2 (SA^i)
 AGV_STATE_IDLE = 0    # No mission to execute
-AGV_STATE_MOVING = 1  # On way to next reserved point 
+AGV_STATE_MOVING = 1  # On way to next reserved point
 AGV_STATE_WAITING = 2  # Stopped at current point
+
 
 class Agv(models.Model):
     """
@@ -19,15 +20,15 @@ class Agv(models.Model):
 
     # Traveling information I^i from Definition 8
     current_node = models.IntegerField(
-        null=True, 
+        null=True,
         help_text="Current position (v_c^i): point where AGV is located or last left"
     )
     next_node = models.IntegerField(
-        null=True, 
+        null=True,
         help_text="Next point to visit (v_n^i)"
     )
     reserved_node = models.IntegerField(
-        null=True, 
+        null=True,
         help_text="Reserved point (v_r^i)"
     )
 
@@ -61,12 +62,6 @@ class Agv(models.Model):
         related_name='active_agv',
         help_text="Currently executing schedule"
     )
-
-    def save(self, *args, **kwargs):
-        # Initialize current_node to preferred_parking_node for new AGVs
-        if not self.pk and self.current_node is None:
-            self.current_node = self.preferred_parking_node
-        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "AGV"

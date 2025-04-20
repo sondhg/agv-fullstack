@@ -26,9 +26,6 @@ export interface AGV {
   reserved_node: number | null;
   motion_state: AGVMotionState;
   spare_flag: boolean;
-  in_sequential_shared_points: boolean;
-  is_deadlocked: boolean;
-  last_spare_point: number | null;
   active_schedule: Schedule | null;  // We'll store the schedule ID
 }
 
