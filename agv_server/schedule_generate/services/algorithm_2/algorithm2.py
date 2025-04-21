@@ -165,8 +165,21 @@ class ControlPolicyController:
             # No residual path, AGV should be at destination (workstation_node)
             return
 
-        # Update next node (v_n^i) based on current position and residual path
+        # Update the residual path if the AGV has reached the first point in it
         if agv.current_node == residual_path[0]:
+            # Remove the current node from the residual path as it's been visited
+            # This implements Definition 2 from the algorithms-pseudocode.tex
+            # "After an AGV reaches an identification point, the residual path of the AGV is updated."
+            residual_path = residual_path[1:]
+            schedule.residual_path = residual_path
+            schedule.save()
+
+        # Update next node (v_n^i) based on current position and residual path
+        if not residual_path:
+            # Residual path is now empty, no next node
+            agv.next_node = None
+        elif agv.current_node == residual_path[0]:
+            # This could happen if we didn't remove the current node from residual path
             # Current node is the first in residual path, next node is the second
             if len(residual_path) > 1:
                 agv.next_node = residual_path[1]
