@@ -97,15 +97,17 @@ def find_nearest_point(shared_point: int, candidates: List[int]) -> Optional[int
         # Try both orientations since Connection is undirected
         try:
             conn = Connection.objects.get(node1=shared_point, node2=candidate)
+            distance = conn.distance
         except Connection.DoesNotExist:
             try:
-                conn = Connection.objects.get(
-                    node1=candidate, node2=shared_point)
+                conn = Connection.objects.get(node1=candidate, node2=shared_point)
+                distance = conn.distance
             except Connection.DoesNotExist:
+                # If no connection exists between these points, skip
                 continue
 
-        if conn.distance < min_distance:
-            min_distance = conn.distance
+        if distance < min_distance:
+            min_distance = distance
             nearest_point = candidate
 
     return nearest_point

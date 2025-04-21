@@ -5,6 +5,7 @@ from .models import Schedule
 from .serializers import ScheduleSerializer
 from rest_framework.generics import ListAPIView
 from .services.algorithm_1 import TaskDispatcher
+from .services.algorithm_3 import DeadlockResolver
 from .constants import ErrorMessages, SuccessMessages, DefaultValues
 from agv_data.models import AGV_STATE_IDLE
 
@@ -118,5 +119,47 @@ class BulkDeleteSchedulesView(APIView):
         except Exception as e:
             return Response(
                 {"error": f"An error occurred during bulk deletion: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class DeadlockDetectionView(APIView):
+    """
+    API endpoint to detect and resolve deadlocks in the AGV system.
+    Implements Algorithm 3: Deadlock Resolution of the Central Controller.
+    """
+    
+    def get(self, request):
+        """
+        Detects and resolves deadlocks in the system.
+        
+        This endpoint checks for head-on and loop deadlocks among AGVs in the
+        waiting state and resolves them by moving AGVs with spare points.
+        
+        Response format:
+        {
+            "success": bool,         # Whether the operation was successful
+            "message": str,          # Description of the operation result
+            "deadlocks_resolved": int,  # Number of deadlocks resolved
+            "agvs_moved": List[int]  # List of AGV IDs that were moved to resolve deadlocks
+        }
+        """
+        try:
+            # Initialize the deadlock resolver
+            resolver = DeadlockResolver()
+            
+            # Detect and resolve deadlocks
+            result = resolver.detect_and_resolve_deadlocks()
+            
+            # Return the result
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {
+                    "success": False,
+                    "message": f"Error during deadlock detection: {str(e)}",
+                    "deadlocks_resolved": 0,
+                    "agvs_moved": []
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
