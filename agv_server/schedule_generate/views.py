@@ -64,7 +64,7 @@ class DeleteScheduleView(APIView):
                 agv.active_schedule = None
                 agv.spare_flag = False
                 agv.spare_points = dict()  # Reset to default empty dict
-                agv.current_node = agv.preferred_parking_node  # Set to preferred parking node as default
+                agv.current_node = None
                 agv.next_node = None
                 agv.reserved_node = None
                 agv.save()
@@ -104,7 +104,7 @@ class BulkDeleteSchedulesView(APIView):
                     agv.active_schedule = None
                     agv.spare_flag = False
                     agv.spare_points = dict()  # Reset to default empty dict
-                    agv.current_node = agv.preferred_parking_node  # Set to preferred parking node as default
+                    agv.current_node = None
                     agv.next_node = None
                     agv.reserved_node = None
                     agv.save()
@@ -128,14 +128,14 @@ class DeadlockDetectionView(APIView):
     API endpoint to detect and resolve deadlocks in the AGV system.
     Implements Algorithm 3: Deadlock Resolution of the Central Controller.
     """
-    
+
     def get(self, request):
         """
         Detects and resolves deadlocks in the system.
-        
+
         This endpoint checks for head-on and loop deadlocks among AGVs in the
         waiting state and resolves them by moving AGVs with spare points.
-        
+
         Response format:
         {
             "success": bool,         # Whether the operation was successful
@@ -147,10 +147,10 @@ class DeadlockDetectionView(APIView):
         try:
             # Initialize the deadlock resolver
             resolver = DeadlockResolver()
-            
+
             # Detect and resolve deadlocks
             result = resolver.detect_and_resolve_deadlocks()
-            
+
             # Return the result
             return Response(result, status=status.HTTP_200_OK)
         except Exception as e:
