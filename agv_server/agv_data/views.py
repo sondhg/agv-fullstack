@@ -6,6 +6,8 @@ from rest_framework.generics import ListAPIView
 from .models import Agv
 from .serializers import AGVSerializer
 from schedule_generate.services.algorithm_2 import ControlPolicyController
+from schedule_generate.services.algorithm_3 import DeadlockResolver
+from schedule_generate.constants import AGVState
 
 
 class ListAGVsView(ListAPIView):
@@ -80,6 +82,10 @@ class UpdateAGVPositionView(APIView):
     3. Evaluates movement conditions to determine if the AGV can move
     4. Handles spare point application or removal if needed
     5. Returns the updated state to the AGV
+    
+    If the AGV enters a waiting state (SA^i = 2), the controller should also:
+    6. Check for deadlocks using Algorithm 3
+    7. Resolve any detected deadlocks by moving AGVs with spare points to their spare points
     """
 
     def post(self, request):
@@ -150,6 +156,32 @@ class UpdateAGVPositionView(APIView):
             # Get the updated AGV data for the response
             updated_agv = Agv.objects.get(agv_id=agv_id)
 
+            # If the AGV entered a waiting state, check for and resolve deadlocks
+            # This implements the automatic deadlock detection and resolution from Algorithm 3
+            deadlock_info = {}
+            if result.get("state") == "waiting":
+                # Initialize the deadlock resolver
+                resolver = DeadlockResolver()
+                
+                # Detect and resolve deadlocks
+                deadlock_result = resolver.detect_and_resolve_deadlocks()
+                
+                # If deadlocks were resolved, refresh the AGV data
+                if deadlock_result.get("deadlocks_resolved", 0) > 0:
+                    # Re-fetch the AGV to get updated state after deadlock resolution
+                    updated_agv = Agv.objects.get(agv_id=agv_id)
+                    
+                    # Update the result with the new state if this AGV was moved
+                    if agv_id in deadlock_result.get("agvs_moved", []):
+                        result["state"] = "moving"
+                        result["message"] = "AGV moved to spare point to resolve deadlock"
+                        result["next_node"] = updated_agv.next_node
+                    
+                    deadlock_info = {
+                        "deadlock_resolved": True,
+                        "deadlock_details": deadlock_result
+                    }
+
             # Add detailed state information to the response
             if result["success"]:
                 result.update({
@@ -158,6 +190,7 @@ class UpdateAGVPositionView(APIView):
                     "spare_points": updated_agv.spare_points,
                     "moved_from": previous_node,
                     "residual_path": updated_agv.active_schedule.residual_path if updated_agv.active_schedule else None,
+                    **deadlock_info  # Add deadlock information if applicable
                 })
 
             # Log the position update for debugging
