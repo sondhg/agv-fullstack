@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { columnsTableAGVs } from "./columnsTableAGVs";
 import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
+import { ButtonStepSimulation } from "./ButtonStepSimulation";
 
 export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
@@ -56,6 +57,7 @@ export function PageAGVs() {
             onSuccess={fetchListData}
             resetSelection={resetSelection}
           />
+          <ButtonStepSimulation onUpdateSuccess={fetchListData} />
         </div>
         <FormSimulateUpdateAgvPosition onUpdateSuccess={fetchListData} />
       </div>

@@ -112,10 +112,7 @@ export const columnsTableAGVs = (
         return (
           <div className="space-y-1">
             {Object.entries(value).map(([pointInSCP, sparePoint], index) => (
-              <div
-                key={index}
-                className="rounded-md bg-gray-100 px-2 py-1 text-sm shadow-sm"
-              >
+              <div key={index}>
                 SCP <span className="font-semibold">{pointInSCP}</span> → SP{" "}
                 <span className="font-semibold">{sparePoint}</span>
               </div>
