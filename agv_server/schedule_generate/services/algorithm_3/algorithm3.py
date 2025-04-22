@@ -1,7 +1,7 @@
 """
 Implementation of Algorithm 3: Deadlock Resolution of the Central Controller
 """
-from typing import Dict, List, Set, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 from django.db import transaction
 from agv_data.models import Agv
 from schedule_generate.constants import AGVState

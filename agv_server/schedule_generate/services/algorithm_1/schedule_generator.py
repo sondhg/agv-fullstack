@@ -3,10 +3,7 @@ Schedule generation module for the DSPA algorithm.
 """
 from typing import Dict, List, Optional
 from order_data.models import Order
-from ...models import Schedule
 from ...serializers import ScheduleSerializer
-from ...constants import AGVState
-from ...pathfinding.factory import PathfindingFactory
 
 
 class ScheduleGenerator:
@@ -91,12 +88,12 @@ class ScheduleGenerator:
         serializer = ScheduleSerializer(data=schedule_data)
         if serializer.is_valid():
             schedule = serializer.save()
-            
+
             if assigned_agv:
                 # Set the AGV relationship after saving
                 schedule.assigned_agv = assigned_agv
                 schedule.save()
-                
+
                 # Update AGV's current schedule
                 assigned_agv.active_schedule = schedule
                 assigned_agv.save()

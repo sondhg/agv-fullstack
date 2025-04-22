@@ -1,11 +1,12 @@
-from enum import IntEnum
 from agv_data.models import AGV_STATE_IDLE, AGV_STATE_MOVING, AGV_STATE_WAITING
+
 
 class AGVState:
     """AGV states as defined in the paper"""
     IDLE = AGV_STATE_IDLE
     MOVING = AGV_STATE_MOVING
     WAITING = AGV_STATE_WAITING
+
 
 class ErrorMessages:
     """Error messages used throughout the application"""
@@ -15,11 +16,13 @@ class ErrorMessages:
     NO_SCHEDULES = "No schedules could be generated"
     BULK_DELETE_NO_IDS = "No schedule IDs provided for deletion."
 
+
 class SuccessMessages:
     """Success messages used throughout the application"""
     SCHEDULES_GENERATED = "Schedules generated successfully."
     SCHEDULE_DELETED = "Schedule {} deleted successfully."
     SCHEDULES_DELETED = "{} schedules deleted successfully."
+
 
 class DefaultValues:
     """Default values used in the application"""

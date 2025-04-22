@@ -1,7 +1,7 @@
 """
 Implementation of Algorithm 1: Task Dispatching of the Central Controller
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Optional
 from order_data.models import Order
 from map_data.models import Direction, Connection
 from ...models import Schedule
@@ -113,11 +113,13 @@ class TaskDispatcher:
                 # Find an idle AGV for this task (line 4)
                 assigned_agv = self._find_idle_agv_for_task(task.parking_node)
                 if not assigned_agv:
-                    print(f"No idle AGV available for task {task.order_id} at parking node {task.parking_node}")
+                    print(
+                        f"No idle AGV available for task {task.order_id} at parking node {task.parking_node}")
                     continue
 
                 # Generate schedule data for task (without CP calculation yet)
-                schedule_data = self.schedule_generator.generate_schedule_data(task)
+                schedule_data = self.schedule_generator.generate_schedule_data(
+                    task)
                 if schedule_data:
                     # Add AGV assignment to schedule data
                     schedule_data['assigned_agv'] = assigned_agv
