@@ -15,6 +15,9 @@ export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
       const step = simulationSteps[currentStepIndex];
       await simulateUpdateAgvPosition(step.agv_id, step.current_node);
 
+      // Show toast for each AGV movement
+      toast.success(`Moved AGV ${step.agv_id} to node ${step.current_node}`);
+
       if (onUpdateSuccess) {
         await onUpdateSuccess();
       }
@@ -24,7 +27,7 @@ export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
       setCurrentStepIndex(nextIndex);
 
       if (nextIndex === 0) {
-        toast.success(
+        toast.info(
           "Cycle complete. Delete and regenerate all schedules before proceeding again.",
         );
       }

@@ -144,6 +144,77 @@ export const columnsTableAGVs = (
         );
       },
     },
+    {
+      accessorKey: "active_schedule.initial_path",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Initial Path" />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.getValue("active_schedule") as Schedule;
+        if (!schedule?.initial_path)
+          return <div className="text-gray-500">No path</div>;
+        return (
+          <div className="text-sm">{schedule.initial_path.join(" → ")}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "active_schedule.residual_path",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Residual Path" />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.getValue("active_schedule") as Schedule;
+        if (!schedule?.residual_path)
+          return <div className="text-gray-500">No path</div>;
+        return (
+          <div className="text-sm">{schedule.residual_path.join(" → ")}</div>
+        );
+      },
+    },
+    {
+      accessorKey: "active_schedule.cp",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Shared Points (CP)" />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.getValue("active_schedule") as Schedule;
+        if (!schedule?.cp || schedule.cp.length === 0)
+          return <div className="text-gray-500">No shared points</div>;
+        return (
+          <div className="text-sm">
+            {schedule.cp.map((point) => (
+              <Badge key={point} variant="outline" className="mr-1">
+                {point}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "active_schedule.scp",
+      header: ({ column }) => (
+        <DataTableColumnHeader
+          column={column}
+          title="Sequential Points (SCP)"
+        />
+      ),
+      cell: ({ row }) => {
+        const schedule = row.getValue("active_schedule") as Schedule;
+        if (!schedule?.scp || schedule.scp.length === 0)
+          return <div className="text-gray-500">No sequential points</div>;
+        return (
+          <div className="text-sm">
+            {schedule.scp.map((point) => (
+              <Badge key={point} variant="outline" className="mr-1">
+                {point}
+              </Badge>
+            ))}
+          </div>
+        );
+      },
+    },
     actionsColumn,
   ];
 };
