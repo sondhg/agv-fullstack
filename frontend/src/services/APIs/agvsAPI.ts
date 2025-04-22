@@ -20,4 +20,20 @@ const bulkDeleteAGVs = async (agvIds: number[]): Promise<void> => {
   });
 };
 
-export { getAGVs, createAGV, deleteAGV, bulkDeleteAGVs };
+const simulateUpdateAgvPosition = async (
+  agvId: number,
+  currentNode: number,
+): Promise<void> => {
+  return apiService.post(API_ENDPOINTS.agvs.simulateUpdateAgvPosition, {
+    agv_id: agvId,
+    current_node: currentNode,
+  });
+};
+
+export {
+  getAGVs,
+  createAGV,
+  deleteAGV,
+  bulkDeleteAGVs,
+  simulateUpdateAgvPosition,
+};

@@ -1,10 +1,12 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { Badge } from "@/components/ui/badge";
+import { createBaseColumns } from "@/components/ui/base-table-columns";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { AGV } from "@/types/AGV.types";
 import { Schedule } from "@/types/Schedule.types";
-import { createBaseColumns } from "@/components/ui/base-table-columns";
+import { ColumnDef } from "@tanstack/react-table";
+import { Check, X } from "lucide-react";
 
 export const columnsTableAGVs = (
   handleClickBtnDelete: (agvId: number) => void,
@@ -29,6 +31,16 @@ export const columnsTableAGVs = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Preferred Parking Node" />
       ),
+      cell: ({ row }) => {
+        const preferredParkingNode = row.getValue(
+          "preferred_parking_node",
+        ) as number;
+        return (
+          <Badge>
+            {preferredParkingNode ? preferredParkingNode : "No Parking Node"}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "current_node",
@@ -60,7 +72,19 @@ export const columnsTableAGVs = (
           1: "Moving",
           2: "Waiting",
         };
-        return <div>{stateMap[state as keyof typeof stateMap]}</div>;
+        return (
+          <Badge
+            variant={
+              state === 0
+                ? "secondary"
+                : state === 1
+                  ? "default"
+                  : "destructive"
+            }
+          >
+            {stateMap[state as keyof typeof stateMap]}
+          </Badge>
+        );
       },
     },
     {
@@ -70,7 +94,9 @@ export const columnsTableAGVs = (
       ),
       cell: ({ row }) => {
         const value = row.getValue("spare_flag") as boolean;
-        return <div>{value ? "Yes" : "No"}</div>;
+        return (
+          <div>{value ? <Check color="#00ff00" /> : <X color="#ff0000" />}</div>
+        );
       },
     },
     {
@@ -80,11 +106,20 @@ export const columnsTableAGVs = (
       ),
       cell: ({ row }) => {
         const value = row.getValue("spare_points") as Record<string, number>;
+        if (Object.keys(value).length === 0) {
+          return <div className="text-gray-500">No SP</div>;
+        }
         return (
-          <div>
-            {Object.keys(value).length > 0
-              ? "Has spare points"
-              : "No spare points"}
+          <div className="space-y-1">
+            {Object.entries(value).map(([pointInSCP, sparePoint], index) => (
+              <div
+                key={index}
+                className="rounded-md bg-gray-100 px-2 py-1 text-sm shadow-sm"
+              >
+                SCP <span className="font-semibold">{pointInSCP}</span> → SP{" "}
+                <span className="font-semibold">{sparePoint}</span>
+              </div>
+            ))}
           </div>
         );
       },

@@ -7,12 +7,17 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { columnsTableAGVs } from "./columnsTableAGVs";
+import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
 
 export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
-  const { rowSelection, setRowSelection, selectedIds: selectedAgvIds, resetSelection } = 
-    useTableSelection<AGV>(listData, "agv_id");
+  const {
+    rowSelection,
+    setRowSelection,
+    selectedIds: selectedAgvIds,
+    resetSelection,
+  } = useTableSelection<AGV>(listData, "agv_id");
 
   const fetchListData = async () => {
     const data = await getAGVs();
@@ -37,19 +42,22 @@ export function PageAGVs() {
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">AGVs</h2>
-      <div className="space-x-5">
-        <DialogFormCreateAGVs
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
-          fetchListData={fetchListData}
-        />
-        <MassDeleteButton
-          selectedIds={selectedAgvIds}
-          onDelete={bulkDeleteAGVs}
-          itemName="AGVs"
-          onSuccess={fetchListData}
-          resetSelection={resetSelection}
-        />
+      <div className="flex flex-wrap items-start space-y-5 md:space-x-5 md:space-y-0">
+        <div className="flex flex-col space-y-3">
+          <DialogFormCreateAGVs
+            isDialogOpen={isDialogOpen}
+            setIsDialogOpen={setIsDialogOpen}
+            fetchListData={fetchListData}
+          />
+          <MassDeleteButton
+            selectedIds={selectedAgvIds}
+            onDelete={bulkDeleteAGVs}
+            itemName="AGVs"
+            onSuccess={fetchListData}
+            resetSelection={resetSelection}
+          />
+        </div>
+        <FormSimulateUpdateAgvPosition onUpdateSuccess={fetchListData} />
       </div>
       <DataTable
         data={listData}

@@ -21,6 +21,7 @@ export const API_ENDPOINTS = {
     get: "agvs/get/",
     delete: (agvId: number) => `agvs/delete/${agvId}/`,
     bulkDelete: "agvs/bulk-delete/",
+    simulateUpdateAgvPosition: "agvs/update-position/",
   },
   map: {
     importConnections: "map/import-connections/",

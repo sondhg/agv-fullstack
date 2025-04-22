@@ -26,6 +26,7 @@
 - **Preserve Existing Code**: Do not alter the structure or logic of existing code unless explicitly instructed to do so.
 - **New Code**: When writing new code, ensure it integrates seamlessly with the existing structure and logic unless changes are absolutely necessary for new functionality.
 - **Refactoring**: When refactoring code:
+  - Avoid redundant code and ensure that the new code is efficient and clean.
   - Maintain existing functionality.
   - Improve readability, maintainability, and structure.
   - Create new files and folders if necessary for better organization.
