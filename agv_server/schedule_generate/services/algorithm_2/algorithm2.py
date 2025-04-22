@@ -53,6 +53,9 @@ class ControlPolicyController:
             # Get the AGV and its schedule
             agv = Agv.objects.get(agv_id=agv_id)
 
+            result_info = {}
+            updated_agvs_list = []
+
             # If AGV has no active schedule, it's idle
             if not agv.active_schedule:
                 return {
@@ -82,58 +85,136 @@ class ControlPolicyController:
                 schedule.status = "completed"
                 schedule.save()
 
-                return {
+                result_info = {
                     "success": True,
                     "message": "Task completed",
                     "state": "idle"
                 }
-
-            # Update travel information (I^i), residual path (Π_i),
-            # shared points (CP^i), and sequential shared points (SCP^i)
-            # This corresponds to line 6 in Algorithm 2
-            self._update_travel_information(agv, schedule)
-
-            # Evaluate movement conditions and update state
-            # This implements the core decision logic of Algorithm 2 (lines 7-20)
-            can_move, should_apply_spare_points = self._evaluate_movement_conditions(
-                agv, schedule)
-
-            # If AGV needs to apply for spare points
-            if should_apply_spare_points:
-                # If spare_flag is already set, just remove current spare point (line 14-16)
-                if agv.spare_flag:
-                    self._remove_current_spare_point(agv)
-                else:
-                    # Apply for spare points (line 17)
-                    self._apply_for_spare_points(agv, schedule)
-
-                # Re-evaluate movement conditions after spare point application
-                can_move, _ = self._evaluate_movement_conditions(agv, schedule)
-
-            # Update AGV state based on evaluation result
-            if can_move:
-                # AGV can move (satisfied one of the movement conditions)
-                agv.motion_state = AGVState.MOVING
-                # Reserved node is set to the next node when AGV is allowed to move
-                # This implements the reservation mechanism described in the paper
-                agv.reserved_node = agv.next_node
-                agv.save()
-                return {
-                    "success": True,
-                    "message": "AGV can move to next point",
-                    "state": "moving",
-                    "next_node": agv.next_node
-                }
             else:
-                # AGV must wait (did not satisfy any movement condition)
-                # When waiting, the AGV reserves its current position
-                agv.reserved_node = agv.current_node
-                agv.save()
-                return {
-                    "success": True,
-                    "message": "AGV must wait at current point",
-                    "state": "waiting"
-                }
+                # Update travel information (I^i), residual path (Π_i),
+                # shared points (CP^i), and sequential shared points (SCP^i)
+                # This corresponds to line 6 in Algorithm 2
+                self._update_travel_information(agv, schedule)
+
+                # Special case: If AGV is at a spare point and the path is now clear,
+                # prioritize returning to the main path as described in Example 3
+                # where r_3 returns from spare point 6 back to 14 when r_2 moves to 22
+                if (agv.spare_flag and agv.next_node and
+                        not self._is_node_reserved_by_others(agv.next_node, agv.agv_id)):
+                    residual_path = schedule.residual_path
+                    if residual_path and agv.next_node == residual_path[0]:
+                        # The path is clear, AGV can move from spare point back to main path
+                        agv.spare_flag = False
+                        agv.spare_points = {}
+                        agv.motion_state = AGVState.MOVING
+                        agv.reserved_node = agv.next_node
+                        agv.save()
+                        result_info = {
+                            "success": True,
+                            "message": "AGV returning from spare point to original path",
+                            "state": "moving",
+                            "next_node": agv.next_node
+                        }
+                    else:
+                        # Evaluate movement conditions and update state
+                        can_move, should_apply_spare_points = self._evaluate_movement_conditions(
+                            agv, schedule)
+
+                        # If AGV needs to apply for spare points
+                        if should_apply_spare_points:
+                            # If spare_flag is already set, just remove current spare point (line 14-16)
+                            if agv.spare_flag:
+                                self._remove_current_spare_point(agv)
+                            else:
+                                # Apply for spare points (line 17)
+                                self._apply_for_spare_points(agv, schedule)
+
+                            # Re-evaluate movement conditions after spare point application
+                            can_move, _ = self._evaluate_movement_conditions(
+                                agv, schedule)
+
+                        # Update AGV state based on evaluation result
+                        if can_move:
+                            # AGV can move (satisfied one of the movement conditions)
+                            agv.motion_state = AGVState.MOVING
+                            # Reserved node is set to the next node when AGV is allowed to move
+                            # This implements the reservation mechanism described in the paper
+                            agv.reserved_node = agv.next_node
+                            agv.save()
+                            result_info = {
+                                "success": True,
+                                "message": "AGV can move to next point",
+                                "state": "moving",
+                                "next_node": agv.next_node
+                            }
+                        else:
+                            # AGV must wait (did not satisfy any movement condition)
+                            # When waiting, the AGV reserves its current position
+                            agv.reserved_node = agv.current_node
+                            agv.save()
+                            result_info = {
+                                "success": True,
+                                "message": "AGV must wait at current point",
+                                "state": "waiting"
+                            }
+                else:
+                    # Evaluate movement conditions and update state
+                    # This implements the core decision logic of Algorithm 2 (lines 7-20)
+                    can_move, should_apply_spare_points = self._evaluate_movement_conditions(
+                        agv, schedule)
+
+                    # If AGV needs to apply for spare points
+                    if should_apply_spare_points:
+                        # If spare_flag is already set, just remove current spare point (line 14-16)
+                        if agv.spare_flag:
+                            self._remove_current_spare_point(agv)
+                        else:
+                            # Apply for spare points (line 17)
+                            self._apply_for_spare_points(agv, schedule)
+
+                        # Re-evaluate movement conditions after spare point application
+                        can_move, _ = self._evaluate_movement_conditions(
+                            agv, schedule)
+
+                    # Update AGV state based on evaluation result
+                    if can_move:
+                        # AGV can move (satisfied one of the movement conditions)
+                        agv.motion_state = AGVState.MOVING
+                        # Reserved node is set to the next node when AGV is allowed to move
+                        # This implements the reservation mechanism described in the paper
+                        agv.reserved_node = agv.next_node
+                        agv.save()
+                        result_info = {
+                            "success": True,
+                            "message": "AGV can move to next point",
+                            "state": "moving",
+                            "next_node": agv.next_node
+                        }
+                    else:
+                        # AGV must wait (did not satisfy any movement condition)
+                        # When waiting, the AGV reserves its current position
+                        agv.reserved_node = agv.current_node
+                        agv.save()
+                        result_info = {
+                            "success": True,
+                            "message": "AGV must wait at current point",
+                            "state": "waiting"
+                        }
+
+            # When any AGV updates its position, check if other AGVs at spare points can return to their paths
+            # This is critical for the behavior described in Example 3 of the research paper
+            # where r_3 returns from spare point 6 to node 14 as soon as r_2 moves to node 14
+            if agv.motion_state == AGVState.MOVING:
+                # Check and update AGVs at spare points that can now return to their original paths
+                updated_agvs_list = self._check_and_update_agvs_at_spare_points(
+                    agv_id)
+
+            # Add information about updated AGVs to the result
+            if updated_agvs_list:
+                result_info["updated_agvs"] = updated_agvs_list
+                result_info["message"] += f". Also updated AGVs {updated_agvs_list} to return from spare points."
+
+            return result_info
 
         except Agv.DoesNotExist:
             return {
@@ -187,9 +268,18 @@ class ControlPolicyController:
                 # This was the last point, no next node
                 agv.next_node = None
         else:
-            # Current node is not in residual path (e.g., after deadlock resolution)
+            # Current node is not in residual path (e.g., after deadlock resolution or at a spare point)
             # Next node is the first in residual path
             agv.next_node = residual_path[0]
+
+            # Special case: If AGV is at a spare point, it should return to the main path
+            # This implements the behavior described in Example 3 of the research paper
+            if agv.spare_flag and not self._is_node_reserved_by_others(residual_path[0], agv.agv_id):
+                # The deadlock has been resolved, and the AGV can now return to its original path
+                # According to Example 3: "r_3 satisfies Condition 1 after updating its traveling information,
+                # and it will return to point 14. Then, set F_3 = 0, SP_3 = ∅"
+                agv.spare_flag = False
+                agv.spare_points = {}
 
     def _evaluate_movement_conditions(self, agv: Agv, schedule: Schedule) -> Tuple[bool, bool]:
         """
@@ -375,3 +465,49 @@ class ControlPolicyController:
             # If no more spare points left, reset spare_flag
             if not agv.spare_points:
                 agv.spare_flag = False
+
+    def _check_and_update_agvs_at_spare_points(self, agv_id: int) -> List[int]:
+        """
+        Check and update AGVs that are at spare points and may need to return to their original path.
+
+        This handles the special case in Example 3 of the research paper where r_3 returns
+        from spare point 6 back to node 14 as soon as r_2 moves to node 14 (rather than node 22).
+        The AGV at a spare point should return to its path as soon as its original next node is free.
+
+        Args:
+            agv_id (int): The ID of the AGV that just updated its position
+
+        Returns:
+            List[int]: IDs of AGVs that were updated to return from spare points
+        """
+        updated_agvs = []
+
+        # Find all AGVs that are at spare points (spare_flag=True) and in waiting state
+        spare_point_agvs = Agv.objects.filter(
+            spare_flag=True,
+            motion_state=AGVState.WAITING
+        ).exclude(agv_id=agv_id)
+
+        # For each AGV at a spare point
+        for agv in spare_point_agvs:
+            if not agv.active_schedule:
+                continue
+
+            # Get the residual path and next node
+            residual_path = agv.active_schedule.residual_path
+            if not residual_path:
+                continue
+
+            # Check if the next node in the residual path is now free
+            next_node = residual_path[0]  # First node in residual path
+            if not self._is_node_reserved_by_others(next_node, agv.agv_id):
+                # The path is clear, AGV can return from spare point to main path
+                agv.next_node = next_node
+                agv.spare_flag = False
+                agv.spare_points = {}
+                agv.motion_state = AGVState.MOVING
+                agv.reserved_node = next_node
+                agv.save()
+                updated_agvs.append(agv.agv_id)
+
+        return updated_agvs

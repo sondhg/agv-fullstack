@@ -42,7 +42,13 @@ The following sequence of requests is based on Example 3 from the research paper
 15. **AGV 3** at node **14**
 16. **AGV 2** at node **13**
 17. **AGV 3** at node **6**
-18. **AGV 2** at node **14** <!-- With current code, this is where unexpected error happens, need to fix.>
+18. **AGV 2** at node **14**
+19. **AGV 3** at node **14**
+20. **AGV 2** at node **22**
+21. **AGV 3** at node **13**
+22. **AGV 3** at node **12**
+23. **AGV 3** at node **11**
+24. **AGV 3** at node **19**
 
 ## Notes
 

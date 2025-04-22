@@ -105,7 +105,6 @@ The map layout consists of nodes and edges, where nodes represent identified poi
 - The server uses the AGV's position to recalculate the schedule and send it back to the AGV.
 - The server also checks for collisions and deadlocks using the DSPA algorithm.
 - If a collision or deadlock is detected, the server recalculates the schedule and sends it to the AGVs.
-- The updated data include `residual_path`, `cp`, `scp`, and `sp`.
 
 ---
 
@@ -116,14 +115,14 @@ I want to successfully mimic the `Example 3` specified in the research paper `al
 - I create a map layout with 32 nodes. I used example files `new-map-conn-and-dist.csv` and `new-map-dir.csv` (located in the `sample-data` folder) to create the map layout.
 - I create 3 orders similar to `orders-example-3.json` (located in the `sample-data` folder).
 - I generate schedules for the 3 AGVs using the "Create Schedules" button on the Schedules page.
-- I want to mimic AGVs' positions update to the server, but have not implemented the real physical AGVs or any simulation yet. I need to do this in the future to test if my web app works correctly with the AGVs.
-- At each step, I must check if it has the same result as the example in the research paper. I will check the following:
-  - The initial path for each AGV.
-  - The residual path for each AGV.
-  - The shared points (cp) for each AGV.
-  - The sequential shared points (scp) for each AGV.
-  - The spare points (sp) for each AGV.
-  - The detection of collisions and deadlocks.
+- I want to mimic AGVs' positions update to the server, but have not implemented the real physical AGVs or any simulation yet. I need to do this in the future to test if my web app works correctly with the AGVs. For now, I use Postman to send a POST request to API endpoint `POST localhost:8000/api/agvs/update-position/` of the server with the AGV's position. The request body should contain the fields `agv_id` and `current_node`. For example, to update the position of AGV 1 to node 7, I send the following request body:
+  ```json
+  {
+    "agv_id": 1,
+    "current_node": 7
+  }
+  ```
+- The detailed way of how I do the testing is specified in the `test-agvs-update-positions.md` file in the root directory.
 
 ## Technologies Used
 
