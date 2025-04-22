@@ -24,20 +24,50 @@ export const columnsTableSchedules = (
       ),
       cell: ({ row }) => {
         const schedule_id = parseFloat(row.getValue("schedule_id"));
-        return <div className="font-medium">{schedule_id}</div>;
+        <div className="font-medium">{schedule_id}</div>;
       },
     },
     {
       accessorKey: "initial_path",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Initial path" />
+        <DataTableColumnHeader column={column} title="Initial Path" />
       ),
+      cell: ({ row }) => {
+        const initialPath = row.getValue("initial_path") as number[];
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            {initialPath.map((value, index) => (
+              <span key={index} className="whitespace-nowrap">
+                <span>{value}</span>
+                {index < initialPath.length - 1 && (
+                  <span className="text-gray-500"> → </span>
+                )}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "residual_path",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Residual Path" />
       ),
+      cell: ({ row }) => {
+        const residualPath = row.getValue("residual_path") as number[];
+        return (
+          <div className="flex flex-wrap items-center gap-1">
+            {residualPath.map((value, index) => (
+              <span key={index} className="whitespace-nowrap">
+                <span>{value}</span>
+                {index < residualPath.length - 1 && (
+                  <span className="text-gray-500"> → </span>
+                )}
+              </span>
+            ))}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "cp",
