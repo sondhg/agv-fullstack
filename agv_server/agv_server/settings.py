@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'users',
     'order_data',
     'map_data',
-    'schedule_generate',
     'agv_data',
 ]
 
