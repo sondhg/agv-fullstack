@@ -15,23 +15,33 @@ const steps = [
   },
   {
     title: "Create a map layout.",
-    description: "Go to the Map page to create a layout if you don't have one.",
+    description: "Go to Map page to create a layout if you don't have one.",
   },
   {
     title: "Create orders.",
     description:
-      "Use the Orders page to create orders via form or import CSV files.",
+      "Go to Orders page to create orders via form or import CSV files.",
   },
   {
-    title: "Generate schedules.",
+    title: "Register AGVs to the system.",
     description:
-      "Generate schedules from orders created, based on algorithms, on the Schedules page. Schedules are then assigned to AGVs.",
+      "Go to AGVs page to register AGVs with their IDs and preferred parking node.",
   },
   {
-    title: "View real-time AGV data.",
+    title: "Dispatch orders to AGVs.",
     description:
-      "Check live data returned by AGVs on the Dashboard page as they travel based on schedules.",
+      "Go to AGVs page to assign created orders to AGVs and calculate initial pathfinding parameters.",
   },
+  {
+    title: "Simulate AGVs movement and see data being updated.",
+    description:
+      "Go to AGVs page to use the 24-step simulation program and view data changes as AGVs travel.",
+  },
+  // {
+  //   title: "View real-time AGV data.",
+  //   description:
+  //     "Check live data returned by AGVs on the Dashboard page as they travel based on schedules.",
+  // },
 ];
 
 type CardProps = React.ComponentProps<typeof Card>;
@@ -41,9 +51,7 @@ export function HowToUseGUIGuide({ className, ...props }: CardProps) {
     <Card className={cn("w-full", className)} {...props}>
       <CardHeader>
         <CardTitle>How to use this web app</CardTitle>
-        <CardDescription>
-          Follow the steps below.
-        </CardDescription>
+        <CardDescription>Follow the steps below.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
         <div>
@@ -54,9 +62,7 @@ export function HowToUseGUIGuide({ className, ...props }: CardProps) {
             >
               <span className="flex h-2 w-2 translate-y-1 rounded-full bg-sky-500" />
               <div className="space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {step.title}
-                </p>
+                <p className="text-sm font-medium leading-none">{step.title}</p>
                 <p className="text-sm text-muted-foreground">
                   {step.description}
                 </p>

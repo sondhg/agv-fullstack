@@ -28,7 +28,7 @@ export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
 
       if (nextIndex === 0) {
         toast.info(
-          "Cycle complete. Delete and regenerate all schedules before proceeding again.",
+          `Simulation done. Click "Dispatch orders to AGVs" to start again.`,
         );
       }
     } catch (error) {
