@@ -17,13 +17,23 @@ Including another URLconf
 
 from django.urls import include, path
 from django.conf import settings
+from django.views.generic import RedirectView
+
+# Import the new order processing view for compatibility
+from agv_data.views import ProcessOrdersView
 
 urlpatterns = [
     path("api/", include([
         path("auth/", include("users.urls")),
         path("orders/", include("order_data.urls")),
         path("map/", include("map_data.urls")),
-        path("schedules/", include("schedule_generate.urls")),
-        path("agvs/", include("agv_data.urls")),  # Uncommented AGV URLs
+        # For backwards compatibility, keep the schedules URLs but redirect key endpoints
+        path("schedules/", include([
+            # Redirect the schedule generation endpoint to the new process-orders endpoint
+            path("generate/", ProcessOrdersView.as_view(), name="schedule_generate_compat"),
+            # Include other schedule endpoints for now
+            path("", include("schedule_generate.urls")),
+        ])),
+        path("agvs/", include("agv_data.urls")),
     ])),
 ]

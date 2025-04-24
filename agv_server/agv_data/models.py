@@ -1,5 +1,5 @@
 from django.db import models
-from schedule_generate.models import Schedule
+from order_data.models import Order
 
 # AGV States from Algorithm 2 (SA^i)
 AGV_STATE_IDLE = 0    # No mission to execute
@@ -53,14 +53,32 @@ class Agv(models.Model):
         help_text="SP^i: mapping of shared points to their allocated spare points"
     )
 
-    # Current schedule
-    active_schedule = models.OneToOneField(
-        Schedule,
+    # Path information according to Algorithm 1
+    initial_path = models.JSONField(
+        help_text="P_i^j: Path of AGV i performing task j. Once generated, will not change.",
+        default=list
+    )
+    residual_path = models.JSONField(
+        help_text="Pi_i: Remaining points to be visited by AGV i.",
+        default=list
+    )
+    cp = models.JSONField(
+        help_text="CP: Shared points with other AGVs",
+        default=list
+    )
+    scp = models.JSONField(
+        help_text="SCP: Sequential shared points",
+        default=list
+    )
+
+    # Current order
+    active_order = models.OneToOneField(
+        Order,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='active_agv',
-        help_text="Currently executing schedule"
+        help_text="Currently executing order"
     )
 
     class Meta:

@@ -1,12 +1,13 @@
-from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from .models import Agv
 from .serializers import AGVSerializer
-from schedule_generate.services.algorithm_2 import ControlPolicyController
-from schedule_generate.services.algorithm_3 import DeadlockResolver
+from .services.algorithm_1.algorithm1 import TaskDispatcher
+from .services.algorithm_2.controller import ControlPolicyController
+from .services.algorithm_3.algorithm3 import DeadlockResolver
+from .constants import ErrorMessages, SuccessMessages
 
 
 class ListAGVsView(ListAPIView):
@@ -188,7 +189,8 @@ class UpdateAGVPositionView(APIView):
                     "spare_flag": updated_agv.spare_flag,
                     "spare_points": updated_agv.spare_points,
                     "moved_from": previous_node,
-                    "residual_path": updated_agv.active_schedule.residual_path if updated_agv.active_schedule else None,
+                    # Updated to use agv.residual_path directly
+                    "residual_path": updated_agv.residual_path,
                     **deadlock_info  # Add deadlock information if applicable
                 })
 
@@ -206,6 +208,61 @@ class UpdateAGVPositionView(APIView):
                 {
                     "success": False,
                     "message": f"Error processing position update: {str(e)}",
+                    "details": traceback_str
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ProcessOrdersView(APIView):
+    """
+    API endpoint to process orders and assign them to available AGVs.
+    This replaces the functionality previously in the schedule_generate app.
+    """
+
+    def post(self, request):
+        """
+        Process available orders and assign them to idle AGVs.
+
+        Returns:
+            Response: Information about processed orders and assigned AGVs.
+        """
+        try:
+            # Initialize the task dispatcher (Algorithm 1)
+            dispatcher = TaskDispatcher()
+
+            # Dispatch tasks (orders) to available AGVs
+            processed_orders = dispatcher.dispatch_tasks()
+
+            if processed_orders:
+                return Response(
+                    {
+                        "success": True,
+                        "message": SuccessMessages.ORDERS_PROCESSED.format(len(processed_orders)),
+                        "processed_orders": processed_orders
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "success": False,
+                        "message": "No orders were processed. Check that you have available orders and idle AGVs."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except ValueError as e:
+            return Response(
+                {"success": False, "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            import traceback
+            traceback_str = traceback.format_exc()
+            return Response(
+                {
+                    "success": False,
+                    "message": f"Error processing orders: {str(e)}",
                     "details": traceback_str
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
