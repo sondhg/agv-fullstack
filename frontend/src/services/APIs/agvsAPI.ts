@@ -20,6 +20,12 @@ const bulkDeleteAGVs = async (agvIds: number[]): Promise<void> => {
   });
 };
 
+const dispatchOrdersToAGVs = async (
+  algorithm: string = "dijkstra",
+): Promise<void> => {
+  return apiService.post(API_ENDPOINTS.agvs.dispatch, { algorithm });
+};
+
 const simulateUpdateAgvPosition = async (
   agvId: number,
   currentNode: number,
@@ -36,4 +42,5 @@ export {
   deleteAGV,
   bulkDeleteAGVs,
   simulateUpdateAgvPosition,
+  dispatchOrdersToAGVs,
 };

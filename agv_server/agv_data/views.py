@@ -214,7 +214,7 @@ class UpdateAGVPositionView(APIView):
             )
 
 
-class ProcessOrdersView(APIView):
+class DispatchOrdersToAGVsView(APIView):
     """
     API endpoint to process orders and assign them to available AGVs.
     This replaces the functionality previously in the schedule_generate app.

@@ -34,10 +34,10 @@ const bulkDeleteOrders = async (orderIds: number[]): Promise<void> => {
 };
 
 export {
+  bulkDeleteOrders,
   createMultipleOrdersBatch,
   createOrder,
   deleteOrder,
   getOrders,
   updateOrder,
-  bulkDeleteOrders,
 };
