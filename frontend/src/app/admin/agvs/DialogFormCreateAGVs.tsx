@@ -54,7 +54,9 @@ export function DialogFormCreateAGVs({
     onSubmit: async (values) => {
       const createDto: CreateAGVDto = {
         agv_id: convertStringToNumber(values.agv_id),
-        preferred_parking_node: convertStringToNumber(values.preferred_parking_node),
+        preferred_parking_node: convertStringToNumber(
+          values.preferred_parking_node,
+        ),
       };
       await createAGV(createDto);
     },

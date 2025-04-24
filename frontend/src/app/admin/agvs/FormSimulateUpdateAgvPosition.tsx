@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ButtonStepSimulation } from "./ButtonStepSimulation";
 
 /**
  * Form schema for AGV position update simulation
@@ -83,59 +84,73 @@ export const FormSimulateUpdateAgvPosition = ({
   };
 
   return (
-    <Card className="w-1/2">
-      <CardHeader>
-        <CardTitle>Simulate AGV Position Update</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row">
-              <FormField
-                control={form.control}
-                name="agv_id"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>AGV ID</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter AGV ID"
-                        type="text"
-                        {...field}
+    <Card>
+      <div className="grid grid-cols-3 gap-2">
+        <div className="col-span-2">
+          <CardHeader>
+            <CardTitle>Simulate AGV Position Update</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <div>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    <div className="flex flex-col gap-4 md:flex-row">
+                      <FormField
+                        control={form.control}
+                        name="agv_id"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>AGV ID</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter AGV ID"
+                                type="text"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="current_node"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Current Node</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter node that AGV reached"
-                        type="text"
-                        {...field}
+                      <FormField
+                        control={form.control}
+                        name="current_node"
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormLabel>Current Node</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter node the AGV reached"
+                                type="text"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                type="submit"
-                className="w-full md:w-auto md:self-end"
-                disabled={isSubmitting || !form.formState.isValid}
-              >
-                {isSubmitting ? "Updating..." : "Update Position"}
-              </Button>
+                      <Button
+                        type="submit"
+                        className="w-full md:w-auto md:self-end"
+                        disabled={isSubmitting || !form.formState.isValid}
+                      >
+                        {isSubmitting ? "Updating..." : "Update Position"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </div>
             </div>
-          </form>
-        </Form>
-      </CardContent>
+          </CardContent>
+        </div>
+        <div className="col-span-1 m-2 flex flex-col justify-center">
+          <ButtonStepSimulation onUpdateSuccess={onUpdateSuccess} />
+        </div>
+      </div>
     </Card>
   );
 };

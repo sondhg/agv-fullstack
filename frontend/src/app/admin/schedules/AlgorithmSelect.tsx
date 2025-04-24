@@ -13,16 +13,16 @@ interface AlgorithmSelectProps {
   onAlgorithmChange: (value: string) => void;
 }
 
-export const AlgorithmSelect: React.FC<AlgorithmSelectProps> = ({
+export function AlgorithmSelect({
   selectedAlgorithm,
   onAlgorithmChange,
-}) => {
+}: AlgorithmSelectProps) {
   return (
     <Select
       onValueChange={onAlgorithmChange} // Pass the selected algorithm to the parent
       defaultValue={selectedAlgorithm} // Default value
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger>
         <SelectValue placeholder="Select Algorithm" />
       </SelectTrigger>
       <SelectContent>
@@ -33,4 +33,4 @@ export const AlgorithmSelect: React.FC<AlgorithmSelectProps> = ({
       </SelectContent>
     </Select>
   );
-};
+}
