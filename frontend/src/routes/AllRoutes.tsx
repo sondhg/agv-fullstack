@@ -1,7 +1,7 @@
+import { PageAGVs } from "@/app/admin/agvs/PageAGVs";
 import { PageDashboard } from "@/app/admin/dashboard/PageDashboard";
 import { PageMap } from "@/app/admin/map/PageMap";
 import { PageOrders } from "@/app/admin/orders/PageOrders";
-import { PageSchedules } from "@/app/admin/schedules/PageSchedules";
 import { LoginPage } from "@/app/auth/LoginPage";
 import { RegisterPage } from "@/app/auth/RegisterPage";
 import { PageDashboardDemo } from "@/app/demo/dashboard-demo/PageDashboardDemo";
@@ -11,7 +11,6 @@ import { Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./NotFound";
 import { PrivateRoute } from "./PrivateRoute";
-import { PageAGVs } from "@/app/admin/agvs/PageAGVs";
 
 export function AllRoutes() {
   return (
@@ -26,7 +25,6 @@ export function AllRoutes() {
             </Route>
             <Route path="/admin" element={<PrivateRoute />}>
               <Route path="orders" element={<PageOrders />} />
-              <Route path="schedules" element={<PageSchedules />} />
               <Route path="dashboard" element={<PageDashboard />} />
               <Route path="map" element={<PageMap />} />
               <Route path="agvs" element={<PageAGVs />} />

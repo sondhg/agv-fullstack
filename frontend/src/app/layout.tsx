@@ -15,7 +15,7 @@ export default function Layout() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-white drop-shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 dark:bg-black">
+        <header className="flex h-16 shrink-0 items-center gap-2 bg-white drop-shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 dark:bg-black">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-4" />

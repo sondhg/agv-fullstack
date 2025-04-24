@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  CalendarDays,
+  Car,
   ChartLine,
   FlaskConical,
   GalleryThumbnails,
@@ -23,7 +23,6 @@ import {
   PlaneLanding,
   University,
   UserPlus,
-  Car,
 } from "lucide-react";
 
 // This is sample data.
@@ -48,29 +47,24 @@ const data = {
       isActive: true,
       items: [
         {
-          title: "Orders",
-          url: "/admin/orders",
-          icon: ListOrdered,
-        },
-        {
-          title: "Schedules",
-          url: "/admin/schedules",
-          icon: CalendarDays,
-        },
-        {
           title: "Map",
           url: "/admin/map",
           icon: Map,
         },
         {
-          title: "Dashboard",
-          url: "/admin/dashboard",
-          icon: ChartLine,
-        },
-        {
           title: "AGVs",
           url: "/admin/agvs",
           icon: Car,
+        },
+        {
+          title: "Orders",
+          url: "/admin/orders",
+          icon: ListOrdered,
+        },
+        {
+          title: "Dashboard",
+          url: "/admin/dashboard",
+          icon: ChartLine,
         },
       ],
     },

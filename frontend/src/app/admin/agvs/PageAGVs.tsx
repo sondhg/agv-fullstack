@@ -12,7 +12,7 @@ import { AGV } from "@/types/AGV.types";
 import { CalendarPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AlgorithmSelect } from "../schedules/AlgorithmSelect";
+import { AlgorithmSelect } from "./AlgorithmSelect";
 import { columnsTableAGVs } from "./columnsTableAGVs";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
