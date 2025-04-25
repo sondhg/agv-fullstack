@@ -23,17 +23,17 @@ class Agv(models.Model):
 
     # Define choices for direction_change
     # Actual integer values to be set on model
-    STRAIGHT = 0  # Go straight
-    REVERSE = 1  # Reverse
-    LEFT = 2  # Turn left
-    RIGHT = 3  # Turn right
+    GO_STRAIGHT = 0  # Go straight
+    TURN_AROUND = 1  # Reverse
+    TURN_LEFT = 2  # Turn left
+    TURN_RIGHT = 3  # Turn right
 
     # Human readable names
     DIRECTION_CHANGE_CHOICES = {
-        STRAIGHT: "Go straight",
-        REVERSE: "Turn reverse",
-        LEFT: "Turn left",
-        RIGHT: "Turn right"
+        GO_STRAIGHT: "Go straight",
+        TURN_AROUND: "Turn around",
+        TURN_LEFT: "Turn left",
+        TURN_RIGHT: "Turn right"
     }
 
     # Model fields

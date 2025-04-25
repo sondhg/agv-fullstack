@@ -1,7 +1,7 @@
 """Models for storing AGV map data."""
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from .constants import MapConstants, DirectionConstants
+from .constants import MapConstants
 
 
 class MapData(models.Model):
@@ -59,12 +59,25 @@ class Direction(models.Model):
     """
     Represents the directional relationship between two nodes.
     The direction value indicates the cardinal direction from node1 to node2:
-    1 = NORTH
-    2 = EAST
-    3 = SOUTH
-    4 = WEST
+    NORTH = 1
+    EAST = 2
+    SOUTH = 3
+    WEST = 4
     A value of 10000 in the CSV indicates no direction (no connection).
     """
+
+    NORTH = 1
+    EAST = 2
+    SOUTH = 3
+    WEST = 4
+
+    DIRECTION_CHOICES = {
+        NORTH: 'North',
+        EAST: 'East',
+        SOUTH: 'South',
+        WEST: 'West',
+    }
+
     node1 = models.IntegerField(
         validators=[MinValueValidator(1)],
         help_text="Reference node (starting point)"
@@ -78,7 +91,7 @@ class Direction(models.Model):
             MinValueValidator(1),
             MaxValueValidator(4)
         ],
-        choices=DirectionConstants.DIRECTION_CHOICES,
+        choices=DIRECTION_CHOICES,
         help_text="Cardinal direction from node1 to node2 (1=North, 2=East, 3=South, 4=West)"
     )
 
@@ -92,5 +105,6 @@ class Direction(models.Model):
         ]
 
     def __str__(self):
-        direction_name = dict(DirectionConstants.DIRECTION_CHOICES)[self.direction]
+        direction_name = dict(self.DIRECTION_CHOICES)[
+            self.direction]
         return f"Node {self.node2} is {direction_name} of node {self.node1}"
