@@ -11,16 +11,13 @@ class DirectionChangeOptions:
 
 class ErrorMessages:
     """Error messages used throughout the application"""
-    NO_ORDERS = "No orders available to generate schedules."
+    NO_ORDERS = "No orders available to dispatch."
     INVALID_MAP_DATA = "Map data is incomplete or missing."
     INVALID_ALGORITHM = "Invalid pathfinding algorithm specified."
-    NO_SCHEDULES = "No schedules could be generated"
-    BULK_DELETE_NO_IDS = "No schedule IDs provided for deletion."
 
 
 class SuccessMessages:
     """Success messages used throughout the application"""
-    SCHEDULES_GENERATED = "Schedules generated successfully."
     ORDER_PROCESSED = "Order {} processed successfully."
     ORDERS_PROCESSED = "{} orders processed successfully."
 

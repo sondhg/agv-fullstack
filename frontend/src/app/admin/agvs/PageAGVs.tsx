@@ -51,16 +51,16 @@ export function PageAGVs() {
     try {
       setIsDispatching(true);
       await dispatchOrdersToAGVs(selectedAlgorithm);
-      toast.success("Schedules generated successfully");
+      toast.success("Successfully dispatched orders to AGVs");
       await fetchListData();
     } catch (error) {
       if (error instanceof Response) {
         const errorData = await error.json();
-        toast.error(errorData.error || "Failed to generate schedules");
+        toast.error(errorData.error || "Failed to dispatch orders to AGVs");
       } else {
-        toast.error("Failed to generate schedules");
+        toast.error("Failed to dispatch orders to AGVs");
       }
-      console.error("Error generating schedules:", error);
+      console.error("Error dispatching orders to AGVs:", error);
     } finally {
       setIsDispatching(false);
     }

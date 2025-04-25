@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Schedule } from "./Schedule.types";
+import { Order } from "./Order.types";
 
 // Define motion state enum to match Python constants
 export enum AGVMotionState {
@@ -26,7 +26,7 @@ export interface AGV {
   reserved_node: number | null;
   motion_state: AGVMotionState;
   spare_flag: boolean;
-  active_schedule: Schedule | null;  // We'll store the schedule ID
+  active_order: Order | null; // We'll store the order ID
 }
 
 export interface CreateAGVDto {

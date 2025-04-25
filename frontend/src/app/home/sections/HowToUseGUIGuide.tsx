@@ -37,11 +37,6 @@ const steps = [
     description:
       "Go to AGVs page to use the 24-step simulation program and view data changes as AGVs travel.",
   },
-  // {
-  //   title: "View real-time AGV data.",
-  //   description:
-  //     "Check live data returned by AGVs on the Dashboard page as they travel based on schedules.",
-  // },
 ];
 
 type CardProps = React.ComponentProps<typeof Card>;
