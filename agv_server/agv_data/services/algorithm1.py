@@ -7,8 +7,8 @@ and shared points identification.
 from typing import List, Dict, Optional
 from order_data.models import Order
 from map_data.models import Direction, Connection
-from ..models import Agv, AGV_STATE_IDLE, AGV_STATE_WAITING
-from ..constants import ErrorMessages
+from ..models import Agv
+from ..constants import ErrorMessages, AGVState
 from ..pathfinding.factory import PathfindingFactory
 from .shared_points import SharedPointsCalculator
 from .order_processor import OrderProcessor
@@ -67,7 +67,7 @@ class TaskDispatcher:
         try:
             # Find an idle AGV with matching preferred parking node
             agv = Agv.objects.filter(
-                motion_state=AGV_STATE_IDLE,
+                motion_state=AGVState.IDLE,
                 preferred_parking_node=parking_node,
                 active_order__isnull=True  # Ensure AGV is truly idle
             ).first()
@@ -128,7 +128,7 @@ class TaskDispatcher:
                     orders_data_list.append(order_data)
 
                     # Update AGV state to waiting (according to Algorithm 2 in paper)
-                    assigned_agv.motion_state = AGV_STATE_WAITING
+                    assigned_agv.motion_state = AGVState.WAITING
                     assigned_agv.save()
             except Exception as e:
                 print(f"Failed to process task {task.order_id}: {str(e)}")

@@ -5,7 +5,8 @@ This module implements the spare point allocation and management as described
 in Algorithm 2 of the DSPA algorithm from algorithms-pseudocode.tex.
 """
 from typing import List
-from ..models import Agv, AGV_STATE_MOVING, AGV_STATE_WAITING
+from ..models import Agv
+from ..constants import AGVState
 from .algorithm4 import allocate_spare_points
 from .utils import is_node_reserved_by_others
 
@@ -100,7 +101,7 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
     updated_agvs = []
     spare_point_agvs = Agv.objects.filter(
         spare_flag=True,
-        motion_state=AGV_STATE_WAITING
+        motion_state=AGVState.WAITING
     ).exclude(agv_id=agv_id)
 
     for agv in spare_point_agvs:
@@ -112,7 +113,7 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
             # Return AGV from spare point to main path
             agv.next_node = next_node
             agv.reserved_node = next_node
-            agv.motion_state = AGV_STATE_MOVING
+            agv.motion_state = AGVState.MOVING
             _clear_spare_points(agv)
             agv.save()
             updated_agvs.append(agv.agv_id)

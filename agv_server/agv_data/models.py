@@ -1,10 +1,6 @@
 from django.db import models
 from order_data.models import Order
-
-# AGV States from Algorithm 2 (SA^i)
-AGV_STATE_IDLE = 0    # No mission to execute
-AGV_STATE_MOVING = 1  # On way to next reserved point
-AGV_STATE_WAITING = 2  # Stopped at current point
+from .constants import AGVState
 
 
 class Agv(models.Model):
@@ -41,11 +37,11 @@ class Agv(models.Model):
     # State management from Algorithm 2
     motion_state = models.IntegerField(
         choices=[
-            (AGV_STATE_IDLE, 'Idle'),
-            (AGV_STATE_MOVING, 'Moving'),
-            (AGV_STATE_WAITING, 'Waiting')
+            (AGVState.IDLE, 'Idle'),
+            (AGVState.MOVING, 'Moving'),
+            (AGVState.WAITING, 'Waiting')
         ],
-        default=AGV_STATE_IDLE,
+        default=AGVState.IDLE,
         help_text="AGV state (SA^i) as defined in Definition 7"
     )
 

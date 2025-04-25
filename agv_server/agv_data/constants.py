@@ -1,15 +1,11 @@
 """Constants used for AGV data and scheduling functionality."""
-# AGV States from Algorithm 2 (SA^i)
-AGV_STATE_IDLE = 0    # No mission to execute
-AGV_STATE_MOVING = 1  # On way to next reserved point
-AGV_STATE_WAITING = 2  # Stopped at current point
 
 
 class AGVState:
     """AGV states as defined in the paper"""
-    IDLE = AGV_STATE_IDLE
-    MOVING = AGV_STATE_MOVING
-    WAITING = AGV_STATE_WAITING
+    IDLE = 0  # No mission to execute
+    MOVING = 1  # On way to next reserved point
+    WAITING = 2  # Stopped at current point
 
 
 class ErrorMessages:

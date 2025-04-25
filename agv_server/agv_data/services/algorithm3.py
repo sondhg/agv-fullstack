@@ -6,7 +6,8 @@ and resolving them using spare points.
 """
 from typing import Dict, List, Tuple, Optional
 from django.db import transaction
-from ..models import Agv, AGV_STATE_WAITING, AGV_STATE_MOVING
+from ..models import Agv
+from ..constants import AGVState
 
 
 class DeadlockResolver:
@@ -40,7 +41,7 @@ class DeadlockResolver:
 
         try:
             # Get all AGVs that are in WAITING state
-            waiting_agvs = Agv.objects.filter(motion_state=AGV_STATE_WAITING)
+            waiting_agvs = Agv.objects.filter(motion_state=AGVState.WAITING)
 
             if not waiting_agvs:
                 return {
@@ -323,11 +324,11 @@ class DeadlockResolver:
                 # Update AGV state and node information
                 agv_to_move.next_node = spare_point
                 agv_to_move.reserved_node = spare_point
-                agv_to_move.motion_state = AGV_STATE_MOVING
+                agv_to_move.motion_state = AGVState.MOVING
                 agv_to_move.save()
 
                 # Update the proceeding AGV state
-                agv_to_proceed.motion_state = AGV_STATE_MOVING
+                agv_to_proceed.motion_state = AGVState.MOVING
                 agv_to_proceed.reserved_node = agv_to_proceed.next_node
                 agv_to_proceed.save()
 
