@@ -1,6 +1,5 @@
 from django.db import models
 from order_data.models import Order
-from .constants import AGVState
 
 
 class Agv(models.Model):
@@ -8,6 +7,21 @@ class Agv(models.Model):
     Represents an AGV in the system according to the DSPA algorithm.
     Following Algorithm 2's control policy and Algorithm 3's deadlock resolution.
     """
+
+    # Define choices for motion_state
+    # Actual integer values to be set on model
+    IDLE = 0  # No mission to execute
+    MOVING = 1  # On way to next reserved point
+    WAITING = 2  # Stopped at current point
+
+    # Human readable names
+    MOTION_STATE_CHOICES = {
+        IDLE: "Idle",
+        MOVING: "Moving",
+        WAITING: "Waiting"
+    }
+
+    # Model fields
     # Basic AGV information
     agv_id = models.BigIntegerField(primary_key=True)
     preferred_parking_node = models.IntegerField(
@@ -35,13 +49,10 @@ class Agv(models.Model):
     )
 
     # State management from Algorithm 2
+
     motion_state = models.IntegerField(
-        choices=[
-            (AGVState.IDLE, 'Idle'),
-            (AGVState.MOVING, 'Moving'),
-            (AGVState.WAITING, 'Waiting')
-        ],
-        default=AGVState.IDLE,
+        choices=MOTION_STATE_CHOICES,
+        default=IDLE,
         help_text="AGV state (SA^i) as defined in Definition 7"
     )
 

@@ -5,7 +5,6 @@ from .models import Order
 from .serializers import OrderSerializer
 from rest_framework.generics import ListAPIView
 from agv_data.models import Agv
-from agv_data.constants import AGVState
 from django.db import transaction
 
 
@@ -87,7 +86,7 @@ class DeleteOrderView(APIView):
         agv.current_node = None
         agv.next_node = None
         agv.reserved_node = None
-        agv.motion_state = AGVState.IDLE
+        agv.motion_state = Agv.IDLE
         agv.spare_flag = False
         agv.spare_points = {}
         agv.initial_path = []
@@ -170,7 +169,7 @@ class BulkDeleteOrdersView(APIView):
             agv.current_node = None
             agv.next_node = None
             agv.reserved_node = None
-            agv.motion_state = AGVState.IDLE
+            agv.motion_state = Agv.IDLE
             agv.spare_flag = False
             agv.spare_points = {}
             agv.initial_path = []

@@ -11,7 +11,6 @@ from typing import Dict, Optional
 
 from order_data.models import Order
 from ..models import Agv
-from ..constants import AGVState
 from .travel_information import update_travel_information
 from .movement_conditions import evaluate_movement_conditions
 from .spare_points_manager import remove_current_spare_point, check_and_update_agvs_at_spare_points, apply_for_spare_points
@@ -49,7 +48,7 @@ class ControlPolicyController:
                 return self._create_error_response("AGV has no active order")
 
             # Default state is waiting (as per Algorithm 2, line 4)
-            agv.motion_state = AGVState.WAITING
+            agv.motion_state = Agv.WAITING
 
             # Check if task is completed
             if self._is_task_completed(agv):
@@ -62,7 +61,7 @@ class ControlPolicyController:
             result_info = self._handle_movement_decision(agv)
 
             # Update other AGVs if needed
-            if agv.motion_state == AGVState.MOVING:
+            if agv.motion_state == Agv.MOVING:
                 updated_agvs = check_and_update_agvs_at_spare_points(agv_id)
                 if updated_agvs:
                     result_info["updated_agvs"] = updated_agvs
@@ -114,7 +113,7 @@ class ControlPolicyController:
 
     def _reset_agv_state(self, agv: Agv) -> None:
         """Reset AGV state to idle."""
-        agv.motion_state = AGVState.IDLE
+        agv.motion_state = Agv.IDLE
         agv.active_order = None
         agv.spare_flag = False
         agv.spare_points = {}
@@ -128,7 +127,7 @@ class ControlPolicyController:
         """Move an AGV from its spare point back to its original path."""
         agv.spare_flag = False
         agv.spare_points = {}
-        agv.motion_state = AGVState.MOVING
+        agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
         agv.save()
 
@@ -159,7 +158,7 @@ class ControlPolicyController:
     def _update_agv_movement_state(self, agv: Agv, can_move: bool) -> Dict:
         """Update AGV state based on movement evaluation."""
         if can_move:
-            agv.motion_state = AGVState.MOVING
+            agv.motion_state = Agv.MOVING
             agv.reserved_node = agv.next_node
             agv.save()
             return {

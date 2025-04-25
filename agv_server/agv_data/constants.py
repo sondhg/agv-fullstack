@@ -1,11 +1,12 @@
 """Constants used for AGV data and scheduling functionality."""
 
 
-class AGVState:
-    """AGV states as defined in the paper"""
-    IDLE = 0  # No mission to execute
-    MOVING = 1  # On way to next reserved point
-    WAITING = 2  # Stopped at current point
+class DirectionChangeOptions:
+    """Options for direction changes when AGV reaches a node and is in MOVING state"""
+    STRAIGHT = 0  # Go straight
+    REVERSE = 1  # Reverse
+    LEFT = 2  # Turn left
+    RIGHT = 3  # Turn right
 
 
 class ErrorMessages:
