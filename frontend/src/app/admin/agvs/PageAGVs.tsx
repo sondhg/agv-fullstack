@@ -75,10 +75,10 @@ export function PageAGVs() {
       <h2 className="text-3xl font-bold">AGVs</h2>
 
       <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="gap-2">
           <div className="flex flex-col gap-4 md:gap-6">
             <div className="grid grid-cols-1 gap-10 xl:grid-cols-6">
-              <div className="flex flex-col gap-4">
+              <div className="col-start-1 col-end-2 flex flex-col gap-4">
                 <DialogFormCreateAGVs
                   isDialogOpen={isDialogOpen}
                   setIsDialogOpen={setIsDialogOpen}
@@ -92,7 +92,7 @@ export function PageAGVs() {
                   resetSelection={resetSelection}
                 />
               </div>
-              <div className="flex flex-col gap-4">
+              <div className="col-start-3 col-end-4 flex flex-col gap-4">
                 <AlgorithmSelect
                   selectedAlgorithm={selectedAlgorithm}
                   onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
@@ -106,7 +106,7 @@ export function PageAGVs() {
                   {isDispatching ? "Dispatching..." : "Dispatch orders to AGVs"}
                 </Button>
               </div>
-              <div className="col-span-3">
+              <div className="col-start-1 col-end-4">
                 <FormSimulateUpdateAgvPosition
                   onUpdateSuccess={fetchListData}
                 />

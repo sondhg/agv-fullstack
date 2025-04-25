@@ -37,7 +37,7 @@ def get_action(prev_node, current_node, next_node):
 
     Returns:
         str: The action the AGV should take at the `current_node`:
-             - "none": No direction change (straight line).
+             - "straight": No direction change (straight line).
              - "right": Turn right.
              - "left": Turn left.
              - "reverse": Turn around (180 degrees).
@@ -46,10 +46,10 @@ def get_action(prev_node, current_node, next_node):
     direction_to_next = get_direction(current_node, next_node)
 
     if direction_to_current is None or direction_to_next is None:
-        return "none"  # Default to "none" if direction data is missing
+        return "straight"  # Default to "straight" if direction data is missing
 
     if direction_to_current == direction_to_next:
-        return "none"  # No direction change (straight line)
+        return "straight"  # No direction change (straight line)
     elif (direction_to_current == NORTH and direction_to_next == EAST) or \
          (direction_to_current == EAST and direction_to_next == SOUTH) or \
          (direction_to_current == SOUTH and direction_to_next == WEST) or \
@@ -66,7 +66,7 @@ def get_action(prev_node, current_node, next_node):
          (direction_to_current == WEST and direction_to_next == EAST):
         return "reverse"  # Turn around (180 degrees)
     else:
-        return "none"  # Default to "none" if 3 nodes are in a straight line
+        return "straight"  # Default to "straight" if 3 nodes are in a straight line
 
 
 def format_instruction_set(path):

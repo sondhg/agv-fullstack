@@ -18,6 +18,12 @@ class Agv(models.Model):
         help_text="Preferred parking point for AGV"
     )
 
+    # previous_node is not needed for DSPA, but will be useful for deciding which direction to turn to when AGV reaches a node, based on considering the relevant three consecutive nodes and the map layout.
+    previous_node = models.IntegerField(
+        null=True,
+        help_text="Last point visited"
+    )
+
     # Traveling information I^i from Definition 8
     current_node = models.IntegerField(
         null=True,
