@@ -11,7 +11,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { simulateUpdateAgvPosition } from "@/services/APIs/agvsAPI";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -43,6 +44,8 @@ export const FormSimulateUpdateAgvPosition = ({
   onUpdateSuccess?: () => Promise<void>;
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Reference to store the reset function from ButtonStepSimulation
+  const resetSimulationRef = useRef<(() => void) | null>(null);
 
   // Initialize form with React Hook Form and Zod validation
   const form = useForm<FormValues>({
@@ -53,6 +56,22 @@ export const FormSimulateUpdateAgvPosition = ({
     },
     mode: "onChange",
   });
+
+  /**
+   * Store the reset function from ButtonStepSimulation
+   */
+  const handleResetRef = useCallback((resetFn: () => void) => {
+    resetSimulationRef.current = resetFn;
+  }, []);
+
+  /**
+   * Reset the simulation when the reset button is clicked
+   */
+  const handleReset = () => {
+    if (resetSimulationRef.current) {
+      resetSimulationRef.current();
+    }
+  };
 
   /**
    * Handle form submission
@@ -147,8 +166,15 @@ export const FormSimulateUpdateAgvPosition = ({
             </div>
           </CardContent>
         </div>
-        <div className="col-span-1 m-2 flex flex-col justify-center">
-          <ButtonStepSimulation onUpdateSuccess={onUpdateSuccess} />
+        <div className="col-span-1 m-2 flex flex-col justify-center gap-4">
+          <ButtonStepSimulation
+            onUpdateSuccess={onUpdateSuccess}
+            onResetRef={handleResetRef}
+          />
+          <Button onClick={handleReset} variant="outline" className="w-full">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reset Simulation
+          </Button>
         </div>
       </div>
     </Card>

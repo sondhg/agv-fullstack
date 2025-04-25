@@ -1,11 +1,23 @@
 import { simulateUpdateAgvPosition } from "@/services/APIs/agvsAPI";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { simulationSteps } from "./simulationSteps";
 
+// Key for storing the simulation step index in localStorage
+const SIMULATION_STEP_KEY = "agv-simulation-current-step";
+
 export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Initialize state from localStorage if available, otherwise start from step 0
+  const [currentStepIndex, setCurrentStepIndex] = useState(() => {
+    const savedStep = localStorage.getItem(SIMULATION_STEP_KEY);
+    return savedStep ? parseInt(savedStep, 10) : 0;
+  });
   const [isSimulating, setIsSimulating] = useState(false);
+
+  // Save step index to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(SIMULATION_STEP_KEY, currentStepIndex.toString());
+  }, [currentStepIndex]);
 
   const handleNextStep = async () => {
     if (isSimulating) return;
@@ -39,10 +51,18 @@ export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
     }
   };
 
+  // Add a function to reset the simulation
+  const resetSimulation = () => {
+    setCurrentStepIndex(0);
+    localStorage.removeItem(SIMULATION_STEP_KEY);
+    toast.info("Simulation has been reset to the beginning");
+  };
+
   return {
     currentStepIndex,
     isSimulating,
     handleNextStep,
+    resetSimulation,
     totalSteps: simulationSteps.length,
     currentStep: simulationSteps[currentStepIndex],
   };

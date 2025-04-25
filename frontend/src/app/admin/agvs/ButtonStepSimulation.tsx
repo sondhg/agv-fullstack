@@ -3,18 +3,26 @@ import { useStepSimulation } from "./useStepSimulation";
 
 interface ButtonStepSimulationProps {
   onUpdateSuccess?: () => Promise<void>;
+  onResetRef?: (resetFn: () => void) => void;
 }
 
 export function ButtonStepSimulation({
   onUpdateSuccess,
+  onResetRef,
 }: ButtonStepSimulationProps) {
   const {
     currentStepIndex,
     isSimulating,
     handleNextStep,
+    resetSimulation,
     totalSteps,
     currentStep,
   } = useStepSimulation(onUpdateSuccess);
+
+  // Pass the reset function to the parent component if the ref is provided
+  if (onResetRef) {
+    onResetRef(resetSimulation);
+  }
 
   return (
     <Button onClick={handleNextStep} disabled={isSimulating} className="h-full">
