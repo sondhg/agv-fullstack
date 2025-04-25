@@ -3,7 +3,7 @@ Utility functions for AGV control policy.
 
 This module provides helper functions for the Algorithm 2 implementation.
 """
-from ...models import Agv
+from ..models import Agv
 
 
 def is_node_reserved_by_others(node: int, exclude_agv_id: int) -> bool:

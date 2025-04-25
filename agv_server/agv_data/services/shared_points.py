@@ -6,7 +6,7 @@ from the research paper.
 """
 from typing import List, Dict, Set, Optional
 from map_data.models import Connection
-from ...models import Agv
+from ..models import Agv
 
 
 class SharedPointsCalculator:

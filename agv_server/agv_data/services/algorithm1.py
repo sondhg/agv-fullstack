@@ -1,12 +1,15 @@
 """
 Implementation of Algorithm 1: Task Dispatching of the Central Controller
+Algorithm 1: Initial Path Planning and Shared Points Detection.
+This algorithm handles task dispatching, initial path planning,
+and shared points identification.
 """
 from typing import List, Dict, Optional
 from order_data.models import Order
 from map_data.models import Direction, Connection
-from ...models import Agv, AGV_STATE_IDLE, AGV_STATE_WAITING
-from ...constants import ErrorMessages
-from ...pathfinding.factory import PathfindingFactory
+from ..models import Agv, AGV_STATE_IDLE, AGV_STATE_WAITING
+from ..constants import ErrorMessages
+from ..pathfinding.factory import PathfindingFactory
 from .shared_points import SharedPointsCalculator
 from .order_processor import OrderProcessor
 

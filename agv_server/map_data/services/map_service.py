@@ -1,25 +1,60 @@
 """Service layer for map data operations."""
 import csv
 import io
-from typing import List, Dict, Any, Tuple, Optional
-from django.db.models.query import QuerySet
+from typing import List, Dict, Any, TypedDict, Optional
 from ..models import MapData, Connection, Direction
-from ..constants import MapConstants, ErrorMessages
+from ..constants import MapConstants
+
+
+class MapResponse(TypedDict):
+    """Type definition for map operation responses."""
+    success: bool
+    message: str
+    data: Optional[Dict[str, Any]]
 
 
 class MapService:
+    """Service class for handling map-related operations."""
+
+    @staticmethod
+    def _create_success_response(message: str, **kwargs) -> MapResponse:
+        """Create a standardized success response."""
+        response = {"success": True, "message": message, "data": None}
+        response.update(kwargs)
+        return response
+
+    @staticmethod
+    def _create_error_response(message: str, **kwargs) -> MapResponse:
+        """Create a standardized error response."""
+        response = {"success": False, "message": message, "data": None}
+        response.update(kwargs)
+        return response
+
+    @staticmethod
+    def _process_matrix_nodes(matrix: List[List[str]], process_func) -> List[Any]:
+        """Process matrix nodes with the given function."""
+        items_to_create = []
+        for i in range(len(matrix)):
+            for j in range(len(matrix[i])):
+                node1 = i + MapConstants.NODE_INDEX_OFFSET
+                node2 = j + MapConstants.NODE_INDEX_OFFSET
+                value = int(matrix[i][j])
+
+                if node1 != node2 and value != MapConstants.NO_CONNECTION:
+                    items_to_create.append(process_func(node1, node2, value))
+        return items_to_create
+
     @staticmethod
     def process_csv_data(data: str) -> List[List[str]]:
         """Process CSV data into a matrix."""
-        reader = csv.reader(io.StringIO(data))
-        return list(reader)
+        try:
+            return list(csv.reader(io.StringIO(data)))
+        except Exception as e:
+            raise ValueError(f"Invalid CSV format: {str(e)}")
 
     @classmethod
-    def import_connections(cls, data: str) -> Dict[str, Any]:
-        """
-        Import connection data from CSV.
-        Returns a dictionary with status and message.
-        """
+    def import_connections(cls, data: str) -> MapResponse:
+        """Import connection data from CSV."""
         try:
             matrix = cls.process_csv_data(data)
             node_count = len(matrix)
@@ -32,129 +67,102 @@ class MapService:
             # Clear old connections
             Connection.objects.all().delete()
 
-            # Save new connections
-            connections_to_create = []
-            for i in range(node_count):
-                for j in range(node_count):
-                    node1 = i + MapConstants.NODE_INDEX_OFFSET
-                    node2 = j + MapConstants.NODE_INDEX_OFFSET
+            # Process and create new connections
+            connections = cls._process_matrix_nodes(
+                matrix,
+                lambda node1, node2, value: Connection(
+                    node1=node1,
+                    node2=node2,
+                    distance=value
+                )
+            )
 
-                    if node1 != node2 and int(matrix[i][j]) != MapConstants.NO_CONNECTION:
-                        connections_to_create.append(
-                            Connection(
-                                node1=node1,
-                                node2=node2,
-                                distance=int(matrix[i][j])
-                            )
-                        )
-
-            # Bulk create connections for better performance
-            Connection.objects.bulk_create(connections_to_create)
-            return {
-                "success": True,
-                "message": "Connection data imported successfully",
-                "connection_count": len(connections_to_create)
-            }
+            Connection.objects.bulk_create(connections)
+            return cls._create_success_response(
+                "Connection data imported successfully",
+                connection_count=len(connections)
+            )
 
         except Exception as e:
-            return {
-                "success": False,
-                "message": f"Error importing connections: {str(e)}"
-            }
+            return cls._create_error_response(f"Error importing connections: {str(e)}")
 
     @classmethod
-    def import_directions(cls, data: str) -> Dict[str, Any]:
-        """
-        Import direction data from CSV.
-        Returns a dictionary with status and message.
-        """
+    def import_directions(cls, data: str) -> MapResponse:
+        """Import direction data from CSV."""
         try:
             matrix = cls.process_csv_data(data)
 
             # Clear old directions
             Direction.objects.all().delete()
 
-            # Save new directions
-            directions_to_create = []
-            for i in range(len(matrix)):
-                for j in range(len(matrix[i])):
-                    node1 = i + MapConstants.NODE_INDEX_OFFSET
-                    node2 = j + MapConstants.NODE_INDEX_OFFSET
+            # Process and create new directions
+            directions = cls._process_matrix_nodes(
+                matrix,
+                lambda node1, node2, value: Direction(
+                    node1=node1,
+                    node2=node2,
+                    direction=value
+                )
+            )
 
-                    if int(matrix[i][j]) != MapConstants.NO_CONNECTION:
-                        directions_to_create.append(
-                            Direction(
-                                node1=node1,
-                                node2=node2,
-                                direction=int(matrix[i][j])
-                            )
-                        )
-
-            # Bulk create directions for better performance
-            Direction.objects.bulk_create(directions_to_create)
-            return {
-                "success": True,
-                "message": "Direction data imported successfully",
-                "direction_count": len(directions_to_create)
-            }
+            Direction.objects.bulk_create(directions)
+            return cls._create_success_response(
+                "Direction data imported successfully",
+                direction_count=len(directions)
+            )
 
         except Exception as e:
-            return {
-                "success": False,
-                "message": f"Error importing directions: {str(e)}"
-            }
+            return cls._create_error_response(f"Error importing directions: {str(e)}")
 
     @staticmethod
-    def get_map_data() -> Dict[str, Any]:
+    def get_map_data() -> MapResponse:
         """Get all map data including nodes, connections, and directions."""
-        nodes = list(Direction.objects.values_list(
-            "node1", flat=True).distinct())
-        connections = list(Connection.objects.values())
-        directions = list(Direction.objects.values())
+        try:
+            nodes = list(Direction.objects.values_list(
+                "node1", flat=True).distinct())
+            connections = list(Connection.objects.values())
+            directions = list(Direction.objects.values())
 
-        # Check what data is available
-        has_connections = len(connections) > 0
-        has_directions = len(directions) > 0
+            has_connections = bool(connections)
+            has_directions = bool(directions)
 
-        if not has_connections and not has_directions:
-            return {
-                "success": False,
-                "message": "No map data available. Please import both connection and direction data.",
-                "missing": ["connections", "directions"]
-            }
-        elif not has_connections:
-            return {
-                "success": False,
-                "message": "Connection data is missing. Please import the connections CSV file.",
-                "missing": ["connections"],
-                "available": {
+            if not has_connections and not has_directions:
+                return MapService._create_error_response(
+                    "No map data available. Please import both connection and direction data.",
+                    missing=["connections", "directions"]
+                )
+
+            if not has_connections:
+                return MapService._create_error_response(
+                    "Connection data is missing. Please import the connections CSV file.",
+                    missing=["connections"],
+                    available={"nodes": nodes, "directions": directions}
+                )
+
+            if not has_directions:
+                return MapService._create_error_response(
+                    "Direction data is missing. Please import the directions CSV file.",
+                    missing=["directions"],
+                    available={
+                        "nodes": list(Connection.objects.values_list("node1", flat=True).distinct()),
+                        "connections": connections
+                    }
+                )
+
+            return MapService._create_success_response(
+                "Complete map data available",
+                data={
                     "nodes": nodes,
+                    "connections": connections,
                     "directions": directions
                 }
-            }
-        elif not has_directions:
-            return {
-                "success": False,
-                "message": "Direction data is missing. Please import the directions CSV file.",
-                "missing": ["directions"],
-                "available": {
-                    "nodes": list(Connection.objects.values_list("node1", flat=True).distinct()),
-                    "connections": connections
-                }
-            }
+            )
 
-        return {
-            "success": True,
-            "message": "Complete map data available",
-            "data": {
-                "nodes": nodes,
-                "connections": connections,
-                "directions": directions
-            }
-        }
+        except Exception as e:
+            return MapService._create_error_response(f"Error retrieving map data: {str(e)}")
 
     @staticmethod
-    def delete_all_data() -> Dict[str, Any]:
+    def delete_all_data() -> MapResponse:
         """Delete all map data."""
         try:
             connections_count = Connection.objects.count()
@@ -164,16 +172,12 @@ class MapService:
             Direction.objects.all().delete()
             MapData.objects.all().delete()
 
-            return {
-                "success": True,
-                "message": "All map data deleted successfully",
-                "deleted": {
+            return MapService._create_success_response(
+                "All map data deleted successfully",
+                deleted={
                     "connections": connections_count,
                     "directions": directions_count
                 }
-            }
+            )
         except Exception as e:
-            return {
-                "success": False,
-                "message": f"Error deleting map data: {str(e)}"
-            }
+            return MapService._create_error_response(f"Error deleting map data: {str(e)}")

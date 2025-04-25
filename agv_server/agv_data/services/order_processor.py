@@ -4,7 +4,7 @@ This replaces the schedule generator module from the schedule_generate app.
 """
 from typing import Dict, List, Optional
 from order_data.models import Order
-from ...models import Agv
+from ..models import Agv
 
 
 class OrderProcessor:

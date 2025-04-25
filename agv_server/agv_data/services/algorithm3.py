@@ -1,13 +1,12 @@
 """
 Implementation of Algorithm 3: Deadlock Detection and Resolution.
 
-This module implements the deadlock detection and resolution functionality
-as described in the DSPA algorithm. It detects deadlocks between AGVs and
-resolves them using spare points.
+This algorithm handles detecting deadlock situations between AGVs
+and resolving them using spare points.
 """
 from typing import Dict, List, Tuple, Optional
 from django.db import transaction
-from ...models import Agv, AGV_STATE_WAITING, AGV_STATE_MOVING
+from ..models import Agv, AGV_STATE_WAITING, AGV_STATE_MOVING
 
 
 class DeadlockResolver:

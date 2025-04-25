@@ -5,9 +5,37 @@ This module implements the spare point allocation and management as described
 in Algorithm 2 of the DSPA algorithm from algorithms-pseudocode.tex.
 """
 from typing import List
-from ...models import Agv, AGV_STATE_MOVING, AGV_STATE_WAITING
-from ..algorithm_4.algorithm4 import allocate_spare_points
+from ..models import Agv, AGV_STATE_MOVING, AGV_STATE_WAITING
+from .algorithm4 import allocate_spare_points
 from .utils import is_node_reserved_by_others
+
+
+def _clear_spare_points(agv: Agv) -> None:
+    """
+    Helper method to reset spare points state for an AGV.
+
+    Args:
+        agv (Agv): The AGV object to reset spare points for
+    """
+    agv.spare_flag = False
+    agv.spare_points = {}
+
+
+def _get_all_other_residual_paths(agv_id: int) -> List[List[int]]:
+    """
+    Helper method to get residual paths of all other active AGVs.
+
+    Args:
+        agv_id (int): ID of the AGV to exclude
+
+    Returns:
+        List[List[int]]: List of residual paths from other AGVs
+    """
+    paths = []
+    for other_agv in Agv.objects.exclude(agv_id=agv_id):
+        if other_agv.active_order:
+            paths.append(other_agv.residual_path)
+    return paths
 
 
 def apply_for_spare_points(agv: Agv) -> None:
@@ -18,35 +46,20 @@ def apply_for_spare_points(agv: Agv) -> None:
     for spare point allocation.
 
     Args:
-        agv (Agv): The AGV object
+        agv (Agv): The AGV object requiring spare points
     """
-
-    scp = agv.scp
-
-    if not scp:
-        # No sequential shared points, no need for spare points
-        agv.spare_flag = False
-        agv.spare_points = {}
+    if not agv.scp:
+        _clear_spare_points(agv)
         return
 
-    # Get all residual paths of other AGVs
-    all_residual_paths = []
-    for other_agv in Agv.objects.exclude(agv_id=agv.agv_id):
-        if other_agv.active_order:
-            all_residual_paths.append(
-                other_agv.residual_path)
-
-    # Call algorithm4's allocate_spare_points to allocate spare points
-    spare_points = allocate_spare_points(scp, all_residual_paths)
+    all_residual_paths = _get_all_other_residual_paths(agv.agv_id)
+    spare_points = allocate_spare_points(agv.scp, all_residual_paths)
 
     if spare_points:
-        # Successfully allocated spare points, set F^i = 1
         agv.spare_flag = True
         agv.spare_points = spare_points
     else:
-        # Failed to allocate spare points, set F^i = 0
-        agv.spare_flag = False
-        agv.spare_points = {}
+        _clear_spare_points(agv)
 
 
 def remove_current_spare_point(agv: Agv) -> None:
@@ -55,21 +68,17 @@ def remove_current_spare_point(agv: Agv) -> None:
     According to Algorithm 2 lines 14-16, when F^i = 1, remove SP^i(v_c^i).
 
     Args:
-        agv (Agv): The AGV object
+        agv (Agv): The AGV object to remove current spare point from
     """
     if not agv.spare_flag or not agv.spare_points:
         return
 
-    # Convert current_node to string since spare_points keys are stored as strings
     current_node_str = str(agv.current_node)
-
-    # Remove the spare point for current position if it exists
     if current_node_str in agv.spare_points:
         spare_points = agv.spare_points.copy()
         spare_points.pop(current_node_str, None)
         agv.spare_points = spare_points
 
-        # If no more spare points left, reset spare_flag
         if not agv.spare_points:
             agv.spare_flag = False
 
@@ -88,34 +97,23 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
     Returns:
         List[int]: IDs of AGVs that were updated to return from spare points
     """
-
     updated_agvs = []
-
-    # Find all AGVs that are at spare points (spare_flag=True) and in waiting state
     spare_point_agvs = Agv.objects.filter(
         spare_flag=True,
         motion_state=AGV_STATE_WAITING
     ).exclude(agv_id=agv_id)
 
-    # For each AGV at a spare point
     for agv in spare_point_agvs:
-        if not agv.active_order:
+        if not agv.active_order or not agv.residual_path:
             continue
 
-        # Get the residual path and next node
-        residual_path = agv.residual_path
-        if not residual_path:
-            continue
-
-        # Check if the next node in the residual path is now free
-        next_node = residual_path[0]  # First node in residual path
+        next_node = agv.residual_path[0]
         if not is_node_reserved_by_others(next_node, agv.agv_id):
-            # The path is clear, AGV can return from spare point to main path
+            # Return AGV from spare point to main path
             agv.next_node = next_node
-            agv.spare_flag = False
-            agv.spare_points = {}
-            agv.motion_state = AGV_STATE_MOVING
             agv.reserved_node = next_node
+            agv.motion_state = AGV_STATE_MOVING
+            _clear_spare_points(agv)
             agv.save()
             updated_agvs.append(agv.agv_id)
 

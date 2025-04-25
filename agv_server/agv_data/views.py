@@ -4,10 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from .models import Agv
 from .serializers import AGVSerializer
-from .services.algorithm_1.algorithm1 import TaskDispatcher
-from .services.algorithm_2.controller import ControlPolicyController
-from .services.algorithm_3.algorithm3 import DeadlockResolver
-from .constants import ErrorMessages, SuccessMessages
+from .services.algorithm1 import TaskDispatcher
+from .services.controller import ControlPolicyController
+from .services.algorithm3 import DeadlockResolver
+from .constants import SuccessMessages
 
 
 class ListAGVsView(ListAPIView):

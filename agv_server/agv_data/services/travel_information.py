@@ -4,7 +4,7 @@ Travel information management for AGV control policy.
 This module handles the updating of AGV travel information as described in
 Algorithm 2 of the DSPA algorithm from algorithms-pseudocode.tex.
 """
-from ...models import Agv
+from ..models import Agv
 from .utils import is_node_reserved_by_others
 
 

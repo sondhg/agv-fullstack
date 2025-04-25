@@ -1,7 +1,7 @@
 """
-Algorithm 4 from research paper: Allocation of spare points for AGV r_i.
-When an AGV is about to enter its sequential shared points, it needs to allocate
-spare points first. This algorithm finds the nearest free point for each sequential shared point.
+Implementation of Algorithm 4: Allocation of spare points for AGV r_i.
+
+This algorithm handles allocation of spare points to resolve potential collisions and deadlocks between AGVs. When an AGV is about to enter its sequential shared points, it needs to allocate spare points first. This algorithm finds the nearest free point for each sequential shared point.
 """
 from typing import Dict, List, Set, Optional
 from map_data.models import Connection
