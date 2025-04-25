@@ -61,6 +61,12 @@ export const columnsTableAGVs = (
       ),
     },
     {
+      accessorKey: "direction_change",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Direction Change" />
+      ),
+    },
+    {
       accessorKey: "motion_state",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Motion State" />
