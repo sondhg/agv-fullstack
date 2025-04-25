@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { createBaseColumns } from "@/components/ui/base-table-columns";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { AGV } from "@/types/AGV.types";
-import { Schedule } from "@/types/Schedule.types";
+import { Order } from "@/types/Order.types";
 import { ColumnDef } from "@tanstack/react-table";
 import { Check, X } from "lucide-react";
 
@@ -41,12 +41,6 @@ export const columnsTableAGVs = (
           </Badge>
         );
       },
-    },
-    {
-      accessorKey: "previous_node",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Previous Node" />
-      ),
     },
     {
       accessorKey: "current_node",
@@ -128,68 +122,64 @@ export const columnsTableAGVs = (
       },
     },
     {
-      accessorKey: "active_schedule",
+      accessorKey: "active_order_info",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Active Schedule" />
+        <DataTableColumnHeader column={column} title="Active Order" />
       ),
       cell: ({ row }) => {
-        const schedule = row.getValue("active_schedule");
-        if (!schedule)
-          return <div className="text-gray-500">No Active Schedule</div>;
+        const orderInfo = row.getValue("active_order_info");
+        if (!orderInfo)
+          return <div className="text-gray-500">No Active Order</div>;
         return (
           <div>
             <div className="font-medium">
-              Schedule {(schedule as Schedule).schedule_id}
+              Order {(orderInfo as Order).order_id}
             </div>
             <div className="text-sm text-gray-500">
-              Parking: {(schedule as Schedule).parking_node} → Storage:{" "}
-              {(schedule as Schedule).storage_node} → Workstation:{" "}
-              {(schedule as Schedule).workstation_node}
+              Parking: {(orderInfo as Order).parking_node} → Storage:{" "}
+              {(orderInfo as Order).storage_node} → Workstation:{" "}
+              {(orderInfo as Order).workstation_node}
             </div>
           </div>
         );
       },
     },
     {
-      accessorKey: "active_schedule.initial_path",
+      accessorKey: "initial_path",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Initial Path" />
       ),
       cell: ({ row }) => {
-        const schedule = row.getValue("active_schedule") as Schedule;
-        if (!schedule?.initial_path)
+        const path = row.getValue("initial_path") as number[];
+        if (!path || path.length === 0)
           return <div className="text-gray-500">No path</div>;
-        return (
-          <div className="text-sm">{schedule.initial_path.join(" → ")}</div>
-        );
+        return <div className="text-sm">{path.join(" → ")}</div>;
       },
     },
     {
-      accessorKey: "active_schedule.residual_path",
+      accessorKey: "residual_path",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Residual Path" />
       ),
       cell: ({ row }) => {
-        const schedule = row.getValue("active_schedule") as Schedule;
-        if (!schedule?.residual_path)
+        const path = row.getValue("residual_path") as number[];
+        if (!path || path.length === 0)
           return <div className="text-gray-500">No path</div>;
-        return (
-          <div className="text-sm">{schedule.residual_path.join(" → ")}</div>
-        );
+        return <div className="text-sm">{path.join(" → ")}</div>;
       },
     },
     {
-      accessorKey: "active_schedule.cp",
+      accessorKey: "cp",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Shared Points (CP)" />
       ),
       cell: ({ row }) => {
-        const schedule = row.getValue("active_schedule") as Schedule;
-        if (!schedule?.cp || schedule.cp.length === 0)
+        const points = row.getValue("cp") as number[];
+        if (!points || points.length === 0)
           return <div className="text-gray-500">No shared points</div>;
         return (
           <div className="text-sm">
-            {schedule.cp.map((point) => (
+            {points.map((point) => (
               <Badge key={point} variant="outline" className="mr-1">
                 {point}
               </Badge>
@@ -199,7 +189,7 @@ export const columnsTableAGVs = (
       },
     },
     {
-      accessorKey: "active_schedule.scp",
+      accessorKey: "scp",
       header: ({ column }) => (
         <DataTableColumnHeader
           column={column}
@@ -207,12 +197,12 @@ export const columnsTableAGVs = (
         />
       ),
       cell: ({ row }) => {
-        const schedule = row.getValue("active_schedule") as Schedule;
-        if (!schedule?.scp || schedule.scp.length === 0)
+        const points = row.getValue("scp") as number[];
+        if (!points || points.length === 0)
           return <div className="text-gray-500">No sequential points</div>;
         return (
           <div className="text-sm">
-            {schedule.scp.map((point) => (
+            {points.map((point) => (
               <Badge key={point} variant="outline" className="mr-1">
                 {point}
               </Badge>
