@@ -7,6 +7,7 @@ from .serializers import AGVSerializer
 from .services.algorithm1 import TaskDispatcher
 from .services.controller import ControlPolicyController
 from .services.algorithm3 import DeadlockResolver
+from .services.position_tracker import update_previous_node
 from .constants import SuccessMessages
 
 
@@ -78,8 +79,7 @@ class UpdateAGVPositionView(APIView):
     identification node, it should report its position to the central controller.
     The controller then:
     1. Updates the traveling information (I^i)
-    2. Updates residual path (Π_i), shared points (CP^i), and sequential shared points (SCP^i)
-    3. Evaluates movement conditions to determine if the AGV can move
+    2. Updates residual path (Π_i), shared points (CP^i), and sequential shared
     4. Handles spare point application or removal if needed
     5. Returns the updated state to the AGV
 
@@ -110,6 +110,7 @@ class UpdateAGVPositionView(APIView):
             "reserved_node": int|null, # Reserved node (v_r^i)
             "spare_flag": bool,      # Whether AGV has spare points (F^i)
             "spare_points": object,  # Spare points mapping (SP^i)
+            "previous_node": int|null, # Previous node the AGV was at (for turn direction calculation)
         }
         """
         try:
@@ -141,6 +142,9 @@ class UpdateAGVPositionView(APIView):
 
             # Store previous position for logging
             previous_node = agv.current_node
+
+            # Update previous_node field before changing current_node
+            update_previous_node(agv)
 
             # Update the AGV's current position
             agv.current_node = current_node
@@ -189,6 +193,7 @@ class UpdateAGVPositionView(APIView):
                     "spare_flag": updated_agv.spare_flag,
                     "spare_points": updated_agv.spare_points,
                     "moved_from": previous_node,
+                    "previous_node": updated_agv.previous_node,  # Include previous_node in response
                     # Updated to use agv.residual_path directly
                     "residual_path": updated_agv.residual_path,
                     **deadlock_info  # Add deadlock information if applicable

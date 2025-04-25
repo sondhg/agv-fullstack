@@ -43,6 +43,12 @@ export const columnsTableAGVs = (
       },
     },
     {
+      accessorKey: "previous_node",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Previous Node" />
+      ),
+    },
+    {
       accessorKey: "current_node",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Current Node" />

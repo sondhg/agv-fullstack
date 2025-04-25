@@ -117,6 +117,7 @@ class ControlPolicyController:
         agv.active_order = None
         agv.spare_flag = False
         agv.spare_points = {}
+        agv.previous_node = None
         agv.current_node = None
         agv.next_node = None
         agv.reserved_node = None
