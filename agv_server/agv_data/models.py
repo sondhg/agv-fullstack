@@ -21,11 +21,32 @@ class Agv(models.Model):
         WAITING: "Waiting"
     }
 
+    # Define choices for direction_change
+    # Actual integer values to be set on model
+    STRAIGHT = 0  # Go straight
+    REVERSE = 1  # Reverse
+    LEFT = 2  # Turn left
+    RIGHT = 3  # Turn right
+
+    # Human readable names
+    DIRECTION_CHANGE_CHOICES = {
+        STRAIGHT: "Go straight",
+        REVERSE: "Turn reverse",
+        LEFT: "Turn left",
+        RIGHT: "Turn right"
+    }
+
     # Model fields
     # Basic AGV information
     agv_id = models.BigIntegerField(primary_key=True)
     preferred_parking_node = models.IntegerField(
         help_text="Preferred parking point for AGV"
+    )
+
+    direction_change = models.IntegerField(
+        choices=DIRECTION_CHANGE_CHOICES,
+        null=True,
+        help_text="Direction the AGV should turn to after reaching a node",
     )
 
     # previous_node is not needed for DSPA, but will be useful for deciding which direction to turn to when AGV reaches a node, based on considering the relevant three consecutive nodes and the map layout.
