@@ -194,8 +194,8 @@ class UpdateAGVPositionView(APIView):
                     "spare_points": updated_agv.spare_points,
                     "moved_from": previous_node,
                     "previous_node": updated_agv.previous_node,  # Include previous_node in response
-                    # Updated to use agv.residual_path directly
                     "residual_path": updated_agv.residual_path,
+                    "direction_change": updated_agv.direction_change,  # Include direction_change in response
                     **deadlock_info  # Add deadlock information if applicable
                 })
 

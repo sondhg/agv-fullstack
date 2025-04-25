@@ -43,6 +43,12 @@ export const columnsTableAGVs = (
       },
     },
     {
+      accessorKey: "previous_node",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Previous Node" />
+      ),
+    },
+    {
       accessorKey: "current_node",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Current Node" />
@@ -65,6 +71,30 @@ export const columnsTableAGVs = (
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Direction Change" />
       ),
+      cell: ({ row }) => {
+        const state = row.getValue("direction_change") as number;
+        const stateMap = {
+          0: "Go straight",
+          1: "Turn around",
+          2: "Turn left",
+          3: "Turn right",
+        };
+        return (
+          <Badge
+            variant={
+              state === 0
+                ? "default"
+                : state === 1
+                  ? "destructive"
+                  : state === 2
+                    ? "secondary"
+                    : "outline"
+            }
+          >
+            {stateMap[state as keyof typeof stateMap]}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "motion_state",

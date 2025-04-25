@@ -8,6 +8,7 @@ from typing import List
 from ..models import Agv
 from .algorithm4 import allocate_spare_points
 from .utils import is_node_reserved_by_others
+from .. import direction_to_turn
 
 
 def _clear_spare_points(agv: Agv) -> None:
@@ -113,6 +114,29 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
             agv.next_node = next_node
             agv.reserved_node = next_node
             agv.motion_state = Agv.MOVING
+
+            # Calculate direction_change when returning from spare point
+            if agv.previous_node:
+                # Use direction_to_turn utility to calculate the direction change
+                direction_change = direction_to_turn.get_action(
+                    agv.previous_node,
+                    agv.current_node,
+                    next_node
+                )
+
+                # If get_action returns None, default to GO_STRAIGHT
+                if direction_change is None:
+                    direction_change = Agv.GO_STRAIGHT
+
+                agv.direction_change = direction_change
+
+                # Debug logging
+                print(f"AGV {agv.agv_id} returning from spare point with direction_change={direction_change}, " +
+                      f"previous={agv.previous_node}, current={agv.current_node}, next={next_node}")
+            else:
+                # If no previous_node, default to GO_STRAIGHT
+                agv.direction_change = Agv.GO_STRAIGHT
+
             _clear_spare_points(agv)
             agv.save()
             updated_agvs.append(agv.agv_id)

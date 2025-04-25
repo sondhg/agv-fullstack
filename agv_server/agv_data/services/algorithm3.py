@@ -7,6 +7,7 @@ and resolving them using spare points.
 from typing import Dict, List, Tuple, Optional
 from django.db import transaction
 from ..models import Agv
+from .controller import ControlPolicyController
 
 
 class DeadlockResolver:
@@ -324,12 +325,26 @@ class DeadlockResolver:
                 agv_to_move.next_node = spare_point
                 agv_to_move.reserved_node = spare_point
                 agv_to_move.motion_state = Agv.MOVING
+
+                # Calculate direction_change for AGV moving to spare point
+                controller = ControlPolicyController()
+                controller._update_direction_change(agv_to_move)
+
                 agv_to_move.save()
 
                 # Update the proceeding AGV state
                 agv_to_proceed.motion_state = Agv.MOVING
                 agv_to_proceed.reserved_node = agv_to_proceed.next_node
+
+                # Calculate direction_change for AGV proceeding to next node
+                controller._update_direction_change(agv_to_proceed)
+
                 agv_to_proceed.save()
+
+                # Log for debugging
+                print(f"Deadlock resolved: AGV {agv_to_move.agv_id} moving to spare point {spare_point} " +
+                      f"with direction_change={agv_to_move.direction_change}, " +
+                      f"AGV {agv_to_proceed.agv_id} can proceed with direction_change={agv_to_proceed.direction_change}")
 
                 return True, agv_to_move
 

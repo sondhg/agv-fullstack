@@ -15,6 +15,7 @@ from .travel_information import update_travel_information
 from .movement_conditions import evaluate_movement_conditions
 from .spare_points_manager import remove_current_spare_point, check_and_update_agvs_at_spare_points, apply_for_spare_points
 from .utils import is_node_reserved_by_others
+from .. import direction_to_turn
 
 
 class ControlPolicyController:
@@ -108,7 +109,8 @@ class ControlPolicyController:
         return {
             "success": True,
             "message": "Task completed",
-            "state": "idle"
+            "state": "idle",
+            "direction_change": None
         }
 
     def _reset_agv_state(self, agv: Agv) -> None:
@@ -121,6 +123,7 @@ class ControlPolicyController:
         agv.current_node = None
         agv.next_node = None
         agv.reserved_node = None
+        agv.direction_change = None
         agv.save()
 
     def _return_agv_from_spare_point(self, agv: Agv) -> Dict:
@@ -129,13 +132,16 @@ class ControlPolicyController:
         agv.spare_points = {}
         agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
+        # Update direction_change based on movement direction
+        self._update_direction_change(agv)
         agv.save()
 
         return {
             "success": True,
             "message": "AGV returning from spare point to original path",
             "state": "moving",
-            "next_node": agv.next_node
+            "next_node": agv.next_node,
+            "direction_change": agv.direction_change
         }
 
     def _evaluate_and_update_agv_movement(self, agv: Agv) -> Dict:
@@ -160,20 +166,27 @@ class ControlPolicyController:
         if can_move:
             agv.motion_state = Agv.MOVING
             agv.reserved_node = agv.next_node
+            # Update direction_change based on movement direction
+            self._update_direction_change(agv)
             agv.save()
             return {
                 "success": True,
                 "message": "AGV can move to next point",
                 "state": "moving",
-                "next_node": agv.next_node
+                "next_node": agv.next_node,
+                "direction_change": agv.direction_change
             }
 
+        agv.motion_state = Agv.WAITING
+        # For waiting state, direction_change should be None
+        agv.direction_change = None
         agv.reserved_node = agv.current_node
         agv.save()
         return {
             "success": True,
             "message": "AGV must wait at current point",
-            "state": "waiting"
+            "state": "waiting",
+            "direction_change": None
         }
 
     def _create_error_response(self, message: str) -> Dict:
@@ -182,3 +195,50 @@ class ControlPolicyController:
             "success": False,
             "message": message
         }
+
+    def _update_direction_change(self, agv: Agv) -> None:
+        """
+        Update the direction_change field of an AGV based on its previous, current, and next nodes.
+
+        This determines which way the AGV should turn at its current node in order to reach the next node.
+        The direction_change is set to None for IDLE or WAITING states.
+        If the AGV is moving but has no previous_node (first position update), 
+        the direction_change is set to GO_STRAIGHT.
+
+        Args:
+            agv (Agv): The AGV object to update
+        """
+        try:
+            if agv.motion_state != Agv.MOVING or not agv.next_node:
+                # If AGV is not moving or missing next node, set direction_change to None
+                agv.direction_change = None
+                return
+
+            # Handle the case when this is the first position update (no previous_node)
+            if not agv.previous_node:
+                agv.direction_change = Agv.GO_STRAIGHT
+                return
+
+            # Calculate the direction change using the three consecutive points
+            direction_change = direction_to_turn.get_action(
+                agv.previous_node,
+                agv.current_node,
+                agv.next_node
+            )
+
+            # Always ensure we have a valid direction_change value
+            if direction_change is None:
+                # Default to GO_STRAIGHT if get_action somehow returned None
+                direction_change = Agv.GO_STRAIGHT
+
+            agv.direction_change = direction_change
+
+            # Debug logging (remove in production)
+            print(f"AGV {agv.agv_id} direction_change calculation: previous={agv.previous_node}, " +
+                  f"current={agv.current_node}, next={agv.next_node}, result={direction_change}")
+
+        except Exception as e:
+            # Fallback to GO_STRAIGHT in case of any errors
+            agv.direction_change = Agv.GO_STRAIGHT
+            print(
+                f"Error calculating direction_change for AGV {agv.agv_id}: {str(e)}")

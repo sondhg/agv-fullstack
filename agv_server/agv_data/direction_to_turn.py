@@ -21,9 +21,23 @@ def get_direction(from_node, to_node):
              Returns None if no direction is found in the `Direction` model.
     """
     try:
+        # First try to get the direction with the exact node order
         return Direction.objects.get(node1=from_node, node2=to_node).direction
     except Direction.DoesNotExist:
-        return None  # Return None if no direction is found
+        try:
+            # If not found, try the reverse direction and map to opposite cardinal direction
+            reverse_direction = Direction.objects.get(
+                node1=to_node, node2=from_node).direction
+            # Map to opposite direction: NORTH<->SOUTH, EAST<->WEST
+            direction_opposites = {
+                NORTH: SOUTH,
+                SOUTH: NORTH,
+                EAST: WEST,
+                WEST: EAST
+            }
+            return direction_opposites.get(reverse_direction)
+        except Direction.DoesNotExist:
+            return None  # Return None if no direction is found in either order
 
 
 def get_action(prev_node, current_node, next_node):
