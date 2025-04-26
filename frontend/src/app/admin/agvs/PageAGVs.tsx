@@ -8,10 +8,13 @@ import {
   dispatchOrdersToAGVs,
   getAGVs,
 } from "@/services/APIs/agvsAPI";
+import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
+import { MapData } from "@/types/Map.types";
 import { CalendarPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MapVisualizer } from "../map/MapVisualizer";
 import { AlgorithmSelect } from "./AlgorithmSelect";
 import { columnsTableAGVs } from "./columnsTableAGVs";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
@@ -20,6 +23,7 @@ import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
 export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
+  const [mapData, setMapData] = useState<MapData | null>(null);
   const {
     rowSelection,
     setRowSelection,
@@ -66,8 +70,37 @@ export function PageAGVs() {
     }
   };
 
+  const handleShowMap = async () => {
+    try {
+      // Check if map data is cached
+      const cachedData = localStorage.getItem("cachedMapData");
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData) as MapData;
+        setMapData(parsedData);
+        return;
+      }
+
+      // Fetch map data from backend if not cached
+      const data = (await fetchMapData()) as MapData;
+
+      if (!data || !data.nodes || !data.connections || !data.directions) {
+        toast.error("Failed to load map data.");
+        setMapData(null);
+        return;
+      }
+
+      setMapData(data);
+      // Cache the map data
+      localStorage.setItem("cachedMapData", JSON.stringify(data));
+    } catch (error) {
+      console.error("Error fetching map data:", error);
+      toast.error("Failed to load map data.");
+    }
+  };
+
   useEffect(() => {
     fetchListData();
+    handleShowMap();
   }, []);
 
   return (
@@ -119,6 +152,21 @@ export function PageAGVs() {
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
             />
+
+            {/* Map Visualization Section */}
+            <div className="mt-8">
+              <h3 className="mb-4 text-xl font-semibold">Map Visualization</h3>
+              {mapData ? (
+                <MapVisualizer data={mapData} />
+              ) : (
+                <div className="rounded-md border border-dashed p-6 text-center">
+                  <p className="text-muted-foreground">
+                    No map data available. Please make sure you've imported map
+                    data in the Map section.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
