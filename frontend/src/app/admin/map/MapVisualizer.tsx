@@ -15,13 +15,16 @@ type NodePositions = { [key: number]: Position };
  * SVG Canvas configuration constants
  */
 const CANVAS_CONFIG = {
-  width: 1000,
-  height: 1000,
   padding: 50,
   startX: 500, // Arbitrary starting x-coordinate
   startY: 500, // Arbitrary starting y-coordinate
   distanceScale: 10, // Scale factor for distances
   nodeRadius: 15,
+  defaultWidth: 1000, // Default width for good visibility
+  defaultHeight: 400, // Default height for good visibility
+  nodeSizeMultiplier: 6, // Multiplier to ensure nodes have enough space
+  aspectRatioMax: 2, // Maximum aspect ratio to prevent extreme rectangles
+  aspectRatioMin: 0.5, // Minimum aspect ratio to prevent extreme rectangles
 };
 
 /**
@@ -39,6 +42,10 @@ enum DirectionEnum {
  */
 export const MapVisualizer = ({ data }: { data: MapData }) => {
   const [scaledPositions, setScaledPositions] = useState<NodePositions>({});
+  const [canvasDimensions, setCanvasDimensions] = useState({
+    width: CANVAS_CONFIG.defaultWidth,
+    height: CANVAS_CONFIG.defaultHeight,
+  });
 
   useEffect(() => {
     if (!data || !data.nodes || !data.connections) {
@@ -49,8 +56,12 @@ export const MapVisualizer = ({ data }: { data: MapData }) => {
     // Calculate node positions
     const unscaledPositions = calculateNodePositions(data);
 
+    // Calculate content dimensions
+    const dimensions = calculateCanvasDimensions(unscaledPositions);
+    setCanvasDimensions(dimensions);
+
     // Scale positions to fit within the canvas
-    const scaled = scalePositionsToFit(unscaledPositions);
+    const scaled = scalePositionsToFit(unscaledPositions, dimensions);
 
     setScaledPositions(scaled);
   }, [data]);
@@ -58,7 +69,7 @@ export const MapVisualizer = ({ data }: { data: MapData }) => {
   return (
     <div className="relative border border-gray-300 p-5">
       <svg
-        viewBox={`0 0 ${CANVAS_CONFIG.width} ${CANVAS_CONFIG.height}`}
+        viewBox={`0 0 ${canvasDimensions.width} ${canvasDimensions.height}`}
         preserveAspectRatio="xMidYMid meet"
         width="100%"
         height="auto"
@@ -166,7 +177,10 @@ function calculatePositionFromDirection(
 /**
  * Scale node positions to fit within the SVG canvas
  */
-function scalePositionsToFit(positions: NodePositions): NodePositions {
+function scalePositionsToFit(
+  positions: NodePositions,
+  dimensions: { width: number; height: number },
+): NodePositions {
   const allX = Object.values(positions).map((pos) => pos.x);
   const allY = Object.values(positions).map((pos) => pos.y);
 
@@ -175,7 +189,8 @@ function scalePositionsToFit(positions: NodePositions): NodePositions {
   const minY = Math.min(...allY);
   const maxY = Math.max(...allY);
 
-  const { width, height, padding } = CANVAS_CONFIG;
+  const { padding } = CANVAS_CONFIG;
+  const { width, height } = dimensions;
 
   // Calculate scaling factors to fit the map within the canvas
   const scaleX = (width - 2 * padding) / (maxX - minX || 1);
@@ -192,6 +207,64 @@ function scalePositionsToFit(positions: NodePositions): NodePositions {
       },
     ]),
   );
+}
+
+/**
+ * Calculate appropriate canvas dimensions based on node positions
+ */
+function calculateCanvasDimensions(positions: NodePositions) {
+  const allX = Object.values(positions).map((pos) => pos.x);
+  const allY = Object.values(positions).map((pos) => pos.y);
+
+  // If we don't have any positions, return default dimensions
+  if (allX.length === 0 || allY.length === 0) {
+    return {
+      width: CANVAS_CONFIG.defaultWidth,
+      height: CANVAS_CONFIG.defaultHeight,
+    };
+  }
+
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  const minY = Math.min(...allY);
+  const maxY = Math.max(...allY);
+
+  // Calculate the content size
+  const nodeCount = Object.keys(positions).length;
+  const { padding, nodeRadius, nodeSizeMultiplier } = CANVAS_CONFIG;
+
+  // Calculate dimensions based on content
+  // For sparse maps with few nodes but large distances, use the actual content size
+  // For dense maps with many nodes, ensure enough space per node
+  const contentWidth = Math.max(
+    maxX - minX + nodeRadius * 4,
+    Math.sqrt(nodeCount) * nodeRadius * nodeSizeMultiplier,
+  );
+  const contentHeight = Math.max(
+    maxY - minY + nodeRadius * 4,
+    Math.sqrt(nodeCount) * nodeRadius * nodeSizeMultiplier,
+  );
+
+  // Add padding to content size
+  let width = contentWidth + 2 * padding;
+  let height = contentHeight + 2 * padding;
+
+  // Ensure the dimensions are at least the default size
+  width = Math.max(width, CANVAS_CONFIG.defaultWidth);
+  height = Math.max(height, CANVAS_CONFIG.defaultHeight);
+
+  // Ensure the aspect ratio is reasonable (not too wide or too tall)
+  const aspectRatio = width / height;
+
+  if (aspectRatio > CANVAS_CONFIG.aspectRatioMax) {
+    // Too wide, adjust height
+    height = width / CANVAS_CONFIG.aspectRatioMax;
+  } else if (aspectRatio < CANVAS_CONFIG.aspectRatioMin) {
+    // Too tall, adjust width
+    width = height * CANVAS_CONFIG.aspectRatioMin;
+  }
+
+  return { width, height };
 }
 
 /**
