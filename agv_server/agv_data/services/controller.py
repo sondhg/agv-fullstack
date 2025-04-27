@@ -114,16 +114,37 @@ class ControlPolicyController:
         }
 
     def _reset_agv_state(self, agv: Agv) -> None:
-        """Reset AGV state to idle."""
+        """
+        Reset all AGV data fields to their default values, except for agv_id and preferred_parking_node.
+        
+        Sets all state-related fields back to their default values when a task is completed
+        or when the AGV needs to be reset for any other reason.
+        
+        Args:
+            agv (Agv): The AGV object to reset
+        """
+        # Reset path information
+        agv.initial_path = []
+        agv.residual_path = []
+        
+        # Reset state information
         agv.motion_state = Agv.IDLE
         agv.active_order = None
+        
+        # Reset DSPA algorithm specific fields
         agv.spare_flag = False
         agv.spare_points = {}
+        agv.cp = []
+        agv.scp = []
+        
+        # Reset position and movement information
         agv.previous_node = None
         agv.current_node = None
         agv.next_node = None
         agv.reserved_node = None
         agv.direction_change = None
+        
+        # Save all changes to the database
         agv.save()
 
     def _return_agv_from_spare_point(self, agv: Agv) -> Dict:
