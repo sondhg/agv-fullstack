@@ -608,11 +608,21 @@ function renderAGVs(agvs: AGVWithAnimation[], positions: NodePositions) {
             <g
               transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2}) rotate(${angle}, ${iconSize / 2}, ${iconSize / 2})`}
             >
+              {/* Invisible larger hitbox for better tooltip triggering */}
+              <rect
+                x="-10"
+                y="-10"
+                width={iconSize + 20}
+                height={iconSize + 20}
+                fill="transparent"
+                className="cursor-pointer"
+              />
               <Car
                 size={iconSize}
                 color={agv.color}
                 fill={agv.color}
                 fillOpacity={0.3}
+                className="cursor-pointer" // Add cursor-pointer to the Car icon itself
               />
             </g>
           </TooltipTrigger>
