@@ -3,6 +3,12 @@ import { Connection, MapData } from "@/types/Map.types";
 import { useEffect, useState, useRef } from "react";
 import { Car } from "lucide-react";
 import { AGV } from "@/types/AGV.types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 /**
  * Position type representing a point with x and y coordinates
@@ -596,27 +602,25 @@ function renderAGVs(agvs: AGVWithAnimation[], positions: NodePositions) {
     const iconSize = CANVAS_CONFIG.agvSize;
 
     return (
-      <g
-        key={`agv-${agv.agv_id}`}
-        transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2}) rotate(${angle}, ${iconSize / 2}, ${iconSize / 2})`}
-      >
-        <Car
-          size={iconSize}
-          color={agv.color}
-          fill={agv.color}
-          fillOpacity={0.3}
-        />
-        <text
-          x={iconSize / 2}
-          y={-5}
-          textAnchor="middle"
-          fontSize="10"
-          fill="black"
-          transform={`rotate(${-angle}, ${iconSize / 2}, ${-5})`}
-        >
-          {agv.agv_id}
-        </text>
-      </g>
+      <TooltipProvider key={`agv-${agv.agv_id}`} delayDuration={0}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <g
+              transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2}) rotate(${angle}, ${iconSize / 2}, ${iconSize / 2})`}
+            >
+              <Car
+                size={iconSize}
+                color={agv.color}
+                fill={agv.color}
+                fillOpacity={0.3}
+              />
+            </g>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>AGV {agv.agv_id}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     );
   });
 }
