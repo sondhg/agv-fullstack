@@ -13,7 +13,7 @@ import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
 import { CalendarPlus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
 import { AlgorithmSelect } from "./AlgorithmSelect";
@@ -33,9 +33,24 @@ export function PageAGVs() {
     resetSelection,
   } = useTableSelection<AGV>(listData, "agv_id");
 
+  // Reference to track last known positions
+  const lastKnownPositions = useRef<Map<number, number | null>>(new Map());
+
   const fetchListData = async () => {
     const data = await getAGVs();
+
+    // Update the list data
     setListData(data);
+
+    // Track position changes for animation
+    data.forEach((agv) => {
+      const lastPosition = lastKnownPositions.current.get(agv.agv_id);
+
+      // If this is the first time we're seeing this AGV or the position changed, update our tracking
+      if (lastPosition !== agv.current_node) {
+        lastKnownPositions.current.set(agv.agv_id, agv.current_node);
+      }
+    });
   };
 
   const handleClickBtnDelete = async (agv_id: number) => {
@@ -100,9 +115,22 @@ export function PageAGVs() {
     }
   };
 
+  // Function to handle position update from the simulation form
+  const handlePositionUpdate = async () => {
+    await fetchListData();
+  };
+
   useEffect(() => {
     fetchListData();
     handleShowMap();
+
+    // Set up polling to periodically check for AGV position updates
+    // This is useful in a real-world scenario where AGVs may be updating their positions
+    const pollingInterval = setInterval(() => {
+      fetchListData();
+    }, 5000); // Poll every 5 seconds
+
+    return () => clearInterval(pollingInterval);
   }, []);
 
   return (
@@ -159,13 +187,14 @@ export function PageAGVs() {
             />
             <Separator className="my-4" />
             <div className="w-3/4">
-              <FormSimulateUpdateAgvPosition onUpdateSuccess={fetchListData} />
+              <FormSimulateUpdateAgvPosition
+                onUpdateSuccess={handlePositionUpdate}
+              />
             </div>
-            <Separator className="my-4" />
             {/* Map Visualization Section */}
             <div>
               {mapData ? (
-                <MapVisualizer data={mapData} />
+                <MapVisualizer data={mapData} agvs={listData} />
               ) : (
                 <div className="rounded-md border border-dashed p-6 text-center">
                   <p className="text-muted-foreground">

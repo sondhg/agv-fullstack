@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Connection, MapData } from "@/types/Map.types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { Car } from "lucide-react";
+import { AGV } from "@/types/AGV.types";
 
 /**
  * Position type representing a point with x and y coordinates
@@ -13,6 +15,16 @@ type Position = { x: number; y: number };
 type NodePositions = { [key: number]: Position };
 
 /**
+ * Type representing an AGV with animation state
+ */
+type AGVWithAnimation = AGV & {
+  color: string;
+  previousNode: number | null;
+  animationProgress: number;
+  isAnimating: boolean;
+};
+
+/**
  * SVG Canvas configuration constants
  */
 const CANVAS_CONFIG = {
@@ -22,10 +34,13 @@ const CANVAS_CONFIG = {
   distanceScale: 10, // Scale factor for distances
   nodeRadius: 15,
   defaultWidth: 1000, // Default width for good visibility
-  defaultHeight: 400, // Default height for good visibility
-  nodeSizeMultiplier: 6, // Multiplier to ensure nodes have enough space
+  defaultHeight: 300, // Default height for good visibility
+  nodeSizeMultiplier: 2, // Multiplier to ensure nodes have enough space
   aspectRatioMax: 2, // Maximum aspect ratio to prevent extreme rectangles
   aspectRatioMin: 0.5, // Minimum aspect ratio to prevent extreme rectangles
+  agvSize: 24, // Size of the AGV icon
+  agvAnimationDuration: 2000, // Animation duration in milliseconds (now 2 seconds)
+  curvePathOffset: 0.2, // Curve offset for animation path (percentage of path length)
 };
 
 /**
@@ -38,34 +53,182 @@ enum DirectionEnum {
   West = 4,
 }
 
+// Array of colors for AGVs
+const AGV_COLORS = [
+  "#ef4444", // Red
+  "#3b82f6", // Blue
+  "#22c55e", // Green
+  "#f59e0b", // Amber
+  "#8b5cf6", // Violet
+  "#ec4899", // Pink
+  "#06b6d4", // Cyan
+  "#14b8a6", // Teal
+  "#f43f5e", // Rose
+  "#d946ef", // Fuchsia
+];
+
 /**
  * MapVisualizer component for visualizing a map of nodes and connections
  */
-export const MapVisualizer = ({ data }: { data: MapData }) => {
+export const MapVisualizer = ({
+  data,
+  agvs = [],
+}: {
+  data: MapData;
+  agvs?: AGV[];
+}) => {
   const [scaledPositions, setScaledPositions] = useState<NodePositions>({});
   const [canvasDimensions, setCanvasDimensions] = useState({
     width: CANVAS_CONFIG.defaultWidth,
     height: CANVAS_CONFIG.defaultHeight,
   });
+  const [agvsState, setAgvsState] = useState<AGVWithAnimation[]>([]);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastAnimationTimeRef = useRef<number | null>(null);
 
+  // Initialize AGVs with colors and animation state
+  useEffect(() => {
+    const updatedAgvs = agvs.map((agv, index) => ({
+      ...agv,
+      color: AGV_COLORS[index % AGV_COLORS.length],
+      previousNode: agv.current_node,
+      animationProgress: 0,
+      isAnimating: false,
+    }));
+    setAgvsState(updatedAgvs);
+  }, [agvs]);
+
+  // Calculate node positions
   useEffect(() => {
     if (!data || !data.nodes || !data.connections) {
       console.error("Invalid data structure:", data);
       return;
     }
 
-    // Calculate node positions
     const unscaledPositions = calculateNodePositions(data);
-
-    // Calculate content dimensions
     const dimensions = calculateCanvasDimensions(unscaledPositions);
     setCanvasDimensions(dimensions);
-
-    // Scale positions to fit within the canvas
     const scaled = scalePositionsToFit(unscaledPositions, dimensions);
-
     setScaledPositions(scaled);
   }, [data]);
+
+  // Animation update function
+  const updateAnimation = (timestamp: number) => {
+    if (!lastAnimationTimeRef.current) {
+      lastAnimationTimeRef.current = timestamp;
+    }
+
+    const deltaTime = timestamp - lastAnimationTimeRef.current;
+    lastAnimationTimeRef.current = timestamp;
+
+    // Update animation progress for each AGV
+    let needsAnimation = false;
+
+    setAgvsState((prevAgvs) =>
+      prevAgvs.map((agv) => {
+        if (!agv.isAnimating) return agv;
+
+        const newProgress =
+          agv.animationProgress +
+          deltaTime / CANVAS_CONFIG.agvAnimationDuration;
+
+        if (newProgress >= 1) {
+          // Animation completed
+          return {
+            ...agv,
+            animationProgress: 1,
+            isAnimating: false,
+            previousNode: agv.current_node,
+          };
+        } else {
+          needsAnimation = true;
+          return {
+            ...agv,
+            animationProgress: newProgress,
+          };
+        }
+      }),
+    );
+
+    // Continue the animation loop if needed
+    if (needsAnimation) {
+      animationFrameRef.current = requestAnimationFrame(updateAnimation);
+    } else {
+      animationFrameRef.current = null;
+      lastAnimationTimeRef.current = null;
+    }
+  };
+
+  // Start or stop animation as needed
+  useEffect(() => {
+    // Function to check if any AGVs need animation and start the animation loop
+    const checkAndStartAnimation = () => {
+      if (
+        agvsState.some((agv) => agv.isAnimating) &&
+        !animationFrameRef.current
+      ) {
+        // Start animation loop
+        animationFrameRef.current = requestAnimationFrame(updateAnimation);
+      }
+    };
+
+    // Initial check for animations
+    checkAndStartAnimation();
+
+    // We also need to monitor for AGVs that start animating
+    const animationObserver = setInterval(() => {
+      if (
+        agvsState.some((agv) => agv.isAnimating) &&
+        !animationFrameRef.current
+      ) {
+        animationFrameRef.current = requestAnimationFrame(updateAnimation);
+      }
+    }, 100); // Check every 100ms
+
+    return () => {
+      // Cleanup animation and interval on component unmount
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      clearInterval(animationObserver);
+    };
+  }); // Empty dependency array since we handle state checks internally
+
+  // Check for AGV position changes and start animations
+  useEffect(() => {
+    setAgvsState((prevAgvs) => {
+      return prevAgvs.map((agvState) => {
+        // Find the corresponding updated AGV
+        const updatedAgv = agvs.find((agv) => agv.agv_id === agvState.agv_id);
+
+        if (!updatedAgv) return agvState;
+
+        // If current_node is null, this AGV should be removed from the map
+        if (updatedAgv.current_node === null) {
+          return { ...agvState, current_node: null };
+        }
+
+        // Check if position has changed
+        if (
+          updatedAgv.current_node !== agvState.previousNode &&
+          updatedAgv.current_node !== null &&
+          agvState.previousNode !== null
+        ) {
+          // Start animation from previous node to current node
+          return {
+            ...agvState,
+            ...updatedAgv,
+            previousNode: agvState.previousNode,
+            animationProgress: 0,
+            isAnimating: true,
+          };
+        }
+
+        return { ...agvState, ...updatedAgv };
+      });
+    });
+  }, [agvs]);
 
   return (
     <Card>
@@ -83,6 +246,7 @@ export const MapVisualizer = ({ data }: { data: MapData }) => {
           {renderConnections(data.connections, scaledPositions)}
           {renderNodes(data.nodes, scaledPositions)}
           {renderNodeLabels(data.nodes, scaledPositions)}
+          {renderAGVs(agvsState, scaledPositions)}
         </svg>
       </CardContent>
     </Card>
@@ -374,6 +538,85 @@ function renderNodeLabels(nodes: number[], positions: NodePositions) {
           {node}
         </text>
       )
+    );
+  });
+}
+
+/**
+ * Render AGVs as Car icons with animation between nodes
+ */
+function renderAGVs(agvs: AGVWithAnimation[], positions: NodePositions) {
+  return agvs.map((agv) => {
+    // Skip rendering if current_node is null (AGV is not on the map)
+    if (agv.current_node === null) return null;
+
+    let position: Position;
+
+    // Calculate the current position of the AGV based on animation progress
+    if (
+      agv.isAnimating &&
+      agv.previousNode !== null &&
+      agv.current_node !== null
+    ) {
+      const fromPos = positions[agv.previousNode];
+      const toPos = positions[agv.current_node];
+
+      if (!fromPos || !toPos) return null;
+
+      // Linear interpolation between previousNode and current_node
+      position = {
+        x: fromPos.x + (toPos.x - fromPos.x) * agv.animationProgress,
+        y: fromPos.y + (toPos.y - fromPos.y) * agv.animationProgress,
+      };
+    } else if (positions[agv.current_node]) {
+      // If not animating, use the current node position
+      position = positions[agv.current_node];
+    } else {
+      return null; // Position not found
+    }
+
+    // Calculate the angle of rotation for the Car icon
+    let angle = 0;
+    if (
+      agv.isAnimating &&
+      agv.previousNode !== null &&
+      agv.current_node !== null
+    ) {
+      const fromPos = positions[agv.previousNode];
+      const toPos = positions[agv.current_node];
+
+      if (fromPos && toPos) {
+        angle =
+          Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x) *
+          (180 / Math.PI);
+      }
+    }
+
+    // Size adjustment for the Car icon
+    const iconSize = CANVAS_CONFIG.agvSize;
+
+    return (
+      <g
+        key={`agv-${agv.agv_id}`}
+        transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2}) rotate(${angle}, ${iconSize / 2}, ${iconSize / 2})`}
+      >
+        <Car
+          size={iconSize}
+          color={agv.color}
+          fill={agv.color}
+          fillOpacity={0.3}
+        />
+        <text
+          x={iconSize / 2}
+          y={-5}
+          textAnchor="middle"
+          fontSize="10"
+          fill="black"
+          transform={`rotate(${-angle}, ${iconSize / 2}, ${-5})`}
+        >
+          {agv.agv_id}
+        </text>
+      </g>
     );
   });
 }
