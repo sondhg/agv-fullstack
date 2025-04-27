@@ -140,6 +140,25 @@ export function PageAGVs() {
       <div className="flex flex-1 flex-col">
         <div className="gap-2">
           <div className="flex flex-col gap-4 md:gap-6">
+            <div className="w-3/4">
+              <FormSimulateUpdateAgvPosition
+                onUpdateSuccess={handlePositionUpdate}
+              />
+            </div>
+            {/* Map Visualization Section */}
+            <div>
+              {mapData ? (
+                <MapVisualizer data={mapData} agvs={listData} />
+              ) : (
+                <div className="rounded-md border border-dashed p-6 text-center">
+                  <p className="text-muted-foreground">
+                    No map data available. Please make sure you've imported CSV
+                    data on the Map page.
+                  </p>
+                </div>
+              )}
+            </div>
+            <Separator className="my-4" />
             <div className="grid grid-cols-4 gap-4">
               <div className="grid grid-rows-2 gap-4">
                 <DialogFormCreateAGVs
@@ -185,25 +204,6 @@ export function PageAGVs() {
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
             />
-            <Separator className="my-4" />
-            <div className="w-3/4">
-              <FormSimulateUpdateAgvPosition
-                onUpdateSuccess={handlePositionUpdate}
-              />
-            </div>
-            {/* Map Visualization Section */}
-            <div>
-              {mapData ? (
-                <MapVisualizer data={mapData} agvs={listData} />
-              ) : (
-                <div className="rounded-md border border-dashed p-6 text-center">
-                  <p className="text-muted-foreground">
-                    No map data available. Please make sure you've imported CSV
-                    data on the Map page.
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
