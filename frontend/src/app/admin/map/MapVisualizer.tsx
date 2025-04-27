@@ -1,3 +1,4 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Connection, MapData } from "@/types/Map.types";
 import { useEffect, useState } from "react";
 
@@ -67,19 +68,24 @@ export const MapVisualizer = ({ data }: { data: MapData }) => {
   }, [data]);
 
   return (
-    <div className="relative border border-gray-300 p-5">
-      <svg
-        viewBox={`0 0 ${canvasDimensions.width} ${canvasDimensions.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        width="100%"
-        height="auto"
-        className="border border-gray-400 bg-zinc-200"
-      >
-        {renderConnections(data.connections, scaledPositions)}
-        {renderNodes(data.nodes, scaledPositions)}
-        {renderNodeLabels(data.nodes, scaledPositions)}
-      </svg>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Map Visualizer</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <svg
+          viewBox={`0 0 ${canvasDimensions.width} ${canvasDimensions.height}`}
+          preserveAspectRatio="xMidYMid meet"
+          width="100%"
+          height="auto"
+          className="border border-gray-400 bg-zinc-200"
+        >
+          {renderConnections(data.connections, scaledPositions)}
+          {renderNodes(data.nodes, scaledPositions)}
+          {renderNodeLabels(data.nodes, scaledPositions)}
+        </svg>
+      </CardContent>
+    </Card>
   );
 };
 

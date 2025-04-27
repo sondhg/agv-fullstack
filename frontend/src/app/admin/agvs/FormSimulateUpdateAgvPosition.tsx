@@ -126,7 +126,7 @@ export const FormSimulateUpdateAgvPosition = ({
                             <FormLabel>AGV ID</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Enter AGV ID"
+                                placeholder="Enter ID of AGV"
                                 type="text"
                                 {...field}
                               />
@@ -143,7 +143,7 @@ export const FormSimulateUpdateAgvPosition = ({
                             <FormLabel>Current Node</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Enter node the AGV reached"
+                                placeholder="Enter current position"
                                 type="text"
                                 {...field}
                               />

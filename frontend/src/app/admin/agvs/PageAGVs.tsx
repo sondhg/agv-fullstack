@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { MassDeleteButton } from "@/components/ui/mass-delete-button";
+import { Separator } from "@/components/ui/separator";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   bulkDeleteAGVs,
@@ -16,7 +17,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
 import { AlgorithmSelect } from "./AlgorithmSelect";
-import { columnsTableAGVs } from "./columnsTableAGVs";
+import { columns1 } from "./columns1";
+import { columns2 } from "./columns2";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
 
@@ -110,8 +112,8 @@ export function PageAGVs() {
       <div className="flex flex-1 flex-col">
         <div className="gap-2">
           <div className="flex flex-col gap-4 md:gap-6">
-            <div className="grid grid-cols-1 gap-10 xl:grid-cols-6">
-              <div className="col-start-1 col-end-2 flex flex-col gap-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-rows-2 gap-4">
                 <DialogFormCreateAGVs
                   isDialogOpen={isDialogOpen}
                   setIsDialogOpen={setIsDialogOpen}
@@ -125,7 +127,7 @@ export function PageAGVs() {
                   resetSelection={resetSelection}
                 />
               </div>
-              <div className="col-start-3 col-end-4 flex flex-col gap-4">
+              <div className="col-end-4 grid grid-rows-2 gap-4">
                 <AlgorithmSelect
                   selectedAlgorithm={selectedAlgorithm}
                   onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
@@ -139,30 +141,36 @@ export function PageAGVs() {
                   {isDispatching ? "Dispatching..." : "Dispatch orders to AGVs"}
                 </Button>
               </div>
-              <div className="col-start-1 col-end-4">
-                <FormSimulateUpdateAgvPosition
-                  onUpdateSuccess={fetchListData}
-                />
-              </div>
             </div>
             <DataTable
               data={listData}
-              columns={columnsTableAGVs(handleClickBtnDelete)}
+              columns={columns1(handleClickBtnDelete)}
               filterSearchByColumn="agv_id"
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
             />
-
+            <Separator className="my-4" />
+            <DataTable
+              data={listData}
+              columns={columns2()}
+              filterSearchByColumn="agv_id"
+              onRowSelectionChange={setRowSelection}
+              rowSelection={rowSelection}
+            />
+            <Separator className="my-4" />
+            <div className="w-3/4">
+              <FormSimulateUpdateAgvPosition onUpdateSuccess={fetchListData} />
+            </div>
+            <Separator className="my-4" />
             {/* Map Visualization Section */}
-            <div className="mt-8">
-              <h3 className="mb-4 text-xl font-semibold">Map Visualization</h3>
+            <div>
               {mapData ? (
                 <MapVisualizer data={mapData} />
               ) : (
                 <div className="rounded-md border border-dashed p-6 text-center">
                   <p className="text-muted-foreground">
-                    No map data available. Please make sure you've imported map
-                    data in the Map section.
+                    No map data available. Please make sure you've imported CSV
+                    data on the Map page.
                   </p>
                 </div>
               )}
