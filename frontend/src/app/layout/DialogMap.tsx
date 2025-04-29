@@ -10,29 +10,31 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { fetchMapData } from "@/services/APIs/mapAPI";
+import { MapData } from "@/types/Map.types";
 import { useState } from "react";
 import { toast } from "sonner";
 
 interface DialogMapProps {
-  mapData: {
-    nodes: number[];
-    connections: { node1: number; node2: number; distance: number }[];
-    directions: { node1: number; node2: number; direction: number }[];
-  } | null;
+  mapData: MapData | null;
 }
 
 export function DialogMap() {
   const [mapData, setMapData] = useState<DialogMapProps["mapData"]>(null);
 
   const handleFetchMapData = async () => {
-    const data = await fetchMapData();
-    console.log("Fetched map data:", data); // Debug log
+    try {
+      const data = await fetchMapData() as MapData;
+      console.log("Fetched map data:", data); // Debug log
 
-    if (!data || !data.nodes || !data.connections) {
+      if (!data || !data.nodes || !data.connections) {
+        toast.error("Failed to load map data.");
+        return;
+      }
+      setMapData(data);
+    } catch (error) {
+      console.error("Error fetching map data:", error);
       toast.error("Failed to load map data.");
-      return;
     }
-    setMapData(data);
   };
 
   return (
