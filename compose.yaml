@@ -4,7 +4,13 @@ services:
     ports:
       - 5173:5173
     volumes:
-      - ./frontend/src:/code/src
+      - ./frontend:/code
+      - /code/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    tty: true
+    stdin_open: true
 
   db:
     image: postgres

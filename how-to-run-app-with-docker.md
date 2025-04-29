@@ -1,45 +1,31 @@
-# How to run AGV web app
+# Running the AGV Web App with Docker
 
-Pre-requisite: [Docker Desktop](https://www.docker.com/products/docker-desktop) must be installed on your machine.
+Pre-requisite: You must have Docker Desktop installed.
 
-## 1. Steps to run the app using Docker
+## Quick Start
 
-### 1.1. First time setup
-
-Clone my code
+First time, run:
 
 ```bash
-git clone https://github.com/sondhg/agv-fullstack.git
-cd agv-fullstack
+docker compose up --build
 ```
 
-All later steps should be run in the `agv-fullstack` directory.
+This will start:
 
-Run the app
+- Frontend at http://localhost:5173
+- Backend at http://localhost:8000
+
+Later, you can just run:
 
 ```bash
-docker compose up --build -d
+docker compose up
 ```
 
-The first time you run this web app, it will take a few minutes. Just wait until the app is up and running. If you wait for a while and error messages are shown in the terminal, press `Ctrl+C` to stop the process and run `docker compose up -d` again.
+## Full Reset
 
-### 1.2. Stop the app
+If you need to completely reset:
 
 ```bash
 docker compose down
+docker compose up --build
 ```
-
-Later, if you want to run the app again, just run `docker compose up -d`.
-
-### 1.3. Get code changes from GitHub and rebuild the app
-
-```bash
-git pull origin main
-docker compose down
-docker compose up --build -d
-```
-
-## 2. Access the app
-
-- Open your browser and go to [http://localhost:5173](http://localhost:5173)
-- Follow instructions on the Home page to use the app.

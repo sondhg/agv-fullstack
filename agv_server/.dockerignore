@@ -113,3 +113,8 @@ node_modules/
 
 # VS Code
 .vscode
+
+.git
+.gitignore
+*.md
+dist
