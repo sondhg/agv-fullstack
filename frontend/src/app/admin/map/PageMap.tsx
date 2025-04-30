@@ -118,8 +118,9 @@ export function PageMap() {
   };
 
   useEffect(() => {
+    // Call handleShowMap only once when component mounts
     handleShowMap();
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <div className="space-y-5">

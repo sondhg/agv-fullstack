@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MapAGVs } from "./components/MapAGVs";
 import { MapConnections } from "./components/MapConnections";
 import { MapNodes } from "./components/MapNodes";
@@ -55,7 +55,7 @@ export const MapVisualizer = ({ data, agvs = [] }: MapVisualizerProps) => {
   }, [data]);
 
   // Animation update function
-  const updateAnimation = (timestamp: number) => {
+  const updateAnimation = useCallback((timestamp: number) => {
     if (!lastAnimationTimeRef.current) {
       lastAnimationTimeRef.current = timestamp;
     }
@@ -99,7 +99,7 @@ export const MapVisualizer = ({ data, agvs = [] }: MapVisualizerProps) => {
       animationFrameRef.current = null;
       lastAnimationTimeRef.current = null;
     }
-  };
+  }, []); // Empty dependency array since we're using refs and function state updaters
 
   // Start or stop animation as needed
   useEffect(() => {
@@ -135,7 +135,7 @@ export const MapVisualizer = ({ data, agvs = [] }: MapVisualizerProps) => {
       }
       clearInterval(animationObserver);
     };
-  }); // Empty dependency array since we handle state checks internally
+  }, [agvsState, updateAnimation]); // Include updateAnimation in the dependency array
 
   // Check for AGV position changes and start animations
   useEffect(() => {
