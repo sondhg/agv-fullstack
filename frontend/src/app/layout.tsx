@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar";
+import { CommandMenu } from "@/components/search-command";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -13,6 +14,8 @@ import { DialogMap } from "./layout/DialogMap";
 export default function Layout() {
   return (
     <SidebarProvider>
+      {/* Add CommandMenu for keyboard shortcut searching */}
+      <CommandMenu />
       <AppSidebar />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 bg-white drop-shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 dark:bg-black">
