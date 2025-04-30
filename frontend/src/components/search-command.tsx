@@ -36,7 +36,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                 onOpenChange?.(false);
               }}
             >
-              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+              {item.icon && <item.icon />}
               <span>{item.title}</span>
             </CommandItem>
           ))}
@@ -62,5 +62,9 @@ export function CommandMenu() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  return <SearchCommand open={open} onOpenChange={setOpen} />;
+  return (
+    <>
+      <SearchCommand open={open} onOpenChange={setOpen} />
+    </>
+  );
 }
