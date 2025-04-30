@@ -6,20 +6,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { ROUTES } from "@/constants/routes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Define navigation items based on the routes in AllRoutes.tsx
-const navigationItems = [
-  { title: "Home", path: "/home" },
-  { title: "Map", path: "/admin/map" },
-  { title: "AGVs", path: "/admin/agvs" },
-  { title: "Orders", path: "/admin/orders" },
-  { title: "Dashboard", path: "/admin/dashboard" },
-  { title: "Login", path: "/login" },
-  { title: "Register", path: "/register" },
-  { title: "Dashboard Demo", path: "/demo/dashboard-demo" },
-];
+// Define navigation items based on the routes constants
+const navigationItems = Object.values(ROUTES);
 
 interface SearchCommandProps {
   open?: boolean;

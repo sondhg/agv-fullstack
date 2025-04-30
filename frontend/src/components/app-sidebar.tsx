@@ -9,6 +9,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { ADMIN_AGVS, ADMIN_DASHBOARD, ADMIN_MAP, ADMIN_ORDERS, DEMO_DASHBOARD, HOME, LOGIN, REGISTER } from "@/constants/routes";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Car,
@@ -48,22 +49,22 @@ const data = {
       items: [
         {
           title: "Map",
-          url: "/admin/map",
+          url: ADMIN_MAP,
           icon: Map,
         },
         {
           title: "AGVs",
-          url: "/admin/agvs",
+          url: ADMIN_AGVS,
           icon: Car,
         },
         {
           title: "Orders",
-          url: "/admin/orders",
+          url: ADMIN_ORDERS,
           icon: ListOrdered,
         },
         {
           title: "Dashboard",
-          url: "/admin/dashboard",
+          url: ADMIN_DASHBOARD,
           icon: ChartLine,
         },
       ],
@@ -75,17 +76,17 @@ const data = {
       items: [
         {
           title: "Home",
-          url: "/home",
+          url: HOME,
           icon: House,
         },
         {
           title: "Login",
-          url: "/login",
+          url: LOGIN,
           icon: LogIn,
         },
         {
           title: "Register",
-          url: "/register",
+          url: REGISTER,
           icon: UserPlus,
         },
       ],
@@ -97,7 +98,7 @@ const data = {
       items: [
         {
           title: "Dashboard Demo",
-          url: "/demo/dashboard-demo",
+          url: DEMO_DASHBOARD,
           icon: ChartLine,
         },
       ],
