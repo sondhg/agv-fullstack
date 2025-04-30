@@ -6,12 +6,12 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { ROUTES } from "@/constants/routes";
+import { getAllRoutes } from "@/routes/routes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-// Define navigation items based on the routes constants
-const navigationItems = Object.values(ROUTES);
+// Get all navigable routes for the search command
+const navigationItems = getAllRoutes();
 
 interface SearchCommandProps {
   open?: boolean;
@@ -36,7 +36,8 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
                 onOpenChange?.(false);
               }}
             >
-              {item.title}
+              {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+              <span>{item.title}</span>
             </CommandItem>
           ))}
         </CommandGroup>

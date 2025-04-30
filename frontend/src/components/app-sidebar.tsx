@@ -9,7 +9,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ADMIN_AGVS, ADMIN_DASHBOARD, ADMIN_MAP, ADMIN_ORDERS, DEMO_DASHBOARD, HOME, LOGIN, REGISTER } from "@/constants/routes";
+import { FRONTEND_ROUTES } from "@/routes/routes";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Car,
@@ -42,29 +42,29 @@ const data = {
   ],
   navMain: [
     {
-      title: "Admin",
+      title: "Admin pages",
       url: "#",
       icon: Navigation,
       isActive: true,
       items: [
         {
-          title: "Map",
-          url: ADMIN_MAP,
+          title: FRONTEND_ROUTES.map.title,
+          url: FRONTEND_ROUTES.map.path,
           icon: Map,
         },
         {
-          title: "AGVs",
-          url: ADMIN_AGVS,
+          title: FRONTEND_ROUTES.agvs.title,
+          url: FRONTEND_ROUTES.agvs.path,
           icon: Car,
         },
         {
-          title: "Orders",
-          url: ADMIN_ORDERS,
+          title: FRONTEND_ROUTES.orders.title,
+          url: FRONTEND_ROUTES.orders.path,
           icon: ListOrdered,
         },
         {
-          title: "Dashboard",
-          url: ADMIN_DASHBOARD,
+          title: FRONTEND_ROUTES.dashboard.title,
+          url: FRONTEND_ROUTES.dashboard.path,
           icon: ChartLine,
         },
       ],
@@ -75,30 +75,30 @@ const data = {
       icon: PlaneLanding,
       items: [
         {
-          title: "Home",
-          url: HOME,
+          title: FRONTEND_ROUTES.home.title,
+          url: FRONTEND_ROUTES.home.path,
           icon: House,
         },
         {
-          title: "Login",
-          url: LOGIN,
+          title: FRONTEND_ROUTES.login.title,
+          url: FRONTEND_ROUTES.login.path,
           icon: LogIn,
         },
         {
-          title: "Register",
-          url: REGISTER,
+          title: FRONTEND_ROUTES.register.title,
+          url: FRONTEND_ROUTES.register.path,
           icon: UserPlus,
         },
       ],
     },
     {
-      title: "Demos (for view only)",
+      title: "Demos",
       url: "#",
       icon: GalleryThumbnails,
       items: [
         {
-          title: "Dashboard Demo",
-          url: DEMO_DASHBOARD,
+          title: FRONTEND_ROUTES.dashboardDemo.title,
+          url: FRONTEND_ROUTES.dashboardDemo.path,
           icon: ChartLine,
         },
       ],
