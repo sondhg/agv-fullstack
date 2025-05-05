@@ -13,8 +13,8 @@ import { RegisterPage } from "@/app/auth/RegisterPage";
 import { PageDashboardDemo } from "@/app/demo/dashboard-demo/PageDashboardDemo";
 import { HomePage } from "@/app/home/HomePage";
 import {
-  Car,
   ChartLine,
+  Forklift,
   House,
   ListOrdered,
   LogIn,
@@ -67,7 +67,7 @@ export const FRONTEND_ROUTES = {
   agvs: {
     path: "/agvs",
     title: "AGVs",
-    icon: Car,
+    icon: Forklift,
     page: PageAGVs,
   },
   orders: {

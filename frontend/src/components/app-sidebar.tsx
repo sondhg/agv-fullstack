@@ -9,21 +9,14 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { FRONTEND_ROUTES } from "@/routes/routes";
 import { useAuth } from "@/hooks/useAuth";
+import { FRONTEND_ROUTES } from "@/routes/routes";
 import {
-  Car,
-  ChartLine,
   FlaskConical,
   GalleryThumbnails,
-  House,
-  ListOrdered,
-  LogIn,
-  Map,
   Navigation,
   PlaneLanding,
   University,
-  UserPlus,
 } from "lucide-react";
 
 // This is sample data.
@@ -50,22 +43,22 @@ const data = {
         {
           title: FRONTEND_ROUTES.map.title,
           url: FRONTEND_ROUTES.map.path,
-          icon: Map,
+          icon: FRONTEND_ROUTES.map.icon,
         },
         {
           title: FRONTEND_ROUTES.agvs.title,
           url: FRONTEND_ROUTES.agvs.path,
-          icon: Car,
+          icon: FRONTEND_ROUTES.agvs.icon,
         },
         {
           title: FRONTEND_ROUTES.orders.title,
           url: FRONTEND_ROUTES.orders.path,
-          icon: ListOrdered,
+          icon: FRONTEND_ROUTES.orders.icon,
         },
         {
           title: FRONTEND_ROUTES.dashboard.title,
           url: FRONTEND_ROUTES.dashboard.path,
-          icon: ChartLine,
+          icon: FRONTEND_ROUTES.dashboard.icon,
         },
       ],
     },
@@ -77,17 +70,17 @@ const data = {
         {
           title: FRONTEND_ROUTES.home.title,
           url: FRONTEND_ROUTES.home.path,
-          icon: House,
+          icon: FRONTEND_ROUTES.home.icon,
         },
         {
           title: FRONTEND_ROUTES.login.title,
           url: FRONTEND_ROUTES.login.path,
-          icon: LogIn,
+          icon: FRONTEND_ROUTES.login.icon,
         },
         {
           title: FRONTEND_ROUTES.register.title,
           url: FRONTEND_ROUTES.register.path,
-          icon: UserPlus,
+          icon: FRONTEND_ROUTES.register.icon,
         },
       ],
     },
@@ -99,7 +92,7 @@ const data = {
         {
           title: FRONTEND_ROUTES.dashboardDemo.title,
           url: FRONTEND_ROUTES.dashboardDemo.path,
-          icon: ChartLine,
+          icon: FRONTEND_ROUTES.dashboardDemo.icon,
         },
       ],
     },
@@ -112,7 +105,7 @@ export function AppSidebar({ ...props }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarTrigger className="ml-0.5" />
+        <SidebarTrigger />
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>

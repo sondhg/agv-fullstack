@@ -4,7 +4,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Car } from "lucide-react";
+import { Forklift } from "lucide-react";
 import { CANVAS_CONFIG } from "../constants/MapVisualizerConfig";
 import { AGVWithAnimation, NodePositions } from "../types/MapVisualizerTypes";
 import {
@@ -53,7 +53,7 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                     fill="transparent"
                     className="cursor-pointer"
                   />
-                  <Car
+                  <Forklift
                     size={iconSize}
                     color={agv.color}
                     fill={agv.color}
