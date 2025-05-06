@@ -32,7 +32,12 @@ export const apiService = {
           `>>> Error posting data to ${url}:`,
           error.response?.data,
         );
-        throw new Error(error.response?.data?.error || "Failed to post data");
+        // Pass through the specific error message from the backend
+        throw new Error(
+          error.response?.data?.detail ||
+            error.response?.data?.error ||
+            "Failed to post data",
+        );
       } else {
         console.error(`>>> Error posting data to ${url}:`, error);
         throw new Error("Failed to post data");

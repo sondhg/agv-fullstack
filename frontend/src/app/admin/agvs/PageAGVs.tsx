@@ -132,7 +132,6 @@ export function PageAGVs() {
       // Trigger click on the ButtonStepSimulation
       if (stepSimulationBtnRef.current) {
         stepSimulationBtnRef.current.click();
-        toast.info("Auto simulation step triggered via Alt+S shortcut");
       }
     }
   };
