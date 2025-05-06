@@ -1,7 +1,7 @@
 import { simulateUpdateAgvPosition } from "@/services/APIs/agvsAPI";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { simulationSteps } from "./simulationSteps";
+import { simulationSteps } from "./simulationSteps.ts";
 
 // Key for storing the simulation step index in localStorage
 const SIMULATION_STEP_KEY = "agv-simulation-current-step";
