@@ -26,6 +26,9 @@ export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
+  // Reference to the ButtonStepSimulation component
+  const stepSimulationBtnRef = useRef<HTMLButtonElement>(null);
+
   const {
     rowSelection,
     setRowSelection,
@@ -120,9 +123,26 @@ export function PageAGVs() {
     await fetchListData();
   };
 
+  // Keyboard shortcut handler for Alt+S
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // Check if Alt+S was pressed
+    if (event.altKey && event.key === "s") {
+      event.preventDefault(); // Prevent default browser behavior
+
+      // Trigger click on the ButtonStepSimulation
+      if (stepSimulationBtnRef.current) {
+        stepSimulationBtnRef.current.click();
+        toast.info("Auto simulation step triggered via Alt+S shortcut");
+      }
+    }
+  };
+
   useEffect(() => {
     fetchListData();
     handleShowMap();
+
+    // Add event listener for keyboard shortcut
+    window.addEventListener("keydown", handleKeyDown);
 
     // Set up polling to periodically check for AGV position updates
     // This is useful in a real-world scenario where AGVs may be updating their positions
@@ -130,7 +150,11 @@ export function PageAGVs() {
       fetchListData();
     }, 5000); // Poll every 5 seconds
 
-    return () => clearInterval(pollingInterval);
+    return () => {
+      // Clean up event listener and interval
+      window.removeEventListener("keydown", handleKeyDown);
+      clearInterval(pollingInterval);
+    };
   }, []);
 
   return (
@@ -143,6 +167,7 @@ export function PageAGVs() {
             <div className="w-3/4">
               <FormSimulateUpdateAgvPosition
                 onUpdateSuccess={handlePositionUpdate}
+                stepSimulationRef={stepSimulationBtnRef}
               />
             </div>
             {/* Map Visualization Section */}

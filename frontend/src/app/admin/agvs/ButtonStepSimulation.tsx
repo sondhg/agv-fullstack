@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { forwardRef } from "react";
 import { useStepSimulation } from "./useStepSimulation";
 
 interface ButtonStepSimulationProps {
@@ -6,10 +7,17 @@ interface ButtonStepSimulationProps {
   onResetRef?: (resetFn: () => void) => void;
 }
 
-export function ButtonStepSimulation({
-  onUpdateSuccess,
-  onResetRef,
-}: ButtonStepSimulationProps) {
+/**
+ * Button component that handles step-by-step AGV simulation
+ *
+ * @param props.onUpdateSuccess - Callback function to run after successful position update
+ * @param props.onResetRef - Function to provide the reset functionality to parent components
+ * @param ref - Forwarded ref to allow programmatic triggering of the button (e.g., via keyboard shortcuts)
+ */
+export const ButtonStepSimulation = forwardRef<
+  HTMLButtonElement,
+  ButtonStepSimulationProps
+>(function ButtonStepSimulation({ onUpdateSuccess, onResetRef }, ref) {
   const {
     currentStepIndex,
     isSimulating,
@@ -25,7 +33,12 @@ export function ButtonStepSimulation({
   }
 
   return (
-    <Button onClick={handleNextStep} disabled={isSimulating} className="h-full">
+    <Button
+      onClick={handleNextStep}
+      disabled={isSimulating}
+      className="h-full"
+      ref={ref} // Forward the ref to the Button component
+    >
       <span>
         {isSimulating ? (
           "Simulating..."
@@ -43,4 +56,4 @@ export function ButtonStepSimulation({
       </span>
     </Button>
   );
-}
+});

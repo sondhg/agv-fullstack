@@ -1,6 +1,6 @@
 # AI Development Assistant Instructions
 
-This guide defines the expected practices and standards for AI-assisted development across Django server backend and React frontend of this web app project.
+This guide defines the expected practices and standards for AI-assisted development across Python, Django, and React projects.
 
 ## Universal Development Standards
 

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { simulateUpdateAgvPosition } from "@/services/APIs/agvsAPI";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RefreshCw } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { RefObject, useCallback, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -37,11 +37,14 @@ type FormValues = z.infer<typeof formSchema>;
  * Form component for simulating AGV position updates
  *
  * @param props.onUpdateSuccess - Callback function to run after successful position update
+ * @param props.stepSimulationRef - Reference to the ButtonStepSimulation component for keyboard shortcuts
  */
 export const FormSimulateUpdateAgvPosition = ({
   onUpdateSuccess,
+  stepSimulationRef,
 }: {
   onUpdateSuccess?: () => Promise<void>;
+  stepSimulationRef?: RefObject<HTMLButtonElement>;
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Reference to store the reset function from ButtonStepSimulation
@@ -170,6 +173,7 @@ export const FormSimulateUpdateAgvPosition = ({
           <ButtonStepSimulation
             onUpdateSuccess={onUpdateSuccess}
             onResetRef={handleResetRef}
+            ref={stepSimulationRef}
           />
           <Button onClick={handleReset} variant="outline" className="w-full">
             <RefreshCw className="mr-2 h-4 w-4" />
