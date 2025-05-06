@@ -1,3 +1,4 @@
+import { SidebarTriggerWithTooltip } from "@/app/layout/SidebarTriggerWithTooltip";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -7,7 +8,6 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { FRONTEND_ROUTES } from "@/routes/routes";
@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarTrigger />
+        <SidebarTriggerWithTooltip side="right" />
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>

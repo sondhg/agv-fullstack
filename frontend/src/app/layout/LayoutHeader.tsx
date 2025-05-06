@@ -1,13 +1,13 @@
 import { ModeToggleOneClick } from "@/components/mode-toggle";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Forklift } from "lucide-react";
 import { SearchButtonTriggerCmdk } from "./SearchButtonTriggerCmdk";
+import { SidebarTriggerWithTooltip } from "./SidebarTriggerWithTooltip";
 export const LayoutHeader = () => {
   return (
     <header className="border-grid sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container-wrapper">
         <div className="container flex h-14 items-center gap-2 p-4 md:gap-4">
-          <SidebarTrigger />
+          <SidebarTriggerWithTooltip />
           <a className="mr-4 flex items-center gap-2 lg:mr-6" href="/">
             <Forklift />
             <span className="hidden font-bold lg:inline-block">
