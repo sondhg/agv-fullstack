@@ -50,6 +50,12 @@ INSTALLED_APPS = [
     'agv_data',
 ]
 
+# MQTT Settings
+MQTT_BROKER_HOST = 'localhost'
+MQTT_BROKER_PORT = 1883
+MQTT_KEEPALIVE = 60
+MQTT_TOPIC_PREFIX = 'AGVRoute'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
