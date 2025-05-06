@@ -21,7 +21,7 @@ function App() {
       <ErrorBoundary FallbackComponent={Fallback}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
               <AllRoutes />
             </ThemeProvider>
           </PersistGate>
@@ -32,7 +32,7 @@ function App() {
           theme="light"
           toastOptions={{}}
           position="top-right"
-          duration={1200}
+          duration={1500}
         />
         <ToasterToast />
       </ErrorBoundary>
