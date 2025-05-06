@@ -42,13 +42,19 @@ export const ButtonStepSimulation = forwardRef<
     <Button
       onClick={handleNextStep}
       disabled={isSimulating || !hasDispatchedOrders}
-      className="h-full min-w-[180px] p-2"
+      className="flex h-[110px] min-w-[180px] items-center justify-center p-2"
       ref={ref}
     >
       {isSimulating ? (
-        <span className="text-sm font-medium">Simulating...</span>
+        <div className="flex h-full items-center justify-center">
+          <span className="text-sm font-medium">Simulating...</span>
+        </div>
       ) : !hasDispatchedOrders ? (
-        <span className="text-sm">Waiting for orders to be dispatched...</span>
+        <div className="flex h-full items-center justify-center">
+          <span className="text-sm">
+            Waiting for orders to be dispatched...
+          </span>
+        </div>
       ) : (
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-semibold">Auto Simulate</span>
