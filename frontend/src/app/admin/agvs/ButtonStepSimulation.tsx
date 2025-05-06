@@ -1,7 +1,7 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { forwardRef } from "react";
 import { useStepSimulation } from "./useStepSimulation";
-
 interface ButtonStepSimulationProps {
   onUpdateSuccess?: () => Promise<void>;
   onResetRef?: (resetFn: () => void) => void;
@@ -36,24 +36,31 @@ export const ButtonStepSimulation = forwardRef<
     <Button
       onClick={handleNextStep}
       disabled={isSimulating}
-      className="h-full"
-      ref={ref} // Forward the ref to the Button component
+      className="h-full min-w-[180px] p-2"
+      ref={ref}
     >
-      <span>
-        {isSimulating ? (
-          "Simulating..."
-        ) : (
-          <div className="flex flex-col">
-            <span>Auto Simulate</span>
+      {isSimulating ? (
+        <span className="text-sm font-medium">Simulating...</span>
+      ) : (
+        <div className="flex flex-col space-y-1">
+          <span className="text-sm font-semibold">Auto Simulate</span>
+          <Badge variant={"secondary"}>
+            <span>Click or press &nbsp;</span>
             <span>
-              Step {currentStepIndex + 1}/{totalSteps}
+              <kbd>Alt + S</kbd>
             </span>
-            <span>
-              (AGV {currentStep.agv_id} → node {currentStep.current_node})
-            </span>
+          </Badge>
+          <div className="space-y-0.5">
+            <div>
+              Step <span className="font-medium">{currentStepIndex + 1}</span>/
+              {totalSteps}
+            </div>
+            <div>
+              AGV {currentStep.agv_id} → {currentStep.current_node}
+            </div>
           </div>
-        )}
-      </span>
+        </div>
+      )}
     </Button>
   );
 });
