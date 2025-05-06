@@ -42,9 +42,11 @@ type FormValues = z.infer<typeof formSchema>;
 export const FormSimulateUpdateAgvPosition = ({
   onUpdateSuccess,
   stepSimulationRef,
+  hasDispatchedOrders = false, // Add this prop with default value
 }: {
   onUpdateSuccess?: () => Promise<void>;
   stepSimulationRef?: RefObject<HTMLButtonElement>;
+  hasDispatchedOrders?: boolean;
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Reference to store the reset function from ButtonStepSimulation
@@ -174,6 +176,7 @@ export const FormSimulateUpdateAgvPosition = ({
             onUpdateSuccess={onUpdateSuccess}
             onResetRef={handleResetRef}
             ref={stepSimulationRef}
+            hasDispatchedOrders={hasDispatchedOrders}
           />
           <Button onClick={handleReset} variant="outline" className="w-full">
             <RefreshCw className="mr-2 h-4 w-4" />

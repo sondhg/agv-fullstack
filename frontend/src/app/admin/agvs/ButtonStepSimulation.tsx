@@ -2,9 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { forwardRef } from "react";
 import { useStepSimulation } from "./useStepSimulation";
+
 interface ButtonStepSimulationProps {
   onUpdateSuccess?: () => Promise<void>;
   onResetRef?: (resetFn: () => void) => void;
+  hasDispatchedOrders: boolean; // Add this prop
 }
 
 /**
@@ -12,12 +14,16 @@ interface ButtonStepSimulationProps {
  *
  * @param props.onUpdateSuccess - Callback function to run after successful position update
  * @param props.onResetRef - Function to provide the reset functionality to parent components
+ * @param props.hasDispatchedOrders - Whether orders have been dispatched to AGVs
  * @param ref - Forwarded ref to allow programmatic triggering of the button (e.g., via keyboard shortcuts)
  */
 export const ButtonStepSimulation = forwardRef<
   HTMLButtonElement,
   ButtonStepSimulationProps
->(function ButtonStepSimulation({ onUpdateSuccess, onResetRef }, ref) {
+>(function ButtonStepSimulation(
+  { onUpdateSuccess, onResetRef, hasDispatchedOrders },
+  ref,
+) {
   const {
     currentStepIndex,
     isSimulating,
@@ -35,12 +41,14 @@ export const ButtonStepSimulation = forwardRef<
   return (
     <Button
       onClick={handleNextStep}
-      disabled={isSimulating}
+      disabled={isSimulating || !hasDispatchedOrders}
       className="h-full min-w-[180px] p-2"
       ref={ref}
     >
       {isSimulating ? (
         <span className="text-sm font-medium">Simulating...</span>
+      ) : !hasDispatchedOrders ? (
+        <span className="text-sm">Waiting for orders to be dispatched...</span>
       ) : (
         <div className="flex flex-col space-y-1">
           <span className="text-sm font-semibold">Auto Simulate</span>

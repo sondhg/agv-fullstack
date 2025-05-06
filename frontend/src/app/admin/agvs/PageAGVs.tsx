@@ -26,6 +26,9 @@ export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
+  // Add state to track if orders have been dispatched
+  const [hasDispatchedOrders, setHasDispatchedOrders] =
+    useState<boolean>(false);
   // Reference to the ButtonStepSimulation component
   const stepSimulationBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -44,6 +47,9 @@ export function PageAGVs() {
 
     // Update the list data
     setListData(data);
+
+    // Update hasDispatchedOrders based on whether any AGV has an active order
+    setHasDispatchedOrders(data.some((agv) => agv.active_order !== null));
 
     // Track position changes for animation
     data.forEach((agv) => {
@@ -76,7 +82,7 @@ export function PageAGVs() {
       setIsDispatching(true);
       await dispatchOrdersToAGVs(selectedAlgorithm);
       toast.success("Successfully dispatched orders to AGVs");
-      await fetchListData();
+      await fetchListData(); // This will update hasDispatchedOrders
     } catch (error) {
       if (error instanceof Response) {
         const errorData = await error.json();
@@ -167,6 +173,7 @@ export function PageAGVs() {
               <FormSimulateUpdateAgvPosition
                 onUpdateSuccess={handlePositionUpdate}
                 stepSimulationRef={stepSimulationBtnRef}
+                hasDispatchedOrders={hasDispatchedOrders}
               />
             </div>
             {/* Map Visualization Section */}
