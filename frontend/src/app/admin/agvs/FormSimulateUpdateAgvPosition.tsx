@@ -178,7 +178,7 @@ export const FormSimulateUpdateAgvPosition = ({
             ref={stepSimulationRef}
             hasDispatchedOrders={hasDispatchedOrders}
           />
-          <Button onClick={handleReset} variant="outline" className="w-full">
+          <Button onClick={handleReset} variant="destructive" className="w-full">
             <RefreshCw className="mr-2 h-4 w-4" />
             Reset Simulation
           </Button>

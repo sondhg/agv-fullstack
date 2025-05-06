@@ -10,7 +10,7 @@ export const CANVAS_CONFIG = {
   defaultWidth: 1000, // Default width for good visibility
   defaultHeight: 300, // Default height for good visibility
   nodeSizeMultiplier: 2, // Multiplier to ensure nodes have enough space
-  aspectRatioMax: 2, // Maximum aspect ratio to prevent extreme rectangles
+  aspectRatioMax: 2.5, // ! Maximum aspect ratio to prevent extreme rectangles. Change this to higher value to make MapVisualizer shorter in height.
   aspectRatioMin: 0.5, // Minimum aspect ratio to prevent extreme rectangles
   agvSize: 24, // Size of the AGV icon
   agvAnimationDuration: 2000, // Animation duration in milliseconds (now 2 seconds)
