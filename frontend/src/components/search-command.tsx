@@ -40,11 +40,11 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
               }}
             >
               {item.icon && <item.icon />}
-              <span>{item.title}</span>
+              <span>{`${item.title} page`}</span>
             </CommandItem>
           ))}
         </CommandGroup>
-        <CommandGroup heading="Theme">
+        <CommandGroup heading="Change theme">
           <CommandItem
             onSelect={() => {
               setTheme("dark");
@@ -52,7 +52,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             }}
           >
             <Moon className="mr-2 h-4 w-4" />
-            <span>Dark</span>
+            <span>Dark theme</span>
           </CommandItem>
           <CommandItem
             onSelect={() => {
@@ -61,7 +61,7 @@ export function SearchCommand({ open, onOpenChange }: SearchCommandProps) {
             }}
           >
             <Sun className="mr-2 h-4 w-4" />
-            <span>Light</span>
+            <span>Light theme</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>
