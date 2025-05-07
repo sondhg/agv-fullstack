@@ -51,7 +51,8 @@ INSTALLED_APPS = [
 ]
 
 # MQTT Settings
-MQTT_BROKER_HOST = 'localhost'
+# MQTT_BROKER_HOST = 'localhost'
+MQTT_BROKER_HOST = 'broker.emqx.io'
 MQTT_BROKER_PORT = 1883
 MQTT_KEEPALIVE = 60
 MQTT_TOPIC_PREFIX = 'AGVRoute'
