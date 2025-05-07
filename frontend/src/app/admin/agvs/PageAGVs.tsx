@@ -149,16 +149,9 @@ export function PageAGVs() {
     // Add event listener for keyboard shortcut
     window.addEventListener("keydown", handleKeyDown);
 
-    // Set up polling to periodically check for AGV position updates
-    // This is useful in a real-world scenario where AGVs may be updating their positions
-    const pollingInterval = setInterval(() => {
-      fetchListData();
-    }, 5000); // Poll every 5 seconds
-
     return () => {
       // Clean up event listener and interval
       window.removeEventListener("keydown", handleKeyDown);
-      clearInterval(pollingInterval);
     };
   }, []);
 
