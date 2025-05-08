@@ -109,7 +109,7 @@ class ControlPolicyController:
         return {
             "success": True,
             "message": "Task completed",
-            "state": "idle",
+            "motion_state": Agv.IDLE,
             "direction_change": None
         }
 
@@ -160,7 +160,7 @@ class ControlPolicyController:
         return {
             "success": True,
             "message": "AGV returning from spare point to original path",
-            "state": "moving",
+            "motion_state": Agv.MOVING,
             "next_node": agv.next_node,
             "direction_change": agv.direction_change
         }
@@ -193,7 +193,7 @@ class ControlPolicyController:
             return {
                 "success": True,
                 "message": "AGV can move to next point",
-                "state": "moving",
+                "motion_state": Agv.MOVING,
                 "next_node": agv.next_node,
                 "direction_change": agv.direction_change
             }
@@ -206,7 +206,8 @@ class ControlPolicyController:
         return {
             "success": True,
             "message": "AGV must wait at current point",
-            "state": "waiting",
+            "motion_state": Agv.WAITING,
+            "next_node": agv.next_node,
             "direction_change": None
         }
 

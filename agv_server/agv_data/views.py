@@ -105,8 +105,8 @@ class UpdateAGVPositionView(APIView):
         {
             "success": bool,         # Whether the request was processed successfully
             "message": str,          # Description message
-            "state": str,            # "idle", "moving", or "waiting" (SA^i)
-            "next_node": int|null,   # Next node to move to (v_n^i) if state is "moving"
+            "motion_state": int,     # AGV state (SA^i): 0=Idle, 1=Moving, 2=Waiting
+            "next_node": int|null,   # Next node to move to (v_n^i) if motion_state is MOVING
             "reserved_node": int|null, # Reserved node (v_r^i)
             "spare_flag": bool,      # Whether AGV has spare points (F^i)
             "spare_points": object,  # Spare points mapping (SP^i)
@@ -163,7 +163,7 @@ class UpdateAGVPositionView(APIView):
             # If the AGV entered a waiting state, check for and resolve deadlocks
             # This implements the automatic deadlock detection and resolution from Algorithm 3
             deadlock_info = {}
-            if result.get("state") == "waiting":
+            if result.get("motion_state") == Agv.WAITING:
                 # Initialize the deadlock resolver
                 resolver = DeadlockResolver()
 
@@ -177,7 +177,7 @@ class UpdateAGVPositionView(APIView):
 
                     # Update the result with the new state if this AGV was moved
                     if agv_id in deadlock_result.get("agvs_moved", []):
-                        result["state"] = "moving"
+                        result["motion_state"] = Agv.MOVING
                         result["message"] = "AGV moved to spare point to resolve deadlock"
                         result["next_node"] = updated_agv.next_node
 
@@ -201,7 +201,7 @@ class UpdateAGVPositionView(APIView):
 
             # Log the position update for debugging
             print(f"AGV {agv_id} updated position from {previous_node} to {current_node}, " +
-                  f"state: {result.get('state', 'unknown')}, next_node: {result.get('next_node', None)}")
+                  f"motion_state: {result.get('motion_state', 'unknown')}, next_node: {result.get('next_node', None)}")
 
             # Return the result to the AGV
             return Response(result, status=status.HTTP_200_OK)

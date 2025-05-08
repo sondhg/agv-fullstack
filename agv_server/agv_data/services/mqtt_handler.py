@@ -36,8 +36,8 @@ class MQTTHandler:
         """Callback when client connects to broker."""
         if rc == 0:
             print("Connected to MQTT broker successfully")
-            # Subscribe to AGV position updates using topic from settings
-            client.subscribe(f"{settings.MQTT_TOPIC_PREFIX}")
+            # Subscribe to incoming messages only, not responses
+            client.subscribe(f"{settings.MQTT_TOPIC_PREFIX}/+/update")
         else:
             print("Bad connection. Code:", rc)
 
@@ -52,10 +52,32 @@ class MQTTHandler:
             "current_node": int,     # Current position of the AGV (v_c^i)
         }
 
-        Response format identical to UpdateAGVPositionView
+        Response format:
+        {
+            "success": bool,         # Whether the request was processed successfully
+            "message": str,          # Description message
+            "motion_state": int,     # AGV state (SA^i): 0=Idle, 1=Moving, 2=Waiting
+            "next_node": int|null,   # Next node to move to (v_n^i) if motion_state is MOVING
+            "reserved_node": int|null, # Reserved node (v_r^i)
+            "spare_flag": bool,      # Whether AGV has spare points (F^i)
+            "spare_points": object,  # Spare points mapping (SP^i)
+            "previous_node": int|null, # Previous node the AGV was at (for turn direction calculation)
+        }
         """
         print(
             f'Received message on topic: {msg.topic} with payload: {msg.payload}')
+
+        # Extract AGV ID from topic first
+        try:
+            topic_parts = msg.topic.split('/')
+            if len(topic_parts) != 3 or topic_parts[0] != settings.MQTT_TOPIC_PREFIX or topic_parts[2] != "update":
+                print(f"Ignoring message on invalid topic: {msg.topic}")
+                return
+            topic_agv_id = int(topic_parts[1])
+        except (ValueError, IndexError):
+            print(f"Could not extract AGV ID from topic: {msg.topic}")
+            return
+
         try:
             # Parse incoming message
             data = json.loads(msg.payload.decode())
@@ -64,22 +86,22 @@ class MQTTHandler:
 
             # Validate input data
             if not agv_id or current_node is None:
-                error_response = {
-                    "success": False,
-                    "message": "agv_id and current_node are required fields"
-                }
-                self.send_response(agv_id, error_response)
+                self.send_error_response(
+                    topic_agv_id, "agv_id and current_node are required fields")
+                return
+
+            # Validate AGV ID matches topic
+            if topic_agv_id != agv_id:
+                self.send_error_response(topic_agv_id,
+                                         f"AGV ID in message ({agv_id}) doesn't match topic AGV ID ({topic_agv_id}). Use AGVRoute/{agv_id}/update")
                 return
 
             # Get the AGV from database
             try:
                 agv = Agv.objects.get(agv_id=agv_id)
             except Agv.DoesNotExist:
-                error_response = {
-                    "success": False,
-                    "message": f"AGV with ID {agv_id} not found"
-                }
-                self.send_response(agv_id, error_response)
+                self.send_error_response(
+                    topic_agv_id, f"AGV with ID {agv_id} not found")
                 return
 
             # Store previous position for logging
@@ -100,7 +122,7 @@ class MQTTHandler:
 
             # Handle deadlock detection and resolution
             deadlock_info = {}
-            if result.get("state") == "waiting":
+            if result.get("motion_state") == Agv.WAITING:
                 # Initialize the deadlock resolver
                 resolver = DeadlockResolver()
 
@@ -114,7 +136,7 @@ class MQTTHandler:
 
                     # Update the result with the new state if this AGV was moved
                     if agv_id in deadlock_result.get("agvs_moved", []):
-                        result["state"] = "moving"
+                        result["motion_state"] = Agv.MOVING
                         result["message"] = "AGV moved to spare point to resolve deadlock"
                         result["next_node"] = updated_agv.next_node
 
@@ -138,30 +160,36 @@ class MQTTHandler:
 
             # Log the position update for debugging
             print(f"AGV {agv_id} updated position from {previous_node} to {current_node}, " +
-                  f"state: {result.get('state', 'unknown')}, next_node: {result.get('next_node', None)}")
+                  f"motion_state: {result.get('motion_state', 'unknown')}, next_node: {result.get('next_node', None)}")
 
             # Send response back to AGV
             self.send_response(agv_id, result)
 
         except json.JSONDecodeError:
-            error_response = {
-                "success": False,
-                "message": "Invalid JSON format in message"
-            }
-            self.send_response(agv_id, error_response)
+            self.send_error_response(
+                topic_agv_id, "Invalid JSON format in message")
         except Exception as e:
             import traceback
             traceback_str = traceback.format_exc()
-            error_response = {
-                "success": False,
-                "message": f"Error processing position update: {str(e)}",
-                "details": traceback_str
-            }
-            self.send_response(agv_id, error_response)
+            self.send_error_response(
+                topic_agv_id, f"Error processing position update: {str(e)}", traceback_str)
 
-    def send_response(self, agv_id, response_data):
+    def send_error_response(self, agv_id: int, message: str, details: str = None):
+        """Send error response to an AGV."""
+        error_response = {
+            "success": False,
+            "message": message
+        }
+        if details:
+            error_response["details"] = details
+        self.send_response(agv_id, error_response)
+
+    def send_response(self, agv_id: int, response_data: dict):
         """Send response back to specific AGV."""
-        response_topic = f"{settings.MQTT_TOPIC_PREFIX}/response/{agv_id}"
+        if agv_id is None:
+            print("Warning: Attempted to send response with agv_id=None")
+            return
+        response_topic = f"{settings.MQTT_TOPIC_PREFIX}/{agv_id}/response"
         self.client.publish(response_topic, json.dumps(response_data))
 
 
