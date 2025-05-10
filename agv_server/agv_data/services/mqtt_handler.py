@@ -7,6 +7,9 @@ from agv_data.services.controller import ControlPolicyController
 from agv_data.services.algorithm3 import DeadlockResolver
 from agv_data.services.position_tracker import update_previous_node
 
+MQTT_TOPIC_AGV_DATA = "agvdata"  # Base topic for receiving AGV data
+MQTT_TOPIC_AGV_ROUTE = "agvroute"  # Base topic for sending instructions
+
 
 class MQTTHandler:
     """
@@ -36,10 +39,12 @@ class MQTTHandler:
         """Callback when client connects to broker."""
         if rc == 0:
             print("Connected to MQTT broker successfully")
-            # Subscribe to incoming messages only, not responses
-            client.subscribe(f"{settings.MQTT_TOPIC_PREFIX}/+/update")
+            # Subscribe to all AGV data topics using wildcard
+            subscribe_topic = f"{MQTT_TOPIC_AGV_DATA}/+"
+            result = client.subscribe(subscribe_topic)
+            print(f"Subscribed to topic: {subscribe_topic}")
         else:
-            print("Bad connection. Code:", rc)
+            print(f"Bad connection. Code: {rc}")
 
     def on_message(self, client, userdata, msg):
         """
@@ -51,18 +56,6 @@ class MQTTHandler:
             "agv_id": int,           # ID of the AGV (r_i)
             "current_node": int,     # Current position of the AGV (v_c^i)
         }
-
-        Response format:
-        {
-            "success": bool,         # Whether the request was processed successfully
-            "message": str,          # Description message
-            "motion_state": int,     # AGV state (SA^i): 0=Idle, 1=Moving, 2=Waiting
-            "next_node": int|null,   # Next node to move to (v_n^i) if motion_state is MOVING
-            "reserved_node": int|null, # Reserved node (v_r^i)
-            "spare_flag": bool,      # Whether AGV has spare points (F^i)
-            "spare_points": object,  # Spare points mapping (SP^i)
-            "previous_node": int|null, # Previous node the AGV was at (for turn direction calculation)
-        }
         """
         print(
             f'Received message on topic: {msg.topic} with payload: {msg.payload}')
@@ -70,7 +63,7 @@ class MQTTHandler:
         # Extract AGV ID from topic first
         try:
             topic_parts = msg.topic.split('/')
-            if len(topic_parts) != 3 or topic_parts[0] != settings.MQTT_TOPIC_PREFIX or topic_parts[2] != "update":
+            if len(topic_parts) != 2 or topic_parts[0] != MQTT_TOPIC_AGV_DATA:
                 print(f"Ignoring message on invalid topic: {msg.topic}")
                 return
             topic_agv_id = int(topic_parts[1])
@@ -93,7 +86,7 @@ class MQTTHandler:
             # Validate AGV ID matches topic
             if topic_agv_id != agv_id:
                 self.send_error_response(topic_agv_id,
-                                         f"AGV ID in message ({agv_id}) doesn't match topic AGV ID ({topic_agv_id}). Use AGVRoute/{agv_id}/update")
+                                         f"AGV ID in message ({agv_id}) doesn't match topic AGV ID ({topic_agv_id}). Use agvdata/{agv_id}")
                 return
 
             # Get the AGV from database
@@ -185,12 +178,24 @@ class MQTTHandler:
         self.send_response(agv_id, error_response)
 
     def send_response(self, agv_id: int, response_data: dict):
-        """Send response back to specific AGV."""
+        """
+        Send response back to specific AGV.
+        Only includes motion_state, direction_change and next_node in the response.
+        """
         if agv_id is None:
             print("Warning: Attempted to send response with agv_id=None")
             return
-        response_topic = f"{settings.MQTT_TOPIC_PREFIX}/{agv_id}/response"
-        self.client.publish(response_topic, json.dumps(response_data))
+
+        # Filter only required fields
+        filtered_response = {
+            "motion_state": response_data.get("motion_state"),
+            "direction_change": response_data.get("direction_change"),
+            "next_node": response_data.get("next_node")
+        }
+
+        response_topic = f"{MQTT_TOPIC_AGV_ROUTE}/{agv_id}"
+        print(f"Publishing response to {response_topic}: {filtered_response}")
+        self.client.publish(response_topic, json.dumps(filtered_response))
 
 
 # Create a singleton instance
