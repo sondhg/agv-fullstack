@@ -92,32 +92,3 @@ def get_action(prev_node, current_node, next_node):
 
     # Get the action from the direction maps, default to GO_STRAIGHT if not found
     return direction_actions.get(direction_to_current, {}).get(direction_to_next, GO_STRAIGHT)
-
-
-def format_instruction_set(path):
-    """
-    Generate the initial path for a given path.
-
-    Args:
-        path (list): A list of nodes representing the path.
-
-    Returns:
-        list: A list of tuples representing the initial path for the path.
-              Each tuple is in the format (from_node, to_node, action).
-    """
-    if len(path) < 2:
-        return []
-
-    initial_path = []
-    for i in range(1, len(path) - 1):
-        prev_node = path[i - 1]
-        current_node = path[i]
-        next_node = path[i + 1]
-        action = get_action(prev_node, current_node, next_node)
-        initial_path.append((prev_node, current_node, action))
-
-    # Add the final segment to the initial path
-    # We're using STRAIGHT as a default action for the final node
-    # This could be modified to use a dedicated STOP constant if available in the future
-    initial_path.append((path[-2], path[-1], GO_STRAIGHT))
-    return initial_path
