@@ -83,6 +83,8 @@ def on_message(client, userdata, msg):
 
         # Handle deadlock detection and resolution
         deadlock_info = {}
+        agvs_to_update = set([agv_id])  # Start with the triggering AGV
+
         if result.get("motion_state") == Agv.WAITING:
             # Initialize the deadlock resolver
             resolver = DeadlockResolver()
@@ -90,8 +92,11 @@ def on_message(client, userdata, msg):
             # Detect and resolve deadlocks
             deadlock_result = resolver.detect_and_resolve_deadlocks()
 
-            # If deadlocks were resolved, refresh the AGV data
+            # If deadlocks were resolved, refresh the AGV data and update moved AGVs
             if deadlock_result.get("deadlocks_resolved", 0) > 0:
+                # Add all moved AGVs to the update set
+                agvs_to_update.update(deadlock_result.get("agvs_moved", []))
+
                 # Re-fetch the AGV to get updated state after deadlock resolution
                 updated_agv = Agv.objects.get(agv_id=agv_id)
 
@@ -105,6 +110,7 @@ def on_message(client, userdata, msg):
                     "deadlock_resolved": True,
                     "deadlock_details": deadlock_result
                 }
+
         # Add detailed state information to the response
         if result["success"]:
             result.update({
@@ -122,13 +128,30 @@ def on_message(client, userdata, msg):
         print(f"AGV {agv_id} updated position from {previous_node} to {current_node}, " +
               f"motion_state: {result.get('motion_state', 'unknown')}, next_node: {result.get('next_node', None)}")
 
-        # Filter only required fields
+        # Send instructions to all affected AGVs
+        for affected_agv_id in agvs_to_update:
+            # Skip if it's the triggering AGV, as we'll handle it below
+            if affected_agv_id != agv_id:
+                # Get the updated state for this AGV
+                affected_agv = Agv.objects.get(agv_id=affected_agv_id)
+                # Create instructions for this AGV
+                affected_instructions = {
+                    "motion_state": affected_agv.motion_state,
+                    "direction_change": affected_agv.direction_change,
+                    "next_node": affected_agv.next_node
+                }
+                # Publish instructions to this AGV's route topic
+                client.publish(
+                    f"agvroute/{affected_agv_id}", json.dumps(affected_instructions))
+                print(
+                    f"Sent updated instructions to AGV {affected_agv_id}: {affected_instructions}")
+
+        # Send instructions to the triggering AGV
         filtered_instructions = {
             "motion_state": result.get("motion_state"),
             "direction_change": result.get("direction_change"),
             "next_node": result.get("next_node")
         }
-
         client.publish(f"agvroute/{agv_id}", json.dumps(filtered_instructions))
 
     except json.JSONDecodeError as e:
