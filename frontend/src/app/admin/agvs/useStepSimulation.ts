@@ -1,10 +1,8 @@
+import { SIMULATION_STEP_KEY } from "@/constants/localStorageKeys.ts";
 import { simulateUpdateAgvPosition } from "@/services/APIs/agvsAPI";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { simulationSteps } from "./simulationSteps.ts";
-
-// Key for storing the simulation step index in localStorage
-const SIMULATION_STEP_KEY = "agv-simulation-current-step";
 
 export const useStepSimulation = (onUpdateSuccess?: () => Promise<void>) => {
   // Initialize state from localStorage if available, otherwise start from step 0

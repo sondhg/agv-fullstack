@@ -3,6 +3,10 @@ import { DataTable } from "@/components/ui/data-table";
 import { MassDeleteButton } from "@/components/ui/mass-delete-button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  CACHED_MAP_DATA_KEY,
+  HTTP_OR_MQTT_TAB_KEY,
+} from "@/constants/localStorageKeys";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   bulkDeleteAGVs,
@@ -30,7 +34,7 @@ export function PageAGVs() {
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [activeTab, setActiveTab] = useState<string>(() => {
     // Try to get the saved tab from localStorage, default to "http" if not found
-    return localStorage.getItem("http-or-mqtt-tab") || "http";
+    return localStorage.getItem(HTTP_OR_MQTT_TAB_KEY) || "http";
   });
   // Add state to track if orders have been dispatched
   const [hasDispatchedOrders, setHasDispatchedOrders] =
@@ -40,7 +44,7 @@ export function PageAGVs() {
 
   // Save activeTab to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("http-or-mqtt-tab", activeTab);
+    localStorage.setItem(HTTP_OR_MQTT_TAB_KEY, activeTab);
   }, [activeTab]);
 
   const {
@@ -110,7 +114,7 @@ export function PageAGVs() {
   const handleShowMap = async () => {
     try {
       // Check if map data is cached
-      const cachedData = localStorage.getItem("cachedMapData");
+      const cachedData = localStorage.getItem(CACHED_MAP_DATA_KEY);
       if (cachedData) {
         const parsedData = JSON.parse(cachedData) as MapData;
         setMapData(parsedData);
@@ -128,7 +132,7 @@ export function PageAGVs() {
 
       setMapData(data);
       // Cache the map data
-      localStorage.setItem("cachedMapData", JSON.stringify(data));
+      localStorage.setItem(CACHED_MAP_DATA_KEY, JSON.stringify(data));
     } catch (error) {
       console.error("Error fetching map data:", error);
       toast.error("Failed to load map data.");

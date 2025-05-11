@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { ACCESS_TOKEN_KEY } from "@/constants/localStorageKeys";
 import { doLogout } from "@/redux/userSlice";
 import { postLogout } from "@/services/APIs/authAPI";
 import { ChevronsUpDown, LogOut } from "lucide-react";
@@ -48,7 +49,7 @@ export function NavUser({
         await postLogout(logoutInfo);
       if (data && data.message) {
         dispatch(doLogout());
-        localStorage.removeItem("access_token");
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
         navigate("/login");
         toast.success(data.message);
       } else {

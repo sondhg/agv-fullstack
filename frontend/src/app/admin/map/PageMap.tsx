@@ -14,6 +14,7 @@ import { AccordionCSVMapGuide } from "./AccordionCSVMapGuide";
 import { AlertMapGuide } from "./AlertMapGuide";
 import { DownloadSampleCSVFilesForMap } from "./DownloadSampleCSVFilesForMap";
 import { MapVisualizer } from "./MapVisualizer";
+import { CACHED_MAP_DATA_KEY } from "@/constants/localStorageKeys";
 
 interface MapData {
   nodes: number[];
@@ -44,7 +45,7 @@ export function PageMap() {
       setMapData(null); // Clear the map data from the UI
       setError(null); // Clear any errors
       resetFileInputs(); // Reset the file inputs
-      localStorage.removeItem("cachedMapData"); // Clear cached data
+      localStorage.removeItem(CACHED_MAP_DATA_KEY); // Clear cached data
     } catch (error) {
       toast.error("Failed to delete map data.");
       console.error("Error deleting map data:", error);
@@ -65,7 +66,7 @@ export function PageMap() {
           .join("\n");
         await importFunction(csvData);
         toast.success("Import successful");
-        localStorage.removeItem("cachedMapData"); // Clear cached data after import
+        localStorage.removeItem(CACHED_MAP_DATA_KEY); // Clear cached data after import
       },
       skipEmptyLines: true,
     });
@@ -73,7 +74,7 @@ export function PageMap() {
 
   const handleShowMap = async () => {
     // Check if map data is cached
-    const cachedData = localStorage.getItem("cachedMapData");
+    const cachedData = localStorage.getItem(CACHED_MAP_DATA_KEY);
     if (cachedData) {
       const parsedData = JSON.parse(cachedData) as MapData;
       setMapData(parsedData);
