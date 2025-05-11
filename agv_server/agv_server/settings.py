@@ -35,6 +35,8 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,18 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'channels',
     'users',
     'order_data',
     'map_data',
     'agv_data',
 ]
 
-# MQTT Settings
-# MQTT_BROKER_HOST = 'localhost'
-MQTT_BROKER_HOST = 'broker.emqx.io'
-MQTT_BROKER_PORT = 1883
-MQTT_KEEPALIVE = 60
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -150,3 +146,6 @@ AUTH_USER_MODEL = "users.User"
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Daphne
+ASGI_APPLICATION = "agv_server.asgi.application"
