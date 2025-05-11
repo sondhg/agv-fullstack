@@ -39,7 +39,7 @@ type FormValues = z.infer<typeof formSchema>;
  * @param props.onUpdateSuccess - Callback function to run after successful position update
  * @param props.stepSimulationRef - Reference to the ButtonStepSimulation component for keyboard shortcuts
  */
-export const FormSimulateUpdateAgvPosition = ({
+export const FormSimulateUpdateAgvPositionHTTP = ({
   onUpdateSuccess,
   stepSimulationRef,
   hasDispatchedOrders = false, // Add this prop with default value
@@ -178,7 +178,11 @@ export const FormSimulateUpdateAgvPosition = ({
             ref={stepSimulationRef}
             hasDispatchedOrders={hasDispatchedOrders}
           />
-          <Button onClick={handleReset} variant="destructive" className="w-full">
+          <Button
+            onClick={handleReset}
+            variant="destructive"
+            className="w-full"
+          >
             <RefreshCw className="mr-2 h-4 w-4" />
             Reset Simulation
           </Button>

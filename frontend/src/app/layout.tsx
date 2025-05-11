@@ -12,7 +12,6 @@ export default function Layout() {
       <AppSidebar />
       <SidebarInset>
         <div
-          vaul-drawer-wrapper
           className="transition-border-radius ease-cubic origin-top transition-transform duration-500"
         >
           <div className="relative flex min-h-svh flex-col bg-background">

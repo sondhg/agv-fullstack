@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import { MassDeleteButton } from "@/components/ui/mass-delete-button";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   bulkDeleteAGVs,
@@ -20,17 +21,27 @@ import { AlgorithmSelect } from "./AlgorithmSelect";
 import { columns1 } from "./columns1";
 import { columns2 } from "./columns2";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
-import { FormSimulateUpdateAgvPosition } from "./FormSimulateUpdateAgvPosition";
+import { FormSimulateUpdateAgvPositionHTTP } from "./FormSimulateUpdateAgvPositionHTTP";
+import { FormSimulateUpdateAgvPositionMQTT } from "./FormSimulateUpdateAgvPositionMQTT";
 
 export function PageAGVs() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    // Try to get the saved tab from localStorage, default to "http" if not found
+    return localStorage.getItem("http-or-mqtt-tab") || "http";
+  });
   // Add state to track if orders have been dispatched
   const [hasDispatchedOrders, setHasDispatchedOrders] =
     useState<boolean>(false);
   // Reference to the ButtonStepSimulation component
   const stepSimulationBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Save activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("http-or-mqtt-tab", activeTab);
+  }, [activeTab]);
 
   const {
     rowSelection,
@@ -162,12 +173,31 @@ export function PageAGVs() {
       <div className="flex flex-1 flex-col">
         <div className="gap-2">
           <div className="flex flex-col gap-4 md:gap-6">
+            {" "}
             <div className="w-3/4">
-              <FormSimulateUpdateAgvPosition
-                onUpdateSuccess={handlePositionUpdate}
-                stepSimulationRef={stepSimulationBtnRef}
-                hasDispatchedOrders={hasDispatchedOrders}
-              />
+              {" "}
+              <Tabs
+                value={activeTab}
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="w-full">
+                  <TabsTrigger value="http">HTTP Communication</TabsTrigger>
+                  <TabsTrigger value="mqtt">MQTT Communication</TabsTrigger>
+                </TabsList>
+                <TabsContent value="http">
+                  <FormSimulateUpdateAgvPositionHTTP
+                    onUpdateSuccess={handlePositionUpdate}
+                    stepSimulationRef={stepSimulationBtnRef}
+                    hasDispatchedOrders={hasDispatchedOrders}
+                  />
+                </TabsContent>
+                <TabsContent value="mqtt">
+                  <FormSimulateUpdateAgvPositionMQTT
+                    onUpdateSuccess={handlePositionUpdate}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
             {/* Map Visualization Section */}
             <div>
