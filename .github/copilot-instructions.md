@@ -38,14 +38,10 @@ This guide defines the expected practices and standards for AI-assisted developm
    ```
 
 3. **Project Integration**
+
    - Review project README and architecture docs
    - Use established patterns and conventions
-   - Prefer built-in libraries and tools over external dependencies
-   - Consider external libraries only when they provide significant benefits:
-     - Improved performance
-     - Enhanced security
-     - Better maintainability
-     - Reduced complexity
+   - Do not try to install any new dependencies. Only use what has been installed in the project. All necessary dependencies are already installed using pnpm and pip.
    - Group related code by feature
    - Extract reusable components
    - Implement proper error handling
@@ -58,6 +54,7 @@ This guide defines the expected practices and standards for AI-assisted developm
 - Use type hints and docstrings
 - Follow PEP 257 for documentation
 - Document class attributes and inheritance
+- Try to use functions instead of class methods
 
 ### React
 
@@ -75,3 +72,6 @@ This guide defines the expected practices and standards for AI-assisted developm
 - Architecture documentation
 
 For unclear requirements or edge cases, request clarification before proceeding.
+
+<!-- ## Notes
+- Right now, I want to build the "Dashboard" page in PageDashboard.tsx. It is a rebuilt version of the "AGVs" page, with full MQTT and WebSocket implementation instead of just HTTP. There will be files that have the same names, so I want you to focus only on the `dashboard` folder, not the `agvs` folder in the `admin` folder when helping me with frontend code. Do not care about the `agvs` folder in the `admin` folder at all.  -->
