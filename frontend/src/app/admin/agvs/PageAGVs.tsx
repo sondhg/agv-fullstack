@@ -30,8 +30,6 @@ export function PageAGVs() {
   // Add state to track if orders have been dispatched
   const [hasDispatchedOrders, setHasDispatchedOrders] =
     useState<boolean>(false);
-  // Reference to the ButtonStepSimulation component
-  const stepSimulationBtnRef = useRef<HTMLButtonElement>(null);
 
   const {
     rowSelection,
@@ -125,30 +123,9 @@ export function PageAGVs() {
     }
   };
 
-  // Keyboard shortcut handler for Alt+S
-  const handleKeyDown = (event: KeyboardEvent) => {
-    // Check if Alt+S was pressed
-    if (event.altKey && event.key === "s") {
-      event.preventDefault(); // Prevent default browser behavior
-
-      // Trigger click on the ButtonStepSimulation
-      if (stepSimulationBtnRef.current) {
-        stepSimulationBtnRef.current.click();
-      }
-    }
-  };
-
   useEffect(() => {
     fetchListData();
     handleShowMap();
-
-    // Add event listener for keyboard shortcut
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      // Clean up event listener and interval
-      window.removeEventListener("keydown", handleKeyDown);
-    };
   }, []);
 
   return (
