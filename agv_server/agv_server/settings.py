@@ -16,6 +16,7 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATE_DIR = BASE_DIR / "templates/"
 
 
 # Quick-start development settings - unsuitable for production
@@ -68,7 +69,7 @@ ROOT_URLCONF = 'agv_server.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [TEMPLATE_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'agv_server.wsgi.application'
+# WSGI_APPLICATION = 'agv_server.wsgi.application'
 
 
 # Database
@@ -149,3 +150,14 @@ CORS_ALLOW_CREDENTIALS = True
 
 # Daphne
 ASGI_APPLICATION = "agv_server.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                ("localhost", 6379),
+            ],
+        },
+    },
+}
