@@ -110,40 +110,40 @@ class ControlPolicyController:
             "success": True,
             "message": "Task completed",
             "motion_state": Agv.IDLE,
-            "direction_change": None
+            "direction_change": Agv.STAY_STILL
         }
 
     def _reset_agv_state(self, agv: Agv) -> None:
         """
         Reset all AGV data fields to their default values, except for agv_id and preferred_parking_node.
-        
+
         Sets all state-related fields back to their default values when a task is completed
         or when the AGV needs to be reset for any other reason.
-        
+
         Args:
             agv (Agv): The AGV object to reset
         """
         # Reset path information
         agv.initial_path = []
         agv.residual_path = []
-        
+
         # Reset state information
         agv.motion_state = Agv.IDLE
         agv.active_order = None
-        
+
         # Reset DSPA algorithm specific fields
         agv.spare_flag = False
         agv.spare_points = {}
         agv.cp = []
         agv.scp = []
-        
+
         # Reset position and movement information
         agv.previous_node = None
         agv.current_node = None
         agv.next_node = None
         agv.reserved_node = None
-        agv.direction_change = None
-        
+        agv.direction_change = Agv.STAY_STILL
+
         # Save all changes to the database
         agv.save()
 
@@ -199,8 +199,8 @@ class ControlPolicyController:
             }
 
         agv.motion_state = Agv.WAITING
-        # For waiting state, direction_change should be None
-        agv.direction_change = None
+        # For waiting state, direction_change should be STAY_STILL
+        agv.direction_change = Agv.STAY_STILL
         agv.reserved_node = agv.current_node
         agv.save()
         return {
@@ -208,7 +208,7 @@ class ControlPolicyController:
             "message": "AGV must wait at current point",
             "motion_state": Agv.WAITING,
             "next_node": agv.next_node,
-            "direction_change": None
+            "direction_change": Agv.STAY_STILL
         }
 
     def _create_error_response(self, message: str) -> Dict:
@@ -223,7 +223,7 @@ class ControlPolicyController:
         Update the direction_change field of an AGV based on its previous, current, and next nodes.
 
         This determines which way the AGV should turn at its current node in order to reach the next node.
-        The direction_change is set to None for IDLE or WAITING states.
+        The direction_change is set to STAY_STILL for IDLE or WAITING states.
         If the AGV is moving but has no previous_node (first position update), 
         the direction_change is set to GO_STRAIGHT.
 
@@ -232,8 +232,8 @@ class ControlPolicyController:
         """
         try:
             if agv.motion_state != Agv.MOVING or not agv.next_node:
-                # If AGV is not moving or missing next node, set direction_change to None
-                agv.direction_change = None
+                # If AGV is not moving or missing next node, set direction_change to STAY_STILL
+                agv.direction_change = Agv.STAY_STILL
                 return
 
             # Handle the case when this is the first position update (no previous_node)

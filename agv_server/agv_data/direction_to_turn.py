@@ -4,7 +4,7 @@ from .models import Agv
 # Extract cardinal direction constants directly from the Direction model
 NORTH, EAST, SOUTH, WEST = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST
 # Extract direction change constants directly from the Agv model
-TURN_RIGHT, TURN_LEFT, GO_STRAIGHT, TURN_AROUND = Agv.TURN_RIGHT, Agv.TURN_LEFT, Agv.GO_STRAIGHT, Agv.TURN_AROUND
+TURN_RIGHT, TURN_LEFT, GO_STRAIGHT, TURN_AROUND, STAY_STILL = Agv.TURN_RIGHT, Agv.TURN_LEFT, Agv.GO_STRAIGHT, Agv.TURN_AROUND, Agv.STAY_STILL
 
 
 def get_direction(from_node, to_node):

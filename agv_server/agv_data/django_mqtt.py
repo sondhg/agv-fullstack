@@ -5,8 +5,7 @@ from .services.controller import ControlPolicyController
 from .services.algorithm3 import DeadlockResolver
 from .services.position_tracker import update_previous_node
 from .agv_to_server_decoder import decode_message
-from .server_to_agv_encoder import encode_message, MOVING, WAITING, IDLE
-from .server_to_agv_encoder import GO_STRAIGHT, TURN_AROUND, TURN_LEFT, TURN_RIGHT
+from .server_to_agv_encoder import encode_message, MOVING
 
 # MQTT Configuration
 MQTT_BROKER = 'broker.emqx.io'

@@ -30,7 +30,7 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
         next_node (int): Next node ID for AGV to move to
         direction_change (int): Direction change instruction
                               (0=GO_STRAIGHT, 1=TURN_AROUND, 
-                               2=TURN_LEFT, 3=TURN_RIGHT)
+                               2=TURN_LEFT, 3=TURN_RIGHT, 4=STAY_STILL)
 
     Returns:
         bytes: Encoded message as byte array
@@ -38,12 +38,12 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
     Raises:
         ValueError: If input parameters are invalid
     """
-    # Validate inputs
-    if motion_state not in (IDLE, MOVING, WAITING):
-        raise ValueError(f"Invalid motion state: {motion_state}")
+    # # Validate inputs
+    # if motion_state not in (IDLE, MOVING, WAITING):
+    #     raise ValueError(f"Invalid motion state: {motion_state}")
 
-    if direction_change not in (GO_STRAIGHT, TURN_AROUND, TURN_LEFT, TURN_RIGHT):
-        raise ValueError(f"Invalid direction change: {direction_change}")
+    # if direction_change not in (GO_STRAIGHT, TURN_AROUND, TURN_LEFT, TURN_RIGHT):
+    #     raise ValueError(f"Invalid direction change: {direction_change}")
 
     try:
         # Convert values to bytes
