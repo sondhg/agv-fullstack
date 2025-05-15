@@ -23,13 +23,24 @@ import { columns2 } from "./columns2";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 
 export function PageAGVs() {
+  const ws = new WebSocket("ws://localhost:8000/ws/agv-consumer/");
+  ws.onopen = () => {
+    ws.send(
+      JSON.stringify({
+        action: "subscribe_to_agv_activity",
+        request_id: new Date().getTime(),
+      }),
+    );
+  };
+  ws.onmessage = (e) => {
+    console.log(e);
+  };
+
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [listData, setListData] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
 
   // Add state to track if orders have been dispatched
-  const [hasDispatchedOrders, setHasDispatchedOrders] =
-    useState<boolean>(false);
 
   const {
     rowSelection,
@@ -46,9 +57,6 @@ export function PageAGVs() {
 
     // Update the list data
     setListData(data);
-
-    // Update hasDispatchedOrders based on whether any AGV has an active order
-    setHasDispatchedOrders(data.some((agv) => agv.active_order !== null));
 
     // Track position changes for animation
     data.forEach((agv) => {
@@ -124,7 +132,10 @@ export function PageAGVs() {
   };
 
   useEffect(() => {
+    // Initial data fetch as fallback
     fetchListData();
+
+    // Show map
     handleShowMap();
   }, []);
 
