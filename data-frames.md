@@ -16,7 +16,7 @@ Example: AGV 2 arrived at node 17 and will send a message in the format of a byt
 | ----------- | ------------ | -------------- | ---------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | --------- |
 | 1 byte      | 1 byte       | 1 byte         | 1 byte                             | 2 bytes                                                           | 1 byte                                                            | 1 byte    |
 | 0x7A        | 0x08         | 0x03           |                                    |                                                                   |                                                                   | 0x7F      |
-|             |              | Message type 3 | 0: IDLE<br>1: MOVING<br>2: WAITING | Hexadecimal value corresponding to the decimal value of next node | 0: GO_STRAIGHT<br>1: TURN_AROUND<br>2: TURN_LEFT<br>3: TURN_RIGHT |           |
+|             |              | Message type 3 | 0: IDLE<br>1: MOVING<br>2: WAITING | Hexadecimal value corresponding to the decimal value of next node | 0: GO_STRAIGHT<br>1: TURN_AROUND<br>2: TURN_LEFT<br>3: TURN_RIGHT<br>4: STAY_STILL |           |
 
 Use little-endian byte order.
 

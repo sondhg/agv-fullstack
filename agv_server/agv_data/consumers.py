@@ -1,27 +1,31 @@
-from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from djangochannelsrestframework.observer import model_observer
-from djangochannelsrestframework.decorators import action
-
-from .serializers import AGVSerializer
+from channels.generic.websocket import AsyncWebsocketConsumer
+import json
+from channels.db import database_sync_to_async
 from .models import Agv
+from .serializers import AGVSerializer
 
 
-class AgvConsumer(GenericAsyncAPIConsumer):
-    queryset = Agv.objects.all()
-    serializer_class = AGVSerializer
+class AgvConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Accept the WebSocket connection
+        print("WebSocket connection established")
+        self.room_group_name = "agv_group"
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+        await self.accept()
 
-    @model_observer(Agv)
-    async def agv_activity(self, message: AGVSerializer, observer=None, subscribing_request_ids=[], **kwargs):
-        for request_id in subscribing_request_ids:
-            await self.send_json({"message": message, "request_id": request_id})
+    async def disconnect(self, close_code):
+        # Handle disconnection
+        print(f"WebSocket connection closed with code: {close_code}")
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    @agv_activity.serializer
-    def agv_activity(self, instance: Agv, action, **kwargs) -> AGVSerializer:
-        """
-        This will return the AGV serializer.
-        """
-        return AGVSerializer(instance).data
+    async def receive(self, text_data):
+        # Handle messages from clients if needed
+        # Not necessary for this implementation as the server initiates the updates
+        pass
 
-    @action()
-    async def subscribe_to_agv_activity(self, request_id, **kwargs):
-        await self.agv_activity.subscribe(request_id=request_id)
+    async def agv_message(self, event):
+        # Send AGV update message to WebSocket client
+        message = event['message']
+        
+        # Forward the message to the WebSocket client
+        await self.send(text_data=json.dumps(message))

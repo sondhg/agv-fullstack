@@ -117,6 +117,10 @@ class Agv(models.Model):
         help_text="Currently executing order"
     )
 
+    @property
+    def data(self):
+        return self.dataitem_set.all()
+
     class Meta:
         verbose_name = "AGV"
         verbose_name_plural = "AGVs"

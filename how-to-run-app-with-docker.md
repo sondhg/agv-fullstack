@@ -29,3 +29,9 @@ If you need to completely reset:
 docker compose down
 docker compose up --build
 ```
+
+Run Redis via Docker with command
+
+```bash
+docker run --rm -p 6379:6379 redis:7
+```

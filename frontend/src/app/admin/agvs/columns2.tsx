@@ -54,6 +54,7 @@ export const columns2 = (): ColumnDef<AGV>[] => {
           1: "Turn around",
           2: "Turn left",
           3: "Turn right",
+          4: "Stay still",
         };
         return (
           <Badge

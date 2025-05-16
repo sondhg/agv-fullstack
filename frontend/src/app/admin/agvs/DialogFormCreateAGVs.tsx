@@ -58,6 +58,7 @@ export function DialogFormCreateAGVs({
           values.preferred_parking_node,
         ),
       };
+      // Submitting via HTTP POST request
       await createAGV(createDto);
     },
     successMessage: "AGV created successfully",

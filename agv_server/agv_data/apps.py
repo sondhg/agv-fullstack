@@ -16,3 +16,6 @@ class AgvDataConfig(AppConfig):
             # Import and start MQTT client
             from . import django_mqtt
             django_mqtt.start_mqtt_client()
+            
+            # Import signals to register them
+            from . import signals
