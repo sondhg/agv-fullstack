@@ -5,7 +5,8 @@ from .views import (
     DeleteAGVView,
     BulkDeleteAGVsView,
     UpdateAGVPositionView,
-    DispatchOrdersToAGVsView
+    DispatchOrdersToAGVsView,
+    ResetAGVsView
 )
 
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     path('bulk-delete/', BulkDeleteAGVsView.as_view(), name='bulk_delete_agvs'),
     path('update-position/', UpdateAGVPositionView.as_view(),
          name='update_agv_position'),
+    path('reset/', ResetAGVsView.as_view(), name='reset_agvs'),
     path('dispatch-orders-to-agvs/', DispatchOrdersToAGVsView.as_view(),
          name='dispatch_orders_to_agvs'),
 ]

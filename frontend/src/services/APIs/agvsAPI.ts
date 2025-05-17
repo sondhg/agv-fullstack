@@ -36,11 +36,16 @@ const simulateUpdateAgvPosition = async (
   });
 };
 
+const resetAGVs = async (): Promise<{success: boolean; message: string}> => {
+  return apiService.post(API_ENDPOINTS.agvs.reset, {});
+};
+
 export {
-  getAGVs,
+  bulkDeleteAGVs,
   createAGV,
   deleteAGV,
-  bulkDeleteAGVs,
-  simulateUpdateAgvPosition,
   dispatchOrdersToAGVs,
+  getAGVs,
+  resetAGVs,
+  simulateUpdateAgvPosition,
 };

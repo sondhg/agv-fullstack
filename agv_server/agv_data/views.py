@@ -9,6 +9,7 @@ from .services.controller import ControlPolicyController
 from .services.algorithm3 import DeadlockResolver
 from .services.position_tracker import update_previous_node
 from .constants import SuccessMessages
+from django.db import transaction
 
 
 class ListAGVsView(ListAPIView):
@@ -195,7 +196,8 @@ class UpdateAGVPositionView(APIView):
                     "moved_from": previous_node,
                     "previous_node": updated_agv.previous_node,  # Include previous_node in response
                     "residual_path": updated_agv.residual_path,
-                    "direction_change": updated_agv.direction_change,  # Include direction_change in response
+                    # Include direction_change in response
+                    "direction_change": updated_agv.direction_change,
                     **deadlock_info  # Add deadlock information if applicable
                 })
 
@@ -268,6 +270,77 @@ class DispatchOrdersToAGVsView(APIView):
                 {
                     "success": False,
                     "message": f"Error processing orders: {str(e)}",
+                    "details": traceback_str
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class ResetAGVsView(APIView):
+    """
+    API endpoint to reset all fields of all AGV records to their default values,
+    except for agv_id and preferred_parking_node.
+    """
+
+    @transaction.atomic
+    def post(self, request):
+        try:
+            # Get all AGVs
+            agvs = Agv.objects.all()
+
+            if not agvs.exists():
+                return Response(
+                    {"success": False, "message": "No AGVs found to reset."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            reset_count = 0
+
+            # Reset each AGV
+            for agv in agvs:
+                # Store the fields we want to keep
+                agv_id = agv.agv_id
+                preferred_parking_node = agv.preferred_parking_node
+
+                # Reset all state fields
+                agv.current_node = None
+                agv.next_node = None
+                agv.reserved_node = None
+                agv.motion_state = Agv.IDLE
+                agv.spare_flag = False
+                agv.spare_points = {}
+                agv.initial_path = []
+                agv.residual_path = []
+                agv.cp = []
+                agv.scp = []
+                agv.active_order = None
+                agv.previous_node = None
+                agv.direction_change = Agv.STAY_STILL
+
+                # Save the changes
+                agv.save(update_fields=[
+                    'current_node', 'next_node', 'reserved_node', 'motion_state',
+                    'spare_flag', 'spare_points', 'initial_path', 'residual_path',
+                    'cp', 'scp', 'active_order', 'previous_node', 'direction_change'
+                ])
+
+                reset_count += 1
+
+            return Response(
+                {
+                    "success": True,
+                    "message": f"Successfully reset {reset_count} AGVs to their default state."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
+            import traceback
+            traceback_str = traceback.format_exc()
+            return Response(
+                {
+                    "success": False,
+                    "message": f"Error resetting AGVs: {str(e)}",
                     "details": traceback_str
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

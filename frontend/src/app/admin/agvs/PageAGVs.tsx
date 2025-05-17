@@ -10,11 +10,12 @@ import {
   deleteAGV,
   dispatchOrdersToAGVs,
   getAGVs,
+  resetAGVs,
 } from "@/services/APIs/agvsAPI";
 import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
@@ -29,6 +30,7 @@ export function PageAGVs() {
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("dijkstra");
 
   // Table selection state
@@ -140,7 +142,6 @@ export function PageAGVs() {
       toast.error("Failed to delete AGV");
     }
   };
-
   const handleDispatchOrders = async () => {
     try {
       setIsDispatching(true);
@@ -165,6 +166,19 @@ export function PageAGVs() {
       setIsDispatching(false);
     }
   };
+  const handleResetAGVs = async () => {
+    try {
+      setIsResetting(true);
+      const response = await resetAGVs();
+      toast.success(response.message);
+      await refreshAgvData();
+    } catch (error) {
+      toast.error("Failed to reset AGVs");
+      console.error("Error resetting AGVs:", error);
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -185,10 +199,10 @@ export function PageAGVs() {
                   </p>
                 </div>
               )}
-            </div>
+            </div>{" "}
             <Separator className="my-4" />
-            <div className="grid grid-cols-4 gap-4">
-              <div className="grid grid-rows-2 gap-4">
+            <div className="flex w-full items-start justify-between">
+              <div className="grid w-[28%] grid-rows-2 gap-4">
                 <DialogFormCreateAGVs
                   isDialogOpen={isDialogOpen}
                   setIsDialogOpen={setIsDialogOpen}
@@ -202,18 +216,31 @@ export function PageAGVs() {
                   resetSelection={resetSelection}
                 />
               </div>
-              <div className="col-end-4 grid grid-rows-2 gap-4">
-                <AlgorithmSelect
-                  selectedAlgorithm={selectedAlgorithm}
-                  onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
-                />
+              <div className="grid w-[28%] grid-rows-2 gap-4">
                 <Button
                   onClick={handleDispatchOrders}
                   disabled={isDispatching}
                   className="w-full"
                 >
                   <CalendarPlus className="mr-2 h-4 w-4" />
-                  {isDispatching ? "Dispatching..." : "Dispatch orders to AGVs"}
+                  {isDispatching
+                    ? "Dispatching..."
+                    : "Dispatch orders to AGVs"}{" "}
+                </Button>
+                <AlgorithmSelect
+                  selectedAlgorithm={selectedAlgorithm}
+                  onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
+                />
+              </div>
+              <div className="grid w-[28%] grid-rows-2 gap-4">
+                <Button
+                  onClick={handleResetAGVs}
+                  disabled={isResetting}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  {isResetting ? "Resetting..." : "Reset AGVs"}
                 </Button>
               </div>
             </div>
