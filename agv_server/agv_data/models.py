@@ -117,9 +117,37 @@ class Agv(models.Model):
         help_text="Currently executing order"
     )
 
-    @property
-    def data(self):
-        return self.dataitem_set.all()
+    def save(self, *args, **kwargs):
+        """
+        Override the save method to send WebSocket updates whenever an AGV instance is saved.
+        This replaces the post_save signal handler with equivalent functionality.
+        """
+        # Call the parent class's save method to save the model
+        super().save(*args, **kwargs)
+
+        # Import here to avoid circular imports
+        from .serializers import AGVSerializer
+        from channels.layers import get_channel_layer
+        from asgiref.sync import async_to_sync
+
+        # Serialize the AGV instance
+        serializer = AGVSerializer(self)
+        agv_data = serializer.data
+
+        # Get the channel layer
+        channel_layer = get_channel_layer()
+
+        # Send message to the WebSocket group
+        async_to_sync(channel_layer.group_send)(
+            "agv_group",  # Group name for AGV updates
+            {
+                "type": "agv_message",
+                "message": {
+                    "type": "agv_update",
+                    "data": agv_data
+                }
+            }
+        )
 
     class Meta:
         verbose_name = "AGV"
