@@ -6,35 +6,31 @@ import {
 } from "@/components/ui/tooltip";
 import { Forklift } from "lucide-react";
 import { CANVAS_CONFIG } from "../constants/MapVisualizerConfig";
-import { AGVWithAnimation, NodePositions } from "../types/MapVisualizerTypes";
-import {
-  calculateAGVPosition,
-  calculateAGVRotation,
-} from "../utils/MapRenderingUtils";
+import { AGVWithColor, NodePositions } from "../types/MapVisualizerTypes";
 
 /**
  * Props for the MapAGVs component
  */
 type MapAGVsProps = {
-  agvs: AGVWithAnimation[];
+  agvs: AGVWithColor[];
   positions: NodePositions;
 };
 
 /**
- * Component for rendering AGVs as Car icons with animation between nodes
+ * Component for rendering AGVs as Forklift icons
  */
 export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
   return (
     <>
       {agvs.map((agv) => {
-        // Get the AGV position
-        const position = calculateAGVPosition(agv, positions);
-        if (!position) return null;
+        // Skip rendering if AGV is not on the map
+        if (agv.current_node === null || !positions[agv.current_node])
+          return null;
 
-        // Calculate the angle of rotation for the Car icon
-        const angle = calculateAGVRotation(agv, positions);
+        // Get the AGV position from its current node
+        const position = positions[agv.current_node];
 
-        // Size adjustment for the Car icon
+        // Size adjustment for the Forklift icon
         const iconSize = CANVAS_CONFIG.agvSize;
 
         return (
@@ -42,7 +38,7 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
             <Tooltip>
               <TooltipTrigger asChild>
                 <g
-                  transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2}) rotate(${angle}, ${iconSize / 2}, ${iconSize / 2})`}
+                  transform={`translate(${position.x - iconSize / 2}, ${position.y - iconSize / 2})`}
                 >
                   {/* Invisible larger hitbox for better tooltip triggering */}
                   <rect

@@ -1,8 +1,4 @@
-import {
-  AGVWithAnimation,
-  NodePositions,
-  Position,
-} from "../types/MapVisualizerTypes";
+import { Position } from "../types/MapVisualizerTypes";
 
 /**
  * Calculate the position for a connection label based on line orientation
@@ -27,64 +23,4 @@ export function calculateLabelPosition(
     x: midX + offsetX,
     y: midY + offsetY,
   };
-}
-
-/**
- * Calculate the current position of an AGV during animation
- */
-export function calculateAGVPosition(
-  agv: AGVWithAnimation,
-  positions: NodePositions,
-): Position | null {
-  // Skip rendering if current_node is null (AGV is not on the map)
-  if (agv.current_node === null) return null;
-
-  // Calculate the current position of the AGV based on animation progress
-  if (
-    agv.isAnimating &&
-    agv.previousNode !== null &&
-    agv.current_node !== null
-  ) {
-    const fromPos = positions[agv.previousNode];
-    const toPos = positions[agv.current_node];
-
-    if (!fromPos || !toPos) return null;
-
-    // Linear interpolation between previousNode and current_node
-    return {
-      x: fromPos.x + (toPos.x - fromPos.x) * agv.animationProgress,
-      y: fromPos.y + (toPos.y - fromPos.y) * agv.animationProgress,
-    };
-  } else if (positions[agv.current_node]) {
-    // If not animating, use the current node position
-    return positions[agv.current_node];
-  }
-
-  return null; // Position not found
-}
-
-/**
- * Calculate the rotation angle for an AGV icon based on movement direction
- */
-export function calculateAGVRotation(
-  agv: AGVWithAnimation,
-  positions: NodePositions,
-): number {
-  let angle = 0;
-
-  if (
-    agv.isAnimating &&
-    agv.previousNode !== null &&
-    agv.current_node !== null
-  ) {
-    const fromPos = positions[agv.previousNode];
-    const toPos = positions[agv.current_node];
-
-    if (fromPos && toPos) {
-      angle =
-        Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x) * (180 / Math.PI);
-    }
-  }
-
-  return angle;
 }

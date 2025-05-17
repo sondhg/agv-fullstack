@@ -12,14 +12,9 @@ export type Position = { x: number; y: number };
 export type NodePositions = { [key: number]: Position };
 
 /**
- * Type representing an AGV with animation state
+ * Type for AGV with color property
  */
-export type AGVWithAnimation = AGV & {
-  color: string;
-  previousNode: number | null;
-  animationProgress: number;
-  isAnimating: boolean;
-};
+export type AGVWithColor = AGV & { color: string };
 
 /**
  * Props for the MapVisualizer component
