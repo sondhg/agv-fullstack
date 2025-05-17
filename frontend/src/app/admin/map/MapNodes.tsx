@@ -1,5 +1,5 @@
-import { CANVAS_CONFIG } from "../constants/MapVisualizerConfig";
-import { NodePositions } from "../types/MapVisualizerTypes";
+import { CANVAS_CONFIG } from "./MapVisualizerConfig";
+import { NodePositions } from "./MapVisualizerTypes";
 
 /**
  * Props for the MapNodes component

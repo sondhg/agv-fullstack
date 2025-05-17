@@ -5,8 +5,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Forklift } from "lucide-react";
-import { CANVAS_CONFIG } from "../constants/MapVisualizerConfig";
-import { AGVWithColor, NodePositions } from "../types/MapVisualizerTypes";
+import { CANVAS_CONFIG } from "./MapVisualizerConfig";
+import { AGVWithColor, NodePositions } from "./MapVisualizerTypes";
 
 /**
  * Props for the MapAGVs component

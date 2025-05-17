@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
-import { AlertHasLoggedIn } from "./sections/AlertHasLoggedIn";
-import { AlertNotLoggedIn } from "./sections/AlertNotLoggedIn";
-import { HowToUseGUIGuide } from "./sections/HowToUseGUIGuide";
+import { AlertHasLoggedIn } from "./AlertHasLoggedIn";
+import { AlertNotLoggedIn } from "./AlertNotLoggedIn";
+import { HowToUseGUIGuide } from "./HowToUseGUIGuide";
 
 export function HomePage() {
   const { isAuthenticated } = useAuth();

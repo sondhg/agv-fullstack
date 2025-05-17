@@ -1,19 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
-import { MapAGVs } from "./components/MapAGVs";
-import { MapConnections } from "./components/MapConnections";
-import { MapNodes } from "./components/MapNodes";
-import { AGV_COLORS, CANVAS_CONFIG } from "./constants/MapVisualizerConfig";
-import {
-  AGVWithColor,
-  MapVisualizerProps,
-  NodePositions,
-} from "./types/MapVisualizerTypes";
+import { MapAGVs } from "./MapAGVs";
+import { MapConnections } from "./MapConnections";
+import { MapNodes } from "./MapNodes";
 import {
   calculateCanvasDimensions,
   calculateNodePositions,
   scalePositionsToFit,
-} from "./utils/MapPositioningUtils";
+} from "./MapPositioningUtils";
+import { AGV_COLORS, CANVAS_CONFIG } from "./MapVisualizerConfig";
+import {
+  AGVWithColor,
+  MapVisualizerProps,
+  NodePositions,
+} from "./MapVisualizerTypes";
 
 /**
  * MapVisualizer component for visualizing a map of nodes and connections

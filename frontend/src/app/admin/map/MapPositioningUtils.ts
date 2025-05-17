@@ -1,6 +1,6 @@
 import { MapData } from "@/types/Map.types";
-import { CANVAS_CONFIG, DirectionEnum } from "../constants/MapVisualizerConfig";
-import { NodePositions, Position } from "../types/MapVisualizerTypes";
+import { CANVAS_CONFIG, DirectionEnum } from "../MapVisualizerConfig";
+import { NodePositions, Position } from "../MapVisualizerTypes";
 
 /**
  * Calculate positions for each node based on connections and directions

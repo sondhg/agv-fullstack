@@ -1,6 +1,6 @@
 import { Connection } from "@/types/Map.types";
-import { NodePositions } from "../types/MapVisualizerTypes";
-import { calculateLabelPosition } from "../utils/MapRenderingUtils";
+import { calculateLabelPosition } from "./MapRenderingUtils";
+import { NodePositions } from "./MapVisualizerTypes";
 
 /**
  * Props for the MapConnections component

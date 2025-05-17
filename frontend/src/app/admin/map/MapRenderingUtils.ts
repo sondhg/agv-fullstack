@@ -1,4 +1,4 @@
-import { Position } from "../types/MapVisualizerTypes";
+import { Position } from "./MapVisualizerTypes";
 
 /**
  * Calculate the position for a connection label based on line orientation
