@@ -15,7 +15,7 @@ import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
 import { CalendarPlus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
 import { AlgorithmSelect } from "./AlgorithmSelect";
@@ -24,193 +24,147 @@ import { columns2 } from "./columns2";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 
 export function PageAGVs() {
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [listData, setListData] = useState<AGV[]>([]);
+  // Core state
+  const [agvs, setAgvs] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState("dijkstra");
 
-  // Add state to track if orders have been dispatched
-
+  // Table selection state
   const {
     rowSelection,
     setRowSelection,
     selectedIds: selectedAgvIds,
     resetSelection,
-  } = useTableSelection<AGV>(listData, "agv_id");
+  } = useTableSelection<AGV>(agvs, "agv_id");
 
-  // Reference to track last known positions
-  const lastKnownPositions = useRef<Map<number, number | null>>(new Map());
-
-  const fetchListData = async () => {
-    const data = await getAGVs();
-
-    // Update the list data
-    setListData(data);
-
-    // Track position changes for animation
-    data.forEach((agv) => {
-      const lastPosition = lastKnownPositions.current.get(agv.agv_id);
-
-      // If this is the first time we're seeing this AGV or the position changed, update our tracking
-      if (lastPosition !== agv.current_node) {
-        lastKnownPositions.current.set(agv.agv_id, agv.current_node);
+  // Load initial data
+  useEffect(() => {
+    // Load AGV data
+    const loadAgvData = async () => {
+      try {
+        const data = await getAGVs();
+        setAgvs(data);
+      } catch (error) {
+        console.error("Failed to load AGV data:", error);
+        toast.error("Failed to load AGV data");
       }
-    });
-  };
+    };
 
-  // Initialize WebSocket connection
-  const initWebSocket = () => {
-    // Close any existing connection
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
+    // Load map data
+    const loadMapData = async () => {
+      try {
+        // Try to get from localStorage first
+        const cachedData = localStorage.getItem(CACHED_MAP_DATA_KEY);
+        if (cachedData) {
+          setMapData(JSON.parse(cachedData) as MapData);
+          return;
+        }
 
-    // Create new WebSocket connection
+        // Fetch from backend if not cached
+        const data = (await fetchMapData()) as MapData;
+        if (!data || !data.nodes || !data.connections || !data.directions) {
+          toast.error("Failed to load map data");
+          return;
+        }
+
+        setMapData(data);
+        localStorage.setItem(CACHED_MAP_DATA_KEY, JSON.stringify(data));
+      } catch (error) {
+        console.error("Failed to load map data:", error);
+        toast.error("Failed to load map data");
+      }
+    };
+
+    // Setup WebSocket
     const ws = new WebSocket(WS_URL);
 
-    ws.onopen = () => {
-      console.log("WebSocket connection established");
-    };
+    ws.onopen = () => console.log("WebSocket connection established");
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-
         if (data.type === "agv_update") {
-          // Update the AGV in the list data
           const updatedAgv = data.data;
 
-          setListData((prevData) => {
-            // If the AGV exists in the list, update it
-            const agvIndex = prevData.findIndex(
+          setAgvs((prevAgvs) => {
+            const index = prevAgvs.findIndex(
               (agv) => agv.agv_id === updatedAgv.agv_id,
             );
 
-            if (agvIndex !== -1) {
-              const newData = [...prevData];
-              newData[agvIndex] = updatedAgv;
-
-              // Track position changes for animation
-              const lastPosition = lastKnownPositions.current.get(
-                updatedAgv.agv_id,
-              );
-              if (lastPosition !== updatedAgv.current_node) {
-                lastKnownPositions.current.set(
-                  updatedAgv.agv_id,
-                  updatedAgv.current_node,
-                );
-              }
-
-              return newData;
+            if (index !== -1) {
+              // Update existing AGV
+              const newAgvs = [...prevAgvs];
+              newAgvs[index] = updatedAgv;
+              return newAgvs;
+            } else {
+              // Add new AGV
+              return [...prevAgvs, updatedAgv];
             }
-
-            // If the AGV doesn't exist in the list, add it
-            return [...prevData, updatedAgv];
           });
         }
       } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
+        console.error("Error handling WebSocket message:", error);
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-      // Attempt to reconnect after a delay
-      setTimeout(initWebSocket, 5000);
-    };
+    ws.onerror = () => console.error("WebSocket error occurred");
 
-    ws.onclose = (event) => {
-      console.log(`WebSocket connection closed: ${event.code}`);
-      // Attempt to reconnect after a delay if the close was unexpected
-      if (event.code !== 1000) {
-        setTimeout(initWebSocket, 5000);
-      }
-    };
+    // Load data
+    loadAgvData();
+    loadMapData();
 
-    // Store the WebSocket reference
-    wsRef.current = ws;
-  };
+    // Cleanup on unmount
+    return () => ws.close();
+  }, []);
 
-  const handleClickBtnDelete = async (agv_id: number) => {
+  // Handler functions
+  const refreshAgvData = async () => {
     try {
-      await deleteAGV(agv_id);
-      toast.success("Delete AGV successfully");
-      await fetchListData();
+      const data = await getAGVs();
+      setAgvs(data);
     } catch (error) {
-      console.error("Failed to delete AGV:", error);
-      toast.error("Failed to delete AGV. Please try again.");
+      console.error("Failed to refresh AGV data:", error);
+      toast.error("Failed to refresh AGV data");
     }
   };
 
-  const [isDispatching, setIsDispatching] = useState(false);
-  const [selectedAlgorithm, setSelectedAlgorithm] =
-    useState<string>("dijkstra");
+  const handleDeleteAgv = async (agv_id: number) => {
+    try {
+      await deleteAGV(agv_id);
+      toast.success("AGV deleted successfully");
+      await refreshAgvData();
+    } catch (error) {
+      console.error("Failed to delete AGV:", error);
+      toast.error("Failed to delete AGV");
+    }
+  };
 
-  const handleDispatchOrdersToAGVs = async () => {
+  const handleDispatchOrders = async () => {
     try {
       setIsDispatching(true);
       await dispatchOrdersToAGVs(selectedAlgorithm);
-      toast.success("Successfully dispatched orders to AGVs");
-      await fetchListData(); // This will update hasDispatchedOrders
+      toast.success("Orders dispatched successfully");
+      await refreshAgvData();
     } catch (error) {
+      let errorMessage = "Failed to dispatch orders";
+
       if (error instanceof Response) {
-        const errorData = await error.json();
-        toast.error(errorData.error || "Failed to dispatch orders to AGVs");
-      } else {
-        toast.error("Failed to dispatch orders to AGVs");
+        try {
+          const errorData = await error.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If error parsing fails, use default message
+        }
       }
-      console.error("Error dispatching orders to AGVs:", error);
+
+      toast.error(errorMessage);
+      console.error("Error dispatching orders:", error);
     } finally {
       setIsDispatching(false);
     }
   };
-
-  const handleShowMap = async () => {
-    try {
-      // Check if map data is cached
-      const cachedData = localStorage.getItem(CACHED_MAP_DATA_KEY);
-      if (cachedData) {
-        const parsedData = JSON.parse(cachedData) as MapData;
-        setMapData(parsedData);
-        return;
-      }
-
-      // Fetch map data from backend if not cached
-      const data = (await fetchMapData()) as MapData;
-
-      if (!data || !data.nodes || !data.connections || !data.directions) {
-        toast.error("Failed to load map data.");
-        setMapData(null);
-        return;
-      }
-
-      setMapData(data);
-      // Cache the map data
-      localStorage.setItem(CACHED_MAP_DATA_KEY, JSON.stringify(data));
-    } catch (error) {
-      console.error("Error fetching map data:", error);
-      toast.error("Failed to load map data.");
-    }
-  };
-
-  // Set up WebSocket connection and initial data loading
-  useEffect(() => {
-    // Fetch initial data
-    fetchListData();
-
-    // Initialize WebSocket connection
-    initWebSocket();
-
-    // Show map
-    handleShowMap();
-
-    // Clean up on component unmount
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
-  }, []);
 
   return (
     <div className="space-y-5">
@@ -222,7 +176,7 @@ export function PageAGVs() {
             {/* Map Visualization Section */}
             <div>
               {mapData ? (
-                <MapVisualizer data={mapData} agvs={listData} />
+                <MapVisualizer data={mapData} agvs={agvs} />
               ) : (
                 <div className="rounded-md border border-dashed p-6 text-center">
                   <p className="text-muted-foreground">
@@ -238,13 +192,13 @@ export function PageAGVs() {
                 <DialogFormCreateAGVs
                   isDialogOpen={isDialogOpen}
                   setIsDialogOpen={setIsDialogOpen}
-                  fetchListData={fetchListData}
+                  fetchListData={refreshAgvData}
                 />
                 <MassDeleteButton
                   selectedIds={selectedAgvIds}
                   onDelete={bulkDeleteAGVs}
                   itemName="AGVs"
-                  onSuccess={fetchListData}
+                  onSuccess={refreshAgvData}
                   resetSelection={resetSelection}
                 />
               </div>
@@ -254,7 +208,7 @@ export function PageAGVs() {
                   onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
                 />
                 <Button
-                  onClick={handleDispatchOrdersToAGVs}
+                  onClick={handleDispatchOrders}
                   disabled={isDispatching}
                   className="w-full"
                 >
@@ -264,15 +218,15 @@ export function PageAGVs() {
               </div>
             </div>
             <DataTable
-              data={listData}
-              columns={columns1(handleClickBtnDelete)}
+              data={agvs}
+              columns={columns1(handleDeleteAgv)}
               filterSearchByColumn="agv_id"
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
             />
             <Separator className="my-4" />
             <DataTable
-              data={listData}
+              data={agvs}
               columns={columns2()}
               filterSearchByColumn="agv_id"
               onRowSelectionChange={setRowSelection}
