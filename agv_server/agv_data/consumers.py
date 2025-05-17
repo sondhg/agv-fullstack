@@ -1,8 +1,5 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
-from channels.db import database_sync_to_async
-from .models import Agv
-from .serializers import AGVSerializer
 
 
 class AgvConsumer(AsyncWebsocketConsumer):
@@ -26,6 +23,6 @@ class AgvConsumer(AsyncWebsocketConsumer):
     async def agv_message(self, event):
         # Send AGV update message to WebSocket client
         message = event['message']
-        
+
         # Forward the message to the WebSocket client
         await self.send(text_data=json.dumps(message))

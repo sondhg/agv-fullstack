@@ -4,7 +4,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .models import Agv
 from .serializers import AGVSerializer
-import json
+
 
 @receiver(post_save, sender=Agv)
 def agv_post_save(sender, instance, **kwargs):
@@ -15,10 +15,10 @@ def agv_post_save(sender, instance, **kwargs):
     # Serialize the AGV instance
     serializer = AGVSerializer(instance)
     agv_data = serializer.data
-    
+
     # Get the channel layer
     channel_layer = get_channel_layer()
-    
+
     # Send message to the WebSocket group
     async_to_sync(channel_layer.group_send)(
         "agv_group",
