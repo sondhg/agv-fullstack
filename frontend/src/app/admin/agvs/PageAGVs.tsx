@@ -3,6 +3,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { MassDeleteButton } from "@/components/ui/mass-delete-button";
 import { Separator } from "@/components/ui/separator";
 import { CACHED_MAP_DATA_KEY } from "@/constants/localStorageKeys";
+import { WS_URL } from "@/constants/websocketConstants";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import {
   bulkDeleteAGVs,
@@ -65,39 +66,44 @@ export function PageAGVs() {
     }
 
     // Create new WebSocket connection
-    const ws = new WebSocket("ws://localhost:8000/ws/agv-consumer/");
-    
+    const ws = new WebSocket(WS_URL);
+
     ws.onopen = () => {
       console.log("WebSocket connection established");
     };
-    
+
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         if (data.type === "agv_update") {
           // Update the AGV in the list data
           const updatedAgv = data.data;
-          
+
           setListData((prevData) => {
             // If the AGV exists in the list, update it
             const agvIndex = prevData.findIndex(
-              (agv) => agv.agv_id === updatedAgv.agv_id
+              (agv) => agv.agv_id === updatedAgv.agv_id,
             );
-            
+
             if (agvIndex !== -1) {
               const newData = [...prevData];
               newData[agvIndex] = updatedAgv;
-              
+
               // Track position changes for animation
-              const lastPosition = lastKnownPositions.current.get(updatedAgv.agv_id);
+              const lastPosition = lastKnownPositions.current.get(
+                updatedAgv.agv_id,
+              );
               if (lastPosition !== updatedAgv.current_node) {
-                lastKnownPositions.current.set(updatedAgv.agv_id, updatedAgv.current_node);
+                lastKnownPositions.current.set(
+                  updatedAgv.agv_id,
+                  updatedAgv.current_node,
+                );
               }
-              
+
               return newData;
             }
-            
+
             // If the AGV doesn't exist in the list, add it
             return [...prevData, updatedAgv];
           });
@@ -106,13 +112,13 @@ export function PageAGVs() {
         console.error("Error parsing WebSocket message:", error);
       }
     };
-    
+
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
       // Attempt to reconnect after a delay
       setTimeout(initWebSocket, 5000);
     };
-    
+
     ws.onclose = (event) => {
       console.log(`WebSocket connection closed: ${event.code}`);
       // Attempt to reconnect after a delay if the close was unexpected
@@ -120,7 +126,7 @@ export function PageAGVs() {
         setTimeout(initWebSocket, 5000);
       }
     };
-    
+
     // Store the WebSocket reference
     wsRef.current = ws;
   };
@@ -191,13 +197,13 @@ export function PageAGVs() {
   useEffect(() => {
     // Fetch initial data
     fetchListData();
-    
+
     // Initialize WebSocket connection
     initWebSocket();
-    
+
     // Show map
     handleShowMap();
-    
+
     // Clean up on component unmount
     return () => {
       if (wsRef.current) {
