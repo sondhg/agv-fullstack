@@ -17,5 +17,8 @@ COPY . .
 
 EXPOSE 8000
 
+# Make entry file executable
+RUN chmod +x  ./entrypoint.sh
+
 CMD ["./entrypoint.sh"]
 
