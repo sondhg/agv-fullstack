@@ -1,143 +1,130 @@
-# Web App as Central Controller for AGV System
+# 🚗 AGV Web App
 
-## Main Goal
+## Important Notes
 
-Generate and update a smart schedule for AGVs to avoid collisions and deadlocks using the **Dynamic Spare Point Application (DSPA)** technique specified in the `algorithms-pseudocode.tex` file located in the `docs` folder.
+- I Dockerized the frontend as production-ready, which means if you edit the frontend code when the web app is running, the changes do not take effect.
+- However, I Dockerized the backend as development-ready, which means if you edit the backend code when the web app is running, the changes take effect immediately. If not, you need to rebuild the backend image with `docker compose up --build` command.
+- The MQTT broker I use for backend is `broker.emqx.io`, which is a public broker. If you want to config your own broker, you should edit code in `django_mqtt.py` and `test_sending_to_mqtt.py` file. Just use `Ctrl+P` in VSCode to find these files. You may need to config some IP address for the web app to connect to your broker too.
 
-## Workflow
+## 🚀 How to Run This Web App with Docker
 
-### Step 1: User Authentication
+> ⚠️ **Pre-requisite:**  
+> You must have [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed before proceeding.
 
-#### Register
+### 1. Clone the Repository
 
-- Users can register for an account by sending a POST request to:  
-   `POST localhost:8000/api/auth/register/`
-- Required fields:
-  - `username`
-  - `email`
-  - `password`
+```bash
+git clone https://github.com/sondhg/agv-fullstack.git
+```
 
-#### Login
+### 2. Navigate to the Project Root
 
-- Users can log in by sending a POST request to:  
-   `POST localhost:8000/api/auth/login/`
-- Required fields:
-  - `username`
-  - `password`
-- On successful login, a JWT access_token is returned, which must be included in the Authorization header for subsequent requests.
+Make sure you are in the root directory of the project (where the `docker-compose.yml` file is located):
 
-#### Logout
+```bash
+cd agv_fullstack
+```
 
-- Users can log out by sending a POST request to:  
-   `POST localhost:8000/api/auth/logout/`
+All commands should be run from the root directory of the project.
 
----
+### 3. Start the Web App
 
-### Step 2: User Creates a Map Layout
+If it's your first time running this web app:
 
-The map layout consists of nodes and edges, where nodes represent identified points (in real life, these are marked with RFID cards) and edges represent connections between these nodes (if any).
+```bash
+docker compose up --build -d
+```
 
-#### 2.1 Upload Map Data
+- The `-d` flag is optional. If you remove this flag, you will see the logs of the web app in your terminal.
+- Wait till it finishes. May take a while; later runs will be faster.
 
-- User sends:
-  - A CSV file containing connections and distances between nodes to the API endpoint:  
-     `POST localhost:8000/api/map/import-connections/`
-  - A CSV file containing relative cardinal directions for each connection to the API endpoint:  
-     `POST localhost:8000/api/map/import-directions/`
-- Example files: `new-map-conn-and-dist.csv` and `new-map-dir.csv` (located in the `sample-data` folder).
+This will start:
 
-#### 2.2 View Map
+- **Frontend:** [http://localhost:8080](http://localhost:8080)
+- **Backend:** [http://localhost:8000](http://localhost:8000)
 
-- Once the files are uploaded, the user can view the map on the frontend (Map page) by sending a GET request to:  
-   `GET localhost:8000/api/map/get/`
+You only need to access the frontend at [http://localhost:8080](http://localhost:8080). The backend is automatically configured to connect to the frontend.
 
----
+### 4. Stop the Web App
 
-### Step 3: User Sends Orders
+When you are done using the web app, you can stop it with:
 
-#### 3.1 Create Orders
+```bash
+docker compose down
+```
 
-- Orders can be created:
-  - Individually through a form.
-  - In bulk by uploading a CSV file.
-- Orders are sent to the API endpoint:  
-   `POST localhost:8000/api/orders/create/`
+If you don't run `docker compose down`, the web app will continue running in the background. This means ports 8080 and 8000 will be occupied until you eventually run the command.  
+**Recommendation:** Run `docker compose down` when you are done using the web app.
 
-#### 3.2 View Orders
+### 5. Subsequent Runs
 
-- Created orders are displayed in a table on the Orders page by sending a GET request to:  
-   `GET localhost:8000/api/orders/get/`
+To use the web app next times, you can just run:
+
+```bash
+docker compose up -d
+```
+
+Again, the `-d` flag is optional. If you remove this flag, you will see the logs of the web app in your terminal.
 
 ---
 
-### Step 4: User Dispatch Created Orders to AGVs
+## 📝 How to Use This Web App
 
-#### 4.1 Pre-requisite
+Assume you have already run the web app with Docker and you can access it at [http://localhost:8080](http://localhost:8080).
 
-- At least one order must be created before dispatching orders to AGVs.
-
-#### 4.2 Dispatch orders to AGVs
-
-- On the AGVs page, users click the "Dispatch orders to AGVs" button, which sends a POST request to:  
-   `POST localhost:8000/api/agvs/dispatch-orders-to-agvs/`
-
-#### 4.4 View initialized AGV data after dispatching
-
-- AGV data can be viewed in a table on the AGVs page by sending a GET request to:  
-   `GET localhost:8000/api/agvs/get/`
+First, you'll see the **Home** page. There is a sidebar on the left for navigation (You can toggle this sidebar with `Ctrl+B`). You can also navigate between pages using keyboard shortcut `Ctrl + K`.
 
 ---
 
-### Step 5: AGVs Operate
+### 1. Register, then Login
 
-- AGVs travel based on instructions by the server.
-- Every time an AGV reaches a node, it sends its position to the server via MQTT.
-- The server uses the AGV's position to recalculate parameters and send it back to the AGV.
-- The server also checks for collisions and deadlocks using the DSPA algorithm.
-- If a collision or deadlock is detected, the server evaluates the situation and sends solutions to the AGVs.
+- Do this before anything else. If you do not login, you cannot access any page other than the **Home** page.
+- Later, when you are bored, you can log out by clicking your username icon at the bottom of the left sidebar.
 
 ---
 
-## Specific example of how I test the AGV system
+### 2. Create Map Data
 
-I want to successfully mimic the `Example 3` specified in the research paper `algorithms-pseudocode.tex` file. This will be my testing script to see if my system works or not. The example consists of 3 AGVs and 3 orders.
+1. Navigate to **Map** page.
+2. Click **"Download sample CSV files"** button. Two CSV files will be downloaded.
+3. Click **"Import 1st CSV"** button and select the `map-connection-and-distance.csv` file.
+4. Click **"Import 2nd CSV"** button and select the `map-direction.csv` file.
+5. Click **"Show map image"** and you'll see an SVG image of the map.
 
-- I create a map layout with 32 nodes. I used example files `new-map-conn-and-dist.csv` and `new-map-dir.csv` (located in the `sample-data` folder) to create the map layout.
-- I create 3 orders similar to `orders-example-3.json` (located in the `sample-data` folder).
-- I dispatch the orders to AGVs by clicking the "Dispatch orders to AGVs" button on the AGVs page. This sends a POST request to the server, which initializes the AGV data and assigns the orders to the AGVs.
-- I want to mimic AGVs' positions update to the server, but have not implemented the real physical AGVs or any simulation yet. I need to do this in the future to test if my web app works correctly with the AGVs. For now, I use Postman to send a POST request to API endpoint `POST localhost:8000/api/agvs/update-position/` of the server with the AGV's position. The request body should contain the fields `agv_id` and `current_node`. For example, to update the position of AGV 1 to node 7, I send the following request body:
-  ```json
-  {
-    "agv_id": 1,
-    "current_node": 7
-  }
-  ```
-- The detailed way of how I do the testing is specified in the `test-agvs-update-positions.md` file in the root directory.
+---
 
-## Technologies Used
+### 3. Create Orders
 
-- **Backend**: Django (Python)
-- **Frontend**: React (TypeScript, Vite) + Tailwind CSS + Shadcn UI
-- **Database**: PostgreSQL
-- **Communication**: MQTT broker (server ↔ AGVs)
-- **Live Updates**: WebSocket
+1. Navigate to **Orders** page.
+2. Click **"CSV instructions"** button. There are two buttons for downloading two different CSV files. You can choose any of them.
+3. Click **"Import CSV"** button and select the downloaded CSV file.
 
-## Project Structure
+---
 
-This is not everything in the project, but just to give you an idea of how the project is structured.
+### 4. Create Initial AGV Data
 
-    ```
-    ├── agv_server
-    │   ├── agv_server
-    │   │   ├── settings.py
-    │   │   ├── urls.py
-    │   │   ├── wsgi.py
-    │   │   ├── asgi.py
-    │   ├── map_data
-    │   ├── order_data
-    │   ├── agv_data
-    │   ├── users
-    │   └── manage.py
-    ├── requirements.txt
-    ├── frontend
-    ```
+1. Navigate to **AGVs** page.
+2. Click **"Create AGV"** button and fill in the data.
+   - The `preferred_parking_node` field **MUST** match the `parking_node` of an order.
+   - For example, if there is an order whose `parking_node` = 1, then there should be at least one AGV whose `preferred_parking_node` = 1. Otherwise, this order will not be assigned to any AGV.
+3. Once done, click **"Dispatch orders to AGVs"** button. This will assign the orders to the AGVs and generate some initial data.
+
+---
+
+### 5. Simulate AGV Updating Their Positions to MQTT Broker via a Python Script
+
+Follow these steps if you don't have physical AGVs to test the web app yet. This is a simulation of AGVs updating their positions to the MQTT broker to receive instructions.
+
+1. Open a new terminal, still in the root directory of the project, and run:
+
+   ```bash
+   python test_sending_to_mqtt.py
+   ```
+
+2. Inside the terminal, it will ask you to enter the AGV ID (`agv_id`) and the new position (`current_node`) of the AGV, as normal decimal integers.
+   - Enter AGV ID, hit `Enter`, then enter the new position, and hit `Enter` again.
+   - Once done, the encoded message will be published to MQTT topic `agvdata/{agv_id}`.
+   - The server will process the message and update the AGV's position in the database.
+   - The server will respond with instructions by publishing to topic `agvroute/{agv_id}`. The instructions will be printed in the terminal in a human-readable format for you to see.
+   - Hit `Enter` to continue with the next message.
+   - Hit `Ctrl + C` to stop the script once you are done.
