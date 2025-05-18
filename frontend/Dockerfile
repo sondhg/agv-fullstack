@@ -1,13 +1,11 @@
-FROM node:20-slim
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-
-WORKDIR /code
-COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY package*.json .
+RUN npm install
 COPY . .
-EXPOSE 5173
+RUN npm run build
+FROM nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+CMD ["nginx", "-g", "daemon off;"]
 
-CMD ["pnpm", "start"]
