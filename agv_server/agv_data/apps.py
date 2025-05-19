@@ -11,7 +11,7 @@ class AgvDataConfig(AppConfig):
         Starts the MQTT client safely.
         """        # Only start MQTT client in the main process (not in reloader)
         import os
-        if os.environ.get('RUN_MAIN', None) != 'true':
+        if os.getenv('RUN_MAIN', None) != 'true':
             # Import and start MQTT client
             from . import django_mqtt
             django_mqtt.start_mqtt_client()
