@@ -48,7 +48,7 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                     height={iconSize + 20}
                     fill="transparent"
                     className="cursor-pointer"
-                  />
+                  />{" "}
                   <Forklift
                     size={iconSize}
                     color={agv.color}
@@ -56,10 +56,51 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                     fillOpacity={0.3}
                     className="cursor-pointer"
                   />
+                  {/* Status indicator */}
+                  <circle
+                    cx={iconSize}
+                    cy={iconSize}
+                    r={iconSize / 4}
+                    fill={
+                      agv.motion_state === 0
+                        ? "#22c55e" // Idle - Green
+                        : agv.motion_state === 1
+                          ? "#3b82f6" // Moving - Blue
+                          : "#f59e0b" // Waiting - Amber
+                    }
+                    stroke="white"
+                    strokeWidth="1"
+                  />
                 </g>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>AGV {agv.agv_id}</p>
+              </TooltipTrigger>{" "}
+              <TooltipContent className="max-w-xs border-none bg-slate-800 p-3 text-white">
+                <p className="text-center text-lg font-bold">
+                  AGV {agv.agv_id}
+                </p>
+                <div className="mt-1 space-y-1 text-sm">
+                  <p>
+                    <span className="font-medium">Status:</span>{" "}
+                    {agv.motion_state === 0
+                      ? "Idle"
+                      : agv.motion_state === 1
+                        ? "Moving"
+                        : "Waiting"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Current Node:</span>{" "}
+                    {agv.current_node !== null ? agv.current_node : "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Next Node:</span>{" "}
+                    {agv.next_node !== null ? agv.next_node : "N/A"}
+                  </p>
+                  {agv.residual_path && agv.residual_path.length > 0 && (
+                    <p>
+                      <span className="font-medium">Remaining Path:</span>{" "}
+                      {agv.residual_path.join(" → ")}
+                    </p>
+                  )}
+                </div>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>

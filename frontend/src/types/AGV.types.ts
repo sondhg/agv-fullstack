@@ -27,6 +27,7 @@ export interface AGV {
   motion_state: AGVMotionState;
   spare_flag: boolean;
   active_order: Order | null; // We'll store the order ID
+  residual_path: number[]; // Remaining points to be visited by the AGV
 }
 
 export interface CreateAGVDto {

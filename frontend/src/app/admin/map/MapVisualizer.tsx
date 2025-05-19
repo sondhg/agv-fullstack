@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useState } from "react";
+import { MapAGVPaths } from "./MapAGVPaths";
 import { MapAGVs } from "./MapAGVs";
 import { MapConnections } from "./MapConnections";
+import { MapLegend } from "./MapLegend";
 import { MapNodes } from "./MapNodes";
 import {
   calculateCanvasDimensions,
@@ -55,6 +57,7 @@ export const MapVisualizer = ({ data, agvs = [] }: MapVisualizerProps) => {
         <CardTitle>Map Visualizer</CardTitle>
       </CardHeader>
       <CardContent>
+        {" "}
         <svg
           viewBox={`0 0 ${canvasDimensions.width} ${canvasDimensions.height}`}
           preserveAspectRatio="xMidYMid meet"
@@ -62,13 +65,20 @@ export const MapVisualizer = ({ data, agvs = [] }: MapVisualizerProps) => {
           height="auto"
           className="border border-gray-400 bg-zinc-200"
         >
+          {/* Order matters for z-index in SVG - later elements appear on top */}
           <MapConnections
             connections={data.connections}
             positions={scaledPositions}
           />
+          <MapAGVPaths
+            agvs={agvsState}
+            positions={scaledPositions}
+            connections={data.connections}
+          />{" "}
           <MapNodes nodes={data.nodes} positions={scaledPositions} />
           <MapAGVs agvs={agvsState} positions={scaledPositions} />
         </svg>
+        <MapLegend />
       </CardContent>
     </Card>
   );
