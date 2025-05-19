@@ -32,10 +32,17 @@ All commands should be run from the root directory of the project.
 If it's your first time running this web app:
 
 ```bash
-docker compose up --build -d
+docker compose up --build
 ```
 
-- The `-d` flag is optional. If you remove this flag, you will see the logs of the web app in your terminal.
+- Alternative: If you don't want to see the logs of the web app in your terminal, you can add `-d` flag to run it in detached mode instead:
+
+```bash
+docker compose up -d --build
+```
+
+Please know that running in detached mode means: Even if you close the terminal, the web app will still run in the background.
+
 - Wait till it finishes. May take a while; later runs will be faster.
 
 This will start:
@@ -61,10 +68,14 @@ If you don't run `docker compose down`, the web app will continue running in the
 To use the web app next times, you can just run:
 
 ```bash
-docker compose up -d
+docker compose up
 ```
 
-Again, the `-d` flag is optional. If you remove this flag, you will see the logs of the web app in your terminal.
+Again, the `-d` flag is optional. If you want to run it in detached mode, you can add `-d` flag:
+
+```bash
+docker compose up -d
+```
 
 ---
 

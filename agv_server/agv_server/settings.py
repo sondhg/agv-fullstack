@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv('.env.local')
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -97,6 +100,7 @@ DATABASES = {
         'USER': os.getenv('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', '12345678'),
         'HOST': os.getenv('DB_HOST', 'localhost'),
+        # 'HOST': 'localhost',
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
