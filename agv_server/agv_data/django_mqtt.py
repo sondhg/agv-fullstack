@@ -8,8 +8,10 @@ from .agv_to_server_decoder import decode_message
 from .server_to_agv_encoder import encode_message, MOVING
 
 # MQTT Configuration
-MQTT_BROKER = 'broker.emqx.io'
-MQTT_PORT = 1883
+import os
+# In development: use localhost, in Docker: use service name
+MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
+MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "django_server"
 
@@ -178,9 +180,7 @@ def initialize_mqtt_client():
         client = mqtt_client.Client(
             callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
             client_id=CLIENT_ID
-        )
-
-        # Set up callbacks
+        )        # Set up callbacks
         client.on_connect = on_connect
         client.on_message = on_message
 
@@ -188,7 +188,7 @@ def initialize_mqtt_client():
         try:
             client.connect(host=MQTT_BROKER, port=MQTT_PORT,
                            keepalive=MQTT_KEEPALIVE)
-            print("MQTT client initialized")
+            print(f"MQTT client initialized with broker: {MQTT_BROKER}")
         except Exception as e:
             print(f"Failed to connect to MQTT broker: {e}")
 

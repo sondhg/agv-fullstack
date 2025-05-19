@@ -1,10 +1,12 @@
 import paho.mqtt.client as mqtt_client
 import signal
 import sys
+import os
 
 # MQTT Configuration
-MQTT_BROKER = 'broker.emqx.io'
-MQTT_PORT = 1883
+# Use localhost for both development and inside Docker container
+MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
+MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "test_client"
 
@@ -119,14 +121,13 @@ def main():
     client = mqtt_client.Client(
         callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
         client_id=CLIENT_ID
-    )
-
-    # Set up callbacks
+    )    # Set up callbacks
     client.on_connect = on_connect
     client.on_message = on_message
 
     # Connect to broker
     try:
+        print(f"Connecting to MQTT broker: {MQTT_BROKER}:{MQTT_PORT}")
         client.connect(MQTT_BROKER, MQTT_PORT, MQTT_KEEPALIVE)
     except Exception as e:
         print(f"Failed to connect to MQTT broker: {e}")
