@@ -3,7 +3,7 @@
  */
 export const MapLegend = () => {
   return (
-    <div className="mt-2 grid grid-cols-3 gap-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+    <div className="mt-2 grid grid-cols-3 gap-4 rounded-md border bg-slate-50 p-3 text-sm dark:bg-zinc-800">
       {/* AGV Motion State Indicators */}
       <div>
         <h4 className="mb-2 font-semibold">AGV Motion State</h4>{" "}
@@ -102,7 +102,7 @@ export const MapLegend = () => {
             <span>Movement Direction</span>
           </div>{" "}
           <div className="mt-2 flex items-center">
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 dark:text-slate-400">
               * Animated arrows show movement direction along paths
             </p>
           </div>
