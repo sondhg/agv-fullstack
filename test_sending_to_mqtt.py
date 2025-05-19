@@ -99,7 +99,8 @@ def on_message(client, userdata, msg):
     print(f"Motion state: {data[3]}")
     print(f"Next node: {int.from_bytes(data[4:6], byteorder='little')}")
     print(f"Direction change: {data[6]}")
-    print(f"Frame end: 0x{data[7]:02x}\n")
+    print(f"Frame end: 0x{data[7]:02x}")
+    print("")  # Add extra newline to ensure prompt appears immediately
 
 
 def signal_handler(sig, frame):
