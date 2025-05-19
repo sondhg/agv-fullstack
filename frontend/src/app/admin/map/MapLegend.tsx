@@ -6,18 +6,18 @@ export const MapLegend = () => {
     <div className="mt-2 grid grid-cols-3 gap-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
       {/* AGV Motion State Indicators */}
       <div>
-        <h4 className="mb-2 font-semibold">AGV Motion State</h4>
+        <h4 className="mb-2 font-semibold">AGV Motion State</h4>{" "}
         <div className="space-y-2">
           <div className="flex items-center">
-            <div className="mr-2 h-4 w-4 rounded-full bg-green-500"></div>
+            <div className="mr-2 h-4 w-4 rounded-full bg-yellow-500"></div>
             <span>Idle</span>
           </div>
           <div className="flex items-center">
-            <div className="mr-2 h-4 w-4 rounded-full bg-blue-500"></div>
+            <div className="mr-2 h-4 w-4 rounded-full bg-green-500"></div>
             <span>Moving</span>
           </div>
           <div className="flex items-center">
-            <div className="mr-2 h-4 w-4 rounded-full bg-amber-500"></div>
+            <div className="mr-2 h-4 w-4 rounded-full bg-red-500"></div>
             <span>Waiting</span>
           </div>
         </div>

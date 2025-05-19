@@ -55,18 +55,18 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                     fill={agv.color}
                     fillOpacity={0.3}
                     className="cursor-pointer"
-                  />
-                  {/* Status indicator */}
+                  />{" "}
+                  {/* Motion state indicator */}{" "}
                   <circle
                     cx={iconSize}
                     cy={iconSize}
                     r={iconSize / 4}
-                    fill={
+                    className={
                       agv.motion_state === 0
-                        ? "#22c55e" // Idle - Green
+                        ? "fill-yellow-500" // Idle - Yellow
                         : agv.motion_state === 1
-                          ? "#3b82f6" // Moving - Blue
-                          : "#f59e0b" // Waiting - Amber
+                          ? "fill-green-500" // Moving - Green
+                          : "fill-red-500" // Waiting - Red
                     }
                     stroke="white"
                     strokeWidth="1"
@@ -79,7 +79,7 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                 </p>
                 <div className="mt-1 space-y-1 text-sm">
                   <p>
-                    <span className="font-medium">Status:</span>{" "}
+                    <span className="font-medium">Motion state:</span>{" "}
                     {agv.motion_state === 0
                       ? "Idle"
                       : agv.motion_state === 1
@@ -96,7 +96,7 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                   </p>
                   {agv.residual_path && agv.residual_path.length > 0 && (
                     <p>
-                      <span className="font-medium">Remaining Path:</span>{" "}
+                      <span className="font-medium">Residual Path:</span>{" "}
                       {agv.residual_path.join(" → ")}
                     </p>
                   )}
