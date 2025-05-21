@@ -3,9 +3,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { MassDeleteButton } from "@/components/ui/mass-delete-button";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import {
+  bulkDeleteOrders,
   deleteOrder,
   getOrders,
-  bulkDeleteOrders,
 } from "@/services/APIs/ordersAPI";
 import { handleExportCSV } from "@/services/CSV/csvExport";
 import { useCSVImport } from "@/services/CSV/useCSVImport";
@@ -13,30 +13,30 @@ import { Order } from "@/types/Order.types";
 import { FileDown, FileUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { AlertTravelRoute } from "./AlertTravelRoute";
 import { columnsTableOrders } from "./columnsTableOrders";
 import { DialogFormCreateOrders } from "./DialogFormCreateOrders";
 import { DialogFormUpdateOrders } from "./DialogFormUpdateOrders";
 import { DialogInstructionsCSV } from "./DialogInstructionsCSV";
-import { AlertTravelRoute } from "./AlertTravelRoute";
 
 export function PageOrders() {
-  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState<boolean>(false);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
   const [currentOrderToUpdate, setCurrentOrderToUpdate] =
     useState<Order | null>(null);
-  const [listData, setListData] = useState<Order[]>([]);
+  const [listOrders, setListOrders] = useState<Order[]>([]);
   const {
     rowSelection,
     setRowSelection,
     selectedIds: selectedOrderIds,
     resetSelection,
-  } = useTableSelection<Order>(listData, "order_id");
+  } = useTableSelection<Order>(listOrders, "order_id");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { handleImportCSV } = useCSVImport();
 
   const fetchListData = async () => {
     const data = await getOrders();
-    setListData(data);
+    setListOrders(data);
   };
 
   const handleClickBtnDelete = async (order_id: number) => {
@@ -77,8 +77,8 @@ export function PageOrders() {
         <AlertTravelRoute />
         <div className="space-x-5">
           <DialogFormCreateOrders
-            isDialogOpen={isDialogOpen}
-            setIsDialogOpen={setIsDialogOpen}
+            isDialogOpen={isCreateDialogOpen}
+            setIsDialogOpen={setIsCreateDialogOpen}
             fetchListData={fetchListData}
           />
           <DialogFormUpdateOrders
@@ -100,7 +100,7 @@ export function PageOrders() {
           />
           <Button
             variant={"secondary"}
-            onClick={() => handleExportCSV(listData)}
+            onClick={() => handleExportCSV(listOrders)}
           >
             <FileDown />
             Export CSV
@@ -116,7 +116,7 @@ export function PageOrders() {
         </div>
 
         <DataTable
-          data={listData}
+          data={listOrders}
           columns={columnsTableOrders(
             handleClickBtnDelete,
             handleClickBtnUpdate,
