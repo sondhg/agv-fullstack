@@ -15,6 +15,9 @@ MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "django_server"
 
+TOPIC_AGV_DATA = "agvdata"
+TOPIC_AGV_HELLO = "agvhello"
+
 # Initialize global client variable
 client = None
 
@@ -33,13 +36,31 @@ def on_connect(client, userdata, flags, rc, properties):
     if rc == 0:
         print("Connected to MQTT broker successfully")
         # Subscribe to all AGV data topics using wildcard
-        client.subscribe("agvdata/#")
-        print(f"Subscribed to topic: agvdata/#")
+        client.subscribe(f"{TOPIC_AGV_DATA}/#")
+        print(f"Subscribed to topic: {TOPIC_AGV_DATA}/#")
+        # Subscribe to the new hello topic
+        client.subscribe(f"{TOPIC_AGV_HELLO}/#")
+        print(f"Subscribed to topic: {TOPIC_AGV_HELLO}/#")
     else:
         print(f"Failed to connect: {rc}")
 
 
 def on_message(client, userdata, msg):
+    """
+    Route incoming MQTT messages to appropriate handlers based on topic.
+
+    Args:
+        client: MQTT client instance 
+        userdata: User-defined data passed to callback
+        msg: MQTT message object containing topic and payload
+    """
+    # Route message to appropriate handler based on topic prefix
+    if msg.topic.startswith(f"{TOPIC_AGV_DATA}/"):
+        handle_agv_data_message(client, msg)
+    elif msg.topic.startswith(f"{TOPIC_AGV_HELLO}/"):
+        handle_agv_hello_message(client, msg)
+    else:
+        print(f"Received message on unhandled topic: {msg.topic}")
     """
     Handle incoming MQTT messages from AGVs.
     Implements identical logic to UpdateAGVPositionView.post()
@@ -51,6 +72,57 @@ def on_message(client, userdata, msg):
 
     Message format:
         Byte array following data frame specification
+    """
+
+
+def initialize_mqtt_client():
+    """
+    Initialize and connect the MQTT client.
+
+    Returns:
+        mqtt_client.Client: The initialized MQTT client
+    """
+    global client
+
+    # Only create a new client if one doesn't exist
+    if client is None:
+        client = mqtt_client.Client(
+            callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
+            client_id=CLIENT_ID
+        )        # Set up callbacks
+        client.on_connect = on_connect
+        client.on_message = on_message
+
+        # Connect to broker
+        try:
+            client.connect(host=MQTT_BROKER, port=MQTT_PORT,
+                           keepalive=MQTT_KEEPALIVE)
+            print(f"MQTT client initialized with broker: {MQTT_BROKER}")
+        except Exception as e:
+            print(f"Failed to connect to MQTT broker: {e}")
+
+    return client
+
+
+def start_mqtt_client():
+    """
+    Start the MQTT client loop. Call this only from the AppConfig.ready() method.
+    """
+    client = initialize_mqtt_client()
+
+    # Check if the loop is already running
+    if not client.is_connected():
+        client.loop_start()
+        print("MQTT client loop started")
+
+
+def handle_agv_data_message(client, msg):
+    """
+    Handle incoming AGV data messages.
+
+    Args:
+        client: MQTT client instance
+        msg: MQTT message object containing topic and payload
     """
     print(
         f"Received message on topic: {msg.topic} with payload: {msg.payload.hex()}")
@@ -166,42 +238,5 @@ def on_message(client, userdata, msg):
         print(f"Error processing message: {e}")
 
 
-def initialize_mqtt_client():
-    """
-    Initialize and connect the MQTT client.
-
-    Returns:
-        mqtt_client.Client: The initialized MQTT client
-    """
-    global client
-
-    # Only create a new client if one doesn't exist
-    if client is None:
-        client = mqtt_client.Client(
-            callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-            client_id=CLIENT_ID
-        )        # Set up callbacks
-        client.on_connect = on_connect
-        client.on_message = on_message
-
-        # Connect to broker
-        try:
-            client.connect(host=MQTT_BROKER, port=MQTT_PORT,
-                           keepalive=MQTT_KEEPALIVE)
-            print(f"MQTT client initialized with broker: {MQTT_BROKER}")
-        except Exception as e:
-            print(f"Failed to connect to MQTT broker: {e}")
-
-    return client
-
-
-def start_mqtt_client():
-    """
-    Start the MQTT client loop. Call this only from the AppConfig.ready() method.
-    """
-    client = initialize_mqtt_client()
-
-    # Check if the loop is already running
-    if not client.is_connected():
-        client.loop_start()
-        print("MQTT client loop started")
+def handle_agv_hello_message(client, msg):
+    pass
