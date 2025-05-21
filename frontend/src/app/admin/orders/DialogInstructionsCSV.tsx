@@ -17,16 +17,22 @@ export function DialogInstructionsCSV() {
     const month = String(today.getMonth() + 1).padStart(2, "0"); // Ensure month is two digits
     const day = String(today.getDate()).padStart(2, "0"); // Ensure day is two digits
     return `${year}-${month}-${day}`;
-  };
-
-  // Function to calculate the start time by adding a specified number of minutes to the current time
+  }; // Function to calculate the start time at the beginning of a minute (seconds = :00)
+  // and at least minutesFromNow minutes from current time
   const getStartTime = (minutesFromNow: number) => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() + minutesFromNow); // Add the specified number of minutes
-    const hours = String(now.getHours()).padStart(2, "0"); // Ensure hours are two digits
-    const minutes = String(now.getMinutes()).padStart(2, "0"); // Ensure minutes are two digits
-    const seconds = String(now.getSeconds()).padStart(2, "0"); // Ensure seconds are two digits
-    return `${hours}:${minutes}:${seconds}`;
+    // Create a base time that's at least 1 minute in the future with seconds set to 00
+    const baseTime = new Date();
+    baseTime.setSeconds(0);
+    baseTime.setMinutes(baseTime.getMinutes() + 1); // At least 1 minute in the future
+
+    // Now add the additional minutes based on the parameter (minus 1 since we already added 1)
+    // This ensures each call gets a different minute
+    baseTime.setMinutes(baseTime.getMinutes() + (minutesFromNow - 1));
+
+    const hours = String(baseTime.getHours()).padStart(2, "0"); // Ensure hours are two digits
+    const minutes = String(baseTime.getMinutes()).padStart(2, "0"); // Ensure minutes are two digits
+
+    return `${hours}:${minutes}:00`; // Seconds always 00
   };
 
   // Function to generate and download the first CSV file (example 1 and 2)
