@@ -1,4 +1,4 @@
 - Never try to install dependencies. All necessary dependencies are already installed.
 - Use .ts and .tsx files for files in `frontend` directory. Do not use .js or .jsx files.
-- Do not try to create any new files or directories unless explicitly asked.
-- Do not force me to accept your terminal commands. If I click "Cancel" when you give a terminal command, you should continue the conversation instead of stopping and cancelling my request.
+- Do not create any new files or directories unless explicitly asked.
+
