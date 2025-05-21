@@ -1,7 +1,5 @@
 from django.db import models
 
-from users.models import User
-
 
 class Order(models.Model):
     order_id = models.BigIntegerField(primary_key=True)

@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   orders: {
     create: "orders/create/",
     get: "orders/get/",
+    update: (orderId: number) => `orders/update/${orderId}/`,
     delete: (orderId: number) => `orders/delete/${orderId}/`,
     bulkDelete: "orders/bulk-delete/",
   },

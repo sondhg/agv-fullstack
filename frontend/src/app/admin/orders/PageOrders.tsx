@@ -15,11 +15,15 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { columnsTableOrders } from "./columnsTableOrders";
 import { DialogFormCreateOrders } from "./DialogFormCreateOrders";
+import { DialogFormUpdateOrders } from "./DialogFormUpdateOrders";
 import { DialogInstructionsCSV } from "./DialogInstructionsCSV";
 import { AlertTravelRoute } from "./AlertTravelRoute";
 
 export function PageOrders() {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState<boolean>(false);
+  const [currentOrderToUpdate, setCurrentOrderToUpdate] =
+    useState<Order | null>(null);
   const [listData, setListData] = useState<Order[]>([]);
   const {
     rowSelection,
@@ -44,6 +48,11 @@ export function PageOrders() {
       console.error("Failed to delete order:", error);
       toast.error("Failed to delete order. Please try again.");
     }
+  };
+
+  const handleClickBtnUpdate = (order: Order) => {
+    setCurrentOrderToUpdate(order);
+    setIsUpdateDialogOpen(true);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +80,12 @@ export function PageOrders() {
             isDialogOpen={isDialogOpen}
             setIsDialogOpen={setIsDialogOpen}
             fetchListData={fetchListData}
+          />
+          <DialogFormUpdateOrders
+            isDialogOpen={isUpdateDialogOpen}
+            setIsDialogOpen={setIsUpdateDialogOpen}
+            fetchListData={fetchListData}
+            orderToUpdate={currentOrderToUpdate}
           />
           <Button onClick={() => fileInputRef.current?.click()}>
             <FileUp />
@@ -102,7 +117,10 @@ export function PageOrders() {
 
         <DataTable
           data={listData}
-          columns={columnsTableOrders(handleClickBtnDelete)}
+          columns={columnsTableOrders(
+            handleClickBtnDelete,
+            handleClickBtnUpdate,
+          )}
           filterSearchByColumn="order_date"
           onRowSelectionChange={setRowSelection}
           rowSelection={rowSelection}

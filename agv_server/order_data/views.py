@@ -29,6 +29,35 @@ class CreateOrderView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UpdateOrderView(APIView):
+    def put(self, request, order_id):
+        """
+        Update an existing order by its ID.
+
+        Args:
+            request: The HTTP request containing updated order data
+            order_id: The ID of the order to update
+
+        Returns:
+            Response: A response containing the updated order data or errors
+        """
+        try:
+            order = Order.objects.get(order_id=order_id)
+            serializer = OrderSerializer(
+                order, data=request.data, partial=True)
+
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": f"Order {order_id} does not exist."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+
 class DeleteOrderView(APIView):
     def delete(self, request, order_id):
         """

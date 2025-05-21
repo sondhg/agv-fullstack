@@ -14,7 +14,7 @@ const updateOrder = async (
   order_id: number,
   order: CreateOrderDto,
 ): Promise<Order> => {
-  return apiService.put(`${API_ENDPOINTS.orders.create}${order_id}/`, order);
+  return apiService.put(API_ENDPOINTS.orders.update(order_id), order);
 };
 
 const deleteOrder = async (order_id: number): Promise<void> => {
