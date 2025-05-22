@@ -166,9 +166,3 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
-
-# Tell Celery about Redis - same URL as CACHES setting
-CELERY_BROKER_URL = f"redis://{os.getenv('REDIS_HOST', '127.0.0.1')}:{os.getenv('REDIS_PORT', 6379)}/1"
-
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
