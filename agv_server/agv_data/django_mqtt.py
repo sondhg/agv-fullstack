@@ -15,7 +15,9 @@ MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "django_server"
 
-TOPIC_AGV_DATA = "agvdata"
+TOPIC_AGV_DATA = "agvdata"  # AGVs send agv_id and current_node to this topic
+TOPIC_AGV_ROUTE = "agvroute"  # Server sends route instructions to AGVs to this topic
+# Server sends hello message to AGV when the time matches start_time and order_date of the order assigned to the AGV
 TOPIC_AGV_HELLO = "agvhello"
 
 # Initialize global client variable
@@ -57,8 +59,6 @@ def on_message(client, userdata, msg):
     # Route message to appropriate handler based on topic prefix
     if msg.topic.startswith(f"{TOPIC_AGV_DATA}/"):
         handle_agv_data_message(client, msg)
-    elif msg.topic.startswith(f"{TOPIC_AGV_HELLO}/"):
-        handle_agv_hello_message(client, msg)
     else:
         print(f"Received message on unhandled topic: {msg.topic}")
     """
@@ -217,7 +217,7 @@ def handle_agv_data_message(client, msg):
                 )
 
                 # Publish instructions to this AGV's route topic
-                client.publish(f"agvroute/{affected_agv_id}", message)
+                client.publish(f"{TOPIC_AGV_ROUTE}/{affected_agv_id}", message)
                 print(f"Sent updated instructions to AGV {affected_agv_id}")
 
         # Send instructions to the triggering AGV
@@ -228,7 +228,7 @@ def handle_agv_data_message(client, msg):
             direction_change=result.get("direction_change")
         )
 
-        client.publish(f"agvroute/{agv_id}", message)
+        client.publish(f"{TOPIC_AGV_ROUTE}/{agv_id}", message)
 
     except ValueError as e:
         print(f"Failed to decode/encode message: {e}")
@@ -238,5 +238,5 @@ def handle_agv_data_message(client, msg):
         print(f"Error processing message: {e}")
 
 
-def handle_agv_hello_message(client, msg):
-    pass
+def send_agv_hello_message(client, msg, agv_id):
+    client.publish(f"{TOPIC_AGV_HELLO}/{agv_id}", "Hello from server")
