@@ -1,5 +1,4 @@
 import paho.mqtt.client as mqtt_client
-import json
 from .models import Agv
 from .services.controller import ControlPolicyController
 from .services.algorithm3 import DeadlockResolver
@@ -10,8 +9,8 @@ from .server_to_agv_encoder import encode_message, MOVING
 # MQTT Configuration
 import os
 # In development: use localhost, in Docker: use service name
-MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
-MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
+MQTT_BROKER = os.getenv('MQTT_BROKER', 'localhost')
+MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "django_server"
 
