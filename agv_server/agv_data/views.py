@@ -13,6 +13,9 @@ from django.db import transaction
 import schedule
 import time
 import datetime
+from . import mqtt
+from django.conf import settings
+import threading
 
 
 class ListAGVsView(ListAPIView):
@@ -346,16 +349,40 @@ class ResetAGVsView(APIView):
                     "message": f"Error resetting AGVs: {str(e)}",
                     "details": traceback_str
                 },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+
+
+def send_agv_hello_message(agv_id):
+    """
+    Send a "Hey" message to the MQTT broker topic agvhello/{agv_id}.
+
+    Args:
+        agv_id: The ID of the AGV to send the hello message to
+    """
+    try:
+        topic = f"{settings.MQTT_TOPIC_AGVHELLO}/{agv_id}"
+
+        frame = bytearray()
+        HELLO_FRAME = 0x01
+        frame.append(HELLO_FRAME)
+
+        message = bytes(frame)
+
+        # Use the global MQTT client from the mqtt module
+        mqtt.client.publish(topic, message)
+        print(
+            f"Successfully sent MQTT message {message} to topic '{topic}' for AGV {agv_id}")
+
+    except Exception as e:
+        print(f"Error sending MQTT hello message to AGV {agv_id}: {str(e)}")
 
 
 class ScheduleOrderHellosView(APIView):
     """
-    API endpoint to schedule terminal messages based on their order start_time and order_date.
+    API endpoint to schedule MQTT messages based on their order start_time and order_date.
     When the frontend sends a GET request to this endpoint, it will:
     1. Get list of all AGVs with active_order_info
-    2. Schedule "Hello to AGV {agv_id}" messages to be printed in terminal at the time that matches start_time and order_date
+    2. Schedule "Hey" messages to be sent to MQTT topic "agvhello/{agv_id}" at the time that matches start_time and order_date
     """
 
     # Class variable to track if scheduler is running
@@ -387,9 +414,8 @@ class ScheduleOrderHellosView(APIView):
             active_order = agv.active_order
             # Get the order date and start time
             order_date = active_order.order_date
-            start_time = active_order.start_time
-
             # Combine date and time to create a datetime object
+            start_time = active_order.start_time
             schedule_datetime = datetime.datetime.combine(
                 order_date, start_time)
 
@@ -398,11 +424,11 @@ class ScheduleOrderHellosView(APIView):
             if schedule_datetime > now:
                 # Create a closure to capture the agv_id correctly
                 def create_hello_function(agv_id_val):
-                    def print_hello():
-                        print(f"Hello to AGV {agv_id_val}")
+                    def send_hello():
+                        send_agv_hello_message(agv_id_val)
                         # Remove this job after it runs once
                         return schedule.CancelJob
-                    return print_hello
+                    return send_hello
 
                 # Schedule at specific time (hour, minute, second) rather than with a delay
                 job = schedule.every().day.at(start_time.strftime(
@@ -412,23 +438,22 @@ class ScheduleOrderHellosView(APIView):
                 scheduled_messages.append({
                     "agv_id": agv_id,
                     "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-                    "seconds_from_now": (schedule_datetime - now).total_seconds()
-                })
+                    "seconds_from_now": (schedule_datetime - now).total_seconds()})
                 print(
-                    f"Scheduled message for AGV {agv_id} at {start_time.strftime('%H:%M:%S')}")
+                    f"Scheduled MQTT message for AGV {agv_id} at {start_time.strftime('%H:%M:%S')}")
             else:
-                # If the time is in the past, print immediately
-                print(f"Hello to AGV {agv_id} (scheduled time already passed)")
+                # If the time is in the past, send MQTT message immediately
+                send_agv_hello_message(agv_id)
+                print(
+                    f"Sent immediate MQTT hello message to AGV {agv_id} (scheduled time already passed)")
 
         # Start the scheduler thread if not already running
-        import threading
 
         if not ScheduleOrderHellosView._scheduler_running and scheduled_messages:
             if ScheduleOrderHellosView._scheduler_thread and ScheduleOrderHellosView._scheduler_thread.is_alive():
                 # Reuse existing thread
                 pass
-            else:
-                # Create a new thread
+            else:                # Create a new thread
                 ScheduleOrderHellosView._scheduler_thread = threading.Thread(
                     target=ScheduleOrderHellosView._run_scheduler,
                     daemon=True,
@@ -439,7 +464,7 @@ class ScheduleOrderHellosView(APIView):
         return Response(
             {
                 "success": True,
-                "message": f"Scheduled hello messages for {len(scheduled_messages)} AGVs",
+                "message": f"Scheduled MQTT hello messages for {len(scheduled_messages)} AGVs",
                 "scheduled_messages": scheduled_messages
             },
             status=status.HTTP_200_OK,
