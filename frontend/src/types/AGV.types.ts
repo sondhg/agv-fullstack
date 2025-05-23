@@ -27,6 +27,7 @@ export interface AGV {
   motion_state: AGVMotionState;
   spare_flag: boolean;
   active_order: Order | null; // We'll store the order ID
+  active_order_info: Order | null; // Detailed order information from serializer
   residual_path: number[]; // Remaining points to be visited by the AGV
 }
 

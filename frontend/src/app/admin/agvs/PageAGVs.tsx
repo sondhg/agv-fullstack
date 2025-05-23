@@ -34,7 +34,6 @@ export function PageAGVs() {
   const [isResetting, setIsResetting] = useState(false);
   const [isSchedulingHello, setIsSchedulingHello] = useState(false);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("dijkstra");
-
   // Table selection state
   const {
     rowSelection,
@@ -42,6 +41,9 @@ export function PageAGVs() {
     selectedIds: selectedAgvIds,
     resetSelection,
   } = useTableSelection<AGV>(agvs, "agv_id");
+
+  // Check if any AGV has orders dispatched to them
+  const hasAGVsWithOrders = agvs.some((agv) => agv.active_order_info !== null);
 
   // Load initial data
   useEffect(() => {
@@ -251,17 +253,8 @@ export function PageAGVs() {
               </div>{" "}
               <div className="grid w-[28%] grid-rows-2 gap-4">
                 <Button
-                  onClick={handleResetAGVs}
-                  disabled={isResetting}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  {isResetting ? "Resetting..." : "Reset AGVs"}
-                </Button>
-                <Button
                   onClick={handleScheduleHelloMessage}
-                  disabled={isSchedulingHello}
+                  disabled={isSchedulingHello || !hasAGVsWithOrders}
                   variant="default"
                   className="w-full"
                 >
@@ -269,6 +262,15 @@ export function PageAGVs() {
                   {isSchedulingHello
                     ? "Scheduling..."
                     : "Schedule Hello Messages"}
+                </Button>
+                <Button
+                  onClick={handleResetAGVs}
+                  disabled={isResetting}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  {isResetting ? "Resetting..." : "Reset AGVs"}
                 </Button>
               </div>
             </div>
