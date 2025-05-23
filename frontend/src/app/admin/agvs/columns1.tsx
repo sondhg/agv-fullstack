@@ -10,6 +10,7 @@ import { Check, X } from "lucide-react";
 
 export const columns1 = (
   handleClickBtnDelete: (agvId: number) => void,
+  handleClickActiveOrder?: (order: Order) => void,
 ): ColumnDef<AGV>[] => {
   const baseColumns = createBaseColumns<AGV>(handleClickBtnDelete, "agv_id");
   const [selectColumn, actionsColumn] = baseColumns;
@@ -36,9 +37,7 @@ export const columns1 = (
           "preferred_parking_node",
         ) as number;
         return (
-          <Badge>
-            {preferredParkingNode ? preferredParkingNode : "None"}
-          </Badge>
+          <Badge>{preferredParkingNode ? preferredParkingNode : "None"}</Badge>
         );
       },
     },
@@ -49,18 +48,15 @@ export const columns1 = (
       ),
       cell: ({ row }) => {
         const orderInfo = row.getValue("active_order_info");
-        if (!orderInfo)
-          return <div className="text-gray-500">None</div>;
+        if (!orderInfo) return <div className="text-gray-500">None</div>;
+
+        const order = orderInfo as Order;
         return (
-          <div>
-            <div className="font-medium">
-              Order {(orderInfo as Order).order_id}
-            </div>
-            <div className="text-sm text-gray-500">
-              Parking: {(orderInfo as Order).parking_node} → Storage:{" "}
-              {(orderInfo as Order).storage_node} → Workstation:{" "}
-              {(orderInfo as Order).workstation_node}
-            </div>
+          <div
+            className="cursor-pointer font-medium text-blue-600 hover:text-blue-800 hover:underline"
+            onClick={() => handleClickActiveOrder?.(order)}
+          >
+            Order {order.order_id}
           </div>
         );
       },
@@ -113,10 +109,7 @@ export const columns1 = (
     {
       accessorKey: "scp",
       header: ({ column }) => (
-        <DataTableColumnHeader
-          column={column}
-          title="SCP"
-        />
+        <DataTableColumnHeader column={column} title="SCP" />
       ),
       cell: ({ row }) => {
         const points = row.getValue("scp") as number[];

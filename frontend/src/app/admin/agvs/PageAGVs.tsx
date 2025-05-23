@@ -16,6 +16,7 @@ import {
 import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
+import { Order } from "@/types/Order.types";
 import { Bell, CalendarPlus, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,12 +25,15 @@ import { AlgorithmSelect } from "./AlgorithmSelect";
 import { columns1 } from "./columns1";
 import { columns2 } from "./columns2";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
+import { DialogViewOrderInfo } from "./DialogViewOrderInfo";
 
 export function PageAGVs() {
   // Core state
   const [agvs, setAgvs] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDispatching, setIsDispatching] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isSchedulingHello, setIsSchedulingHello] = useState(false);
@@ -135,7 +139,6 @@ export function PageAGVs() {
       toast.error("Failed to refresh AGV data");
     }
   };
-
   const handleDeleteAgv = async (agv_id: number) => {
     try {
       await deleteAGV(agv_id);
@@ -145,6 +148,11 @@ export function PageAGVs() {
       console.error("Failed to delete AGV:", error);
       toast.error("Failed to delete AGV");
     }
+  };
+
+  const handleClickActiveOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsOrderDialogOpen(true);
   };
   const handleDispatchOrders = async () => {
     try {
@@ -273,10 +281,10 @@ export function PageAGVs() {
                   {isResetting ? "Resetting..." : "Reset AGVs"}
                 </Button>
               </div>
-            </div>
+            </div>{" "}
             <DataTable
               data={agvs}
-              columns={columns1(handleDeleteAgv)}
+              columns={columns1(handleDeleteAgv, handleClickActiveOrder)}
               filterSearchByColumn="agv_id"
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
@@ -288,10 +296,16 @@ export function PageAGVs() {
               filterSearchByColumn="agv_id"
               onRowSelectionChange={setRowSelection}
               rowSelection={rowSelection}
-            />
+            />{" "}
           </div>
         </div>
       </div>
+
+      <DialogViewOrderInfo
+        isDialogOpen={isOrderDialogOpen}
+        setIsDialogOpen={setIsOrderDialogOpen}
+        orderToView={selectedOrder}
+      />
     </div>
   );
 }
