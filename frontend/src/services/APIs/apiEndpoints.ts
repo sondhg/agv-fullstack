@@ -19,6 +19,7 @@ export const API_ENDPOINTS = {
     simulateUpdateAgvPosition: "agvs/update-position/",
     dispatch: "agvs/dispatch-orders-to-agvs/",
     reset: "agvs/reset/",
+    scheduleHelloMessage: "agvs/schedule-hello-messages/",
   },
   map: {
     importConnections: "map/import-connections/",

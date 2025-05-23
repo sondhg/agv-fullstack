@@ -36,8 +36,12 @@ const simulateUpdateAgvPosition = async (
   });
 };
 
-const resetAGVs = async (): Promise<{success: boolean; message: string}> => {
+const resetAGVs = async (): Promise<{ success: boolean; message: string }> => {
   return apiService.post(API_ENDPOINTS.agvs.reset, {});
+};
+
+const scheduleHelloMessage = async (): Promise<AGV[]> => {
+  return apiService.get(API_ENDPOINTS.agvs.scheduleHelloMessage);
 };
 
 export {
@@ -48,4 +52,5 @@ export {
   getAGVs,
   resetAGVs,
   simulateUpdateAgvPosition,
+  scheduleHelloMessage,
 };

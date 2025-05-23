@@ -10,6 +10,9 @@ from .services.algorithm3 import DeadlockResolver
 from .services.position_tracker import update_previous_node
 from .constants import SuccessMessages
 from django.db import transaction
+import schedule
+import time
+import datetime
 
 
 class ListAGVsView(ListAPIView):
@@ -345,3 +348,99 @@ class ResetAGVsView(APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class ScheduleOrderHellosView(APIView):
+    """
+    API endpoint to schedule terminal messages based on their order start_time and order_date.
+    When the frontend sends a GET request to this endpoint, it will:
+    1. Get list of all AGVs with active_order_info
+    2. Schedule "Hello to AGV {agv_id}" messages to be printed in terminal at the time that matches start_time and order_date
+    """
+
+    # Class variable to track if scheduler is running
+    _scheduler_running = False
+    _scheduler_thread = None
+
+    @classmethod
+    def _run_scheduler(cls):
+        """Run the scheduler in a background thread"""
+        cls._scheduler_running = True
+        while cls._scheduler_running:
+            schedule.run_pending()
+            time.sleep(1)
+        print("Scheduler thread stopped")
+
+    def get(self, request):
+        # Get all AGVs with active orders
+        agvs_with_orders = Agv.objects.filter(
+            active_order__isnull=False)
+
+        # Clear any existing scheduled jobs to avoid duplicates
+        schedule.clear()
+
+        scheduled_messages = []
+
+        for agv in agvs_with_orders:
+            agv_id = agv.agv_id
+            # Get the active order for this AGV
+            active_order = agv.active_order
+            # Get the order date and start time
+            order_date = active_order.order_date
+            start_time = active_order.start_time
+
+            # Combine date and time to create a datetime object
+            schedule_datetime = datetime.datetime.combine(
+                order_date, start_time)
+
+            # Only schedule if the time is in the future
+            now = datetime.datetime.now()
+            if schedule_datetime > now:
+                # Create a closure to capture the agv_id correctly
+                def create_hello_function(agv_id_val):
+                    def print_hello():
+                        print(f"Hello to AGV {agv_id_val}")
+                        # Remove this job after it runs once
+                        return schedule.CancelJob
+                    return print_hello
+
+                # Schedule at specific time (hour, minute, second) rather than with a delay
+                job = schedule.every().day.at(start_time.strftime(
+                    "%H:%M:%S")).do(create_hello_function(agv_id))
+                job.tag(f"agv_{agv_id}")
+
+                scheduled_messages.append({
+                    "agv_id": agv_id,
+                    "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+                    "seconds_from_now": (schedule_datetime - now).total_seconds()
+                })
+                print(
+                    f"Scheduled message for AGV {agv_id} at {start_time.strftime('%H:%M:%S')}")
+            else:
+                # If the time is in the past, print immediately
+                print(f"Hello to AGV {agv_id} (scheduled time already passed)")
+
+        # Start the scheduler thread if not already running
+        import threading
+
+        if not ScheduleOrderHellosView._scheduler_running and scheduled_messages:
+            if ScheduleOrderHellosView._scheduler_thread and ScheduleOrderHellosView._scheduler_thread.is_alive():
+                # Reuse existing thread
+                pass
+            else:
+                # Create a new thread
+                ScheduleOrderHellosView._scheduler_thread = threading.Thread(
+                    target=ScheduleOrderHellosView._run_scheduler,
+                    daemon=True,
+                    name="scheduler_thread"
+                )
+                ScheduleOrderHellosView._scheduler_thread.start()
+
+        return Response(
+            {
+                "success": True,
+                "message": f"Scheduled hello messages for {len(scheduled_messages)} AGVs",
+                "scheduled_messages": scheduled_messages
+            },
+            status=status.HTTP_200_OK,
+        )
