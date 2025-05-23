@@ -155,4 +155,6 @@ class Agv(models.Model):
         ordering = ['agv_id']
 
     def __str__(self):
-        return f"AGV {self.agv_id}"
+        return f"AGV {self.agv_id} likes to park at {self.preferred_parking_node} and is currently at {self.current_node} with state {self.get_motion_state_display()}."
+
+# For every field that has choices set, the object will have a get_FOO_display() method, where FOO is the name of the field. This method returns the “human-readable” value of the field.

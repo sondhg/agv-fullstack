@@ -52,7 +52,7 @@ class Connection(models.Model):
         ]
 
     def __str__(self):
-        return f"Connection from node {self.node1} to {self.node2} (distance: {self.distance})"
+        return f"{self.node1} connects to {self.node2} (distance: {self.distance})"
 
 
 class Direction(models.Model):
