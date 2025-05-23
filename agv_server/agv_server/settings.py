@@ -166,3 +166,13 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+MQTT_BROKER = os.getenv('MQTT_BROKER', 'localhost')
+MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
+MQTT_KEEPALIVE = 60
+MQTT_USER = ""
+MQTT_PASSWORD = ""
+
+MQTT_TOPIC_AGVDATA = "agvdata"
+MQTT_TOPIC_AGVROUTE = "agvroute"
+MQTT_TOPIC_AGVHELLO = "agvhello"

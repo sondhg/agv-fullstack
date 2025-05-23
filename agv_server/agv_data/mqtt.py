@@ -1,4 +1,6 @@
-import paho.mqtt.client as mqtt_client
+import paho.mqtt.client as mqtt
+from django.conf import settings
+
 from .models import Agv
 from .services.controller import ControlPolicyController
 from .services.algorithm3 import DeadlockResolver
@@ -6,113 +8,37 @@ from .services.position_tracker import update_previous_node
 from .agv_to_server_decoder import decode_message
 from .server_to_agv_encoder import encode_message, MOVING
 
-# MQTT Configuration
-import os
-# In development: use localhost, in Docker: use service name
-MQTT_BROKER = os.getenv('MQTT_BROKER', 'localhost')
-MQTT_PORT = int(os.getenv('MQTT_PORT', 1883))
-MQTT_KEEPALIVE = 60
-CLIENT_ID = "django_server"
 
-TOPIC_AGV_DATA = "agvdata"  # AGVs send agv_id and current_node to this topic
-TOPIC_AGV_ROUTE = "agvroute"  # Server sends route instructions to AGVs to this topic
-# Server sends hello message to AGV when the time matches start_time and order_date of the order assigned to the AGV
-TOPIC_AGV_HELLO = "agvhello"
+MQTT_BROKER = settings.MQTT_BROKER
+MQTT_PORT = settings.MQTT_PORT
+MQTT_KEEPALIVE = settings.MQTT_KEEPALIVE
+MQTT_USER = settings.MQTT_USER
+MQTT_PASSWORD = settings.MQTT_PASSWORD
 
-# Initialize global client variable
-client = None
+MQTT_TOPIC_AGVDATA = settings.MQTT_TOPIC_AGVDATA
+MQTT_TOPIC_AGVROUTE = settings.MQTT_TOPIC_AGVROUTE
+MQTT_TOPIC_AGVHELLO = settings.MQTT_TOPIC_AGVHELLO
 
 
-def on_connect(client, userdata, flags, rc, properties):
-    """
-    Callback when client connects to broker.
-
-    Args:
-        client: MQTT client instance
-        userdata: User-defined data passed to callback
-        flags: Response flags from broker
-        rc (int): Connection result code
-        properties: MQTT v5.0 properties
-    """
+def on_connect(mqtt_client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker successfully")
-        # Subscribe to all AGV data topics using wildcard
-        client.subscribe(f"{TOPIC_AGV_DATA}/#")
-        print(f"Subscribed to topic: {TOPIC_AGV_DATA}/#")
-        # Subscribe to the new hello topic
-        client.subscribe(f"{TOPIC_AGV_HELLO}/#")
-        print(f"Subscribed to topic: {TOPIC_AGV_HELLO}/#")
+        mqtt_client.subscribe(f"{MQTT_TOPIC_AGVDATA}/#")
     else:
-        print(f"Failed to connect: {rc}")
+        print('Bad connection. Code:', rc)
 
 
-def on_message(client, userdata, msg):
+def on_message(mqtt_client, userdata, msg):
     """
     Route incoming MQTT messages to appropriate handlers based on topic.
-
-    Args:
-        client: MQTT client instance 
-        userdata: User-defined data passed to callback
-        msg: MQTT message object containing topic and payload
     """
+    print(
+        f'Received message on topic: {msg.topic} with payload: {msg.payload}')
     # Route message to appropriate handler based on topic prefix
-    if msg.topic.startswith(f"{TOPIC_AGV_DATA}/"):
-        handle_agv_data_message(client, msg)
+    if msg.topic.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
+        handle_agv_data_message(mqtt_client, msg)
     else:
         print(f"Received message on unhandled topic: {msg.topic}")
-    """
-    Handle incoming MQTT messages from AGVs.
-    Implements identical logic to UpdateAGVPositionView.post()
-
-    Args:
-        client: MQTT client instance 
-        userdata: User-defined data passed to callback
-        msg: MQTT message object containing topic and payload
-
-    Message format:
-        Byte array following data frame specification
-    """
-
-
-def initialize_mqtt_client():
-    """
-    Initialize and connect the MQTT client.
-
-    Returns:
-        mqtt_client.Client: The initialized MQTT client
-    """
-    global client
-
-    # Only create a new client if one doesn't exist
-    if client is None:
-        client = mqtt_client.Client(
-            callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-            client_id=CLIENT_ID
-        )        # Set up callbacks
-        client.on_connect = on_connect
-        client.on_message = on_message
-
-        # Connect to broker
-        try:
-            client.connect(host=MQTT_BROKER, port=MQTT_PORT,
-                           keepalive=MQTT_KEEPALIVE)
-            print(f"MQTT client initialized with broker: {MQTT_BROKER}")
-        except Exception as e:
-            print(f"Failed to connect to MQTT broker: {e}")
-
-    return client
-
-
-def start_mqtt_client():
-    """
-    Start the MQTT client loop. Call this only from the AppConfig.ready() method.
-    """
-    client = initialize_mqtt_client()
-
-    # Check if the loop is already running
-    if not client.is_connected():
-        client.loop_start()
-        print("MQTT client loop started")
 
 
 def handle_agv_data_message(client, msg):
@@ -216,7 +142,7 @@ def handle_agv_data_message(client, msg):
                 )
 
                 # Publish instructions to this AGV's route topic
-                client.publish(f"{TOPIC_AGV_ROUTE}/{affected_agv_id}", message)
+                client.publish(f"{MQTT_TOPIC_AGVROUTE}/{affected_agv_id}", message)
                 print(f"Sent updated instructions to AGV {affected_agv_id}")
 
         # Send instructions to the triggering AGV
@@ -227,7 +153,7 @@ def handle_agv_data_message(client, msg):
             direction_change=result.get("direction_change")
         )
 
-        client.publish(f"{TOPIC_AGV_ROUTE}/{agv_id}", message)
+        client.publish(f"{MQTT_TOPIC_AGVROUTE}/{agv_id}", message)
 
     except ValueError as e:
         print(f"Failed to decode/encode message: {e}")
@@ -237,5 +163,15 @@ def handle_agv_data_message(client, msg):
         print(f"Error processing message: {e}")
 
 
-def send_agv_hello_message(client, msg, agv_id):
-    client.publish(f"{TOPIC_AGV_HELLO}/{agv_id}", "Hello from server")
+# def send_agv_hello_message(client, msg, agv_id):
+#     client.publish(f"{MQTT_TOPIC_AGVHELLO}/{agv_id}", "Hello from server")
+
+client = mqtt.Client()
+client.on_connect = on_connect
+client.on_message = on_message
+client.username_pw_set(settings.MQTT_USER, settings.MQTT_PASSWORD)
+client.connect(
+    host=settings.MQTT_BROKER,
+    port=settings.MQTT_PORT,
+    keepalive=settings.MQTT_KEEPALIVE
+)

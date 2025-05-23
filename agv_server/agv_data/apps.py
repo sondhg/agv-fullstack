@@ -6,12 +6,8 @@ class AgvDataConfig(AppConfig):
     name = 'agv_data'
 
     def ready(self):
-        """
-        Initialize the application when Django is ready.
-        Starts the MQTT client safely.
-        """        # Only start MQTT client in the main process (not in reloader)
         import os
-        if os.getenv('RUN_MAIN', None) != 'true':
-            # Import and start MQTT client
-            from . import django_mqtt
-            django_mqtt.start_mqtt_client()
+        if os.getenv('RUN_MAIN'):
+            # Import and start MQTT client only when app is ready
+            from . import mqtt
+            mqtt.client.loop_start()
