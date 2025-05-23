@@ -16,7 +16,6 @@ export const API_ENDPOINTS = {
     get: "agvs/get/",
     delete: (agvId: number) => `agvs/delete/${agvId}/`,
     bulkDelete: "agvs/bulk-delete/",
-    simulateUpdateAgvPosition: "agvs/update-position/",
     dispatch: "agvs/dispatch-orders-to-agvs/",
     reset: "agvs/reset/",
     scheduleHelloMessage: "agvs/schedule-hello-messages/",

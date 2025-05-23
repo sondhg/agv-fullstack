@@ -26,16 +26,6 @@ const dispatchOrdersToAGVs = async (
   return apiService.post(API_ENDPOINTS.agvs.dispatch, { algorithm });
 };
 
-const simulateUpdateAgvPosition = async (
-  agvId: number,
-  currentNode: number,
-): Promise<void> => {
-  return apiService.post(API_ENDPOINTS.agvs.simulateUpdateAgvPosition, {
-    agv_id: agvId,
-    current_node: currentNode,
-  });
-};
-
 const resetAGVs = async (): Promise<{ success: boolean; message: string }> => {
   return apiService.post(API_ENDPOINTS.agvs.reset, {});
 };
@@ -51,6 +41,5 @@ export {
   dispatchOrdersToAGVs,
   getAGVs,
   resetAGVs,
-  simulateUpdateAgvPosition,
   scheduleHelloMessage,
 };

@@ -4,7 +4,6 @@ from .views import (
     ListAGVsView,
     DeleteAGVView,
     BulkDeleteAGVsView,
-    UpdateAGVPositionView,
     DispatchOrdersToAGVsView,
     ResetAGVsView,
     ScheduleOrderHellosView
@@ -15,8 +14,6 @@ urlpatterns = [
     path('create/', CreateAGVView.as_view(), name='create_agv'),
     path("delete/<int:agv_id>/", DeleteAGVView.as_view(), name="delete_agv"),
     path('bulk-delete/', BulkDeleteAGVsView.as_view(), name='bulk_delete_agvs'),
-    path('update-position/', UpdateAGVPositionView.as_view(),
-         name='update_agv_position'),
     path('reset/', ResetAGVsView.as_view(), name='reset_agvs'),
     path('dispatch-orders-to-agvs/', DispatchOrdersToAGVsView.as_view(),
          name='dispatch_orders_to_agvs'),
