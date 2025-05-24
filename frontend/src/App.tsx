@@ -1,17 +1,22 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster as ToasterSonner } from "@/components/ui/sonner";
 import { Toaster as ToasterToast } from "@/components/ui/toaster";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "./redux/store";
 import { AllRoutes } from "./routes/AllRoutes";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+
+// Create a client
+const queryClient = new QueryClient();
 
 function App() {
   const Fallback = ({ error }: { error: Error }) => (
     <div role="alert">
       <p>Something went wrong:</p>
-      <pre className="text-error">{error.message}</pre>
+      <pre className="text-red-500">{error.message}</pre>
       <pre>{error.stack}</pre>
     </div>
   );
@@ -22,7 +27,10 @@ function App() {
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-              <AllRoutes />
+              <QueryClientProvider client={queryClient}>
+                <AllRoutes />
+                <ReactQueryDevtools initialIsOpen={false} />
+              </QueryClientProvider>
             </ThemeProvider>
           </PersistGate>
         </Provider>
