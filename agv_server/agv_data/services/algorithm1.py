@@ -134,7 +134,7 @@ class TaskDispatcher:
                 print(f"Failed to process task {task.order_id}: {str(e)}")
                 continue
 
-        # Now calculate CP for each order using all orders' remaining paths
+        # Now calculate common_nodes for each order using all orders' remaining paths
         for i, current_order in enumerate(orders_data_list):
             # Get all other orders' remaining paths
             other_paths = []
@@ -152,7 +152,7 @@ class TaskDispatcher:
                 shared_points)
 
             # Update the order data with calculated points
-            current_order["cp"] = shared_points
+            current_order["common_nodes"] = shared_points
             current_order["scp"] = sequential_shared_points
 
         # Finally, update all AGVs with their order data
@@ -166,7 +166,7 @@ class TaskDispatcher:
                     "order_id": order_data["order_id"],
                     "agv_id": assigned_agv.agv_id,
                     "initial_path": order_data["initial_path"],
-                    "cp": order_data["cp"],
+                    "common_nodes": order_data["common_nodes"],
                     "scp": order_data["scp"]
                 })
 

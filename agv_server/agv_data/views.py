@@ -164,7 +164,7 @@ class ResetAGVsView(APIView):
                 agv.spare_points = {}
                 agv.initial_path = []
                 agv.remaining_path = []
-                agv.cp = []
+                agv.common_nodes = []
                 agv.scp = []
                 agv.active_order = None
                 agv.previous_node = None
@@ -174,7 +174,7 @@ class ResetAGVsView(APIView):
                 agv.save(update_fields=[
                     'current_node', 'next_node', 'reserved_node', 'motion_state',
                     'spare_flag', 'spare_points', 'initial_path', 'remaining_path',
-                    'cp', 'scp', 'active_order', 'previous_node', 'direction_change'
+                    'common_nodes', 'scp', 'active_order', 'previous_node', 'direction_change'
                 ])
 
                 reset_count += 1

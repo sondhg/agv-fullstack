@@ -87,12 +87,12 @@ export const columns1 = (
     },
 
     {
-      accessorKey: "cp",
+      accessorKey: "common_nodes",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="CP" />
+        <DataTableColumnHeader column={column} title="Common Nodes" />
       ),
       cell: ({ row }) => {
-        const points = row.getValue("cp") as number[];
+        const points = row.getValue("common_nodes") as number[];
         if (!points || points.length === 0)
           return <div className="text-gray-500">None</div>;
         return (

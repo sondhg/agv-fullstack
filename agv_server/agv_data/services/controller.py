@@ -134,7 +134,7 @@ class ControlPolicyController:
         # Reset DSPA algorithm specific fields
         agv.spare_flag = False
         agv.spare_points = {}
-        agv.cp = []
+        agv.common_nodes = []
         agv.scp = []
 
         # Reset position and movement information

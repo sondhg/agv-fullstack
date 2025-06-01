@@ -120,9 +120,9 @@ def update_shared_points(agv: Agv) -> None:
     
     # Calculate shared points
     shared_points = calculate_shared_points(agv.remaining_path, other_paths)
-    
-    # Update AGV's CP field
-    agv.cp = shared_points
+
+    # Update AGV's common_nodes field
+    agv.common_nodes = shared_points
     
     # Calculate sequential shared points
     sequential_shared_points = calculate_sequential_shared_points(shared_points)

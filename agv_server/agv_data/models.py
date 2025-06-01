@@ -98,7 +98,7 @@ class Agv(models.Model):
         help_text="Pi_i: Remaining points to be visited by AGV i.",
         default=list
     )
-    cp = models.JSONField(
+    common_nodes = models.JSONField(
         help_text="CP: Shared points with other AGVs",
         default=list
     )
