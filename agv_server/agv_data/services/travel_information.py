@@ -58,4 +58,4 @@ def update_travel_information(agv: Agv) -> None:
             # According to Example 3: "r_3 satisfies Condition 1 after updating its traveling information,
             # and it will return to point 14. Then, set F_3 = 0, SP_3 = ∅"
             agv.spare_flag = False
-            agv.spare_points = {}
+            agv.backup_nodes = {}

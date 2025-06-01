@@ -7,16 +7,16 @@ from typing import Dict, List, Set, Optional
 from map_data.models import Connection
 
 
-def allocate_spare_points(adjacent_common_nodes: List[int], all_remaining_paths: List[List[int]]) -> Dict[str, int]:
+def allocate_backup_nodes(adjacent_common_nodes: List[int], all_remaining_paths: List[List[int]]) -> Dict[str, int]:
     """
-    Allocate spare points for an AGV's sequential shared points.
+    Allocate backup nodes for an AGV's sequential shared points.
 
     Args:
         adjacent_common_nodes (List[int]): Adjacent common nodes (ACN^i) of the AGV
         all_remaining_paths (List[List[int]]): Remaining paths of all AGVs in the system
 
     Returns:
-        Dict[str, int]: Mapping of shared points to their allocated spare points.
+        Dict[str, int]: Mapping of shared points to their allocated backup nodes.
                        Empty dict if allocation fails.
     """
     # Convert remaining paths to a set for O(1) lookup
@@ -24,27 +24,27 @@ def allocate_spare_points(adjacent_common_nodes: List[int], all_remaining_paths:
     for path in all_remaining_paths:
         occupied_points.update(path)
 
-    spare_points: Dict[str, int] = {}
+    backup_nodes: Dict[str, int] = {}
 
     # For each adjacent common node
-    for shared_point in adjacent_common_nodes:
+    for adjacent_common_node in adjacent_common_nodes:
         # Get all neighboring points from the Connection model
-        neighbors = get_free_points(shared_point, occupied_points)
+        neighbors = get_free_points(adjacent_common_node, occupied_points)
 
         if not neighbors:
             # If no free points exist for any shared point, allocation fails
             return {}
 
-        # Select the nearest free point as the spare point
-        nearest_point = find_nearest_point(shared_point, neighbors)
+        # Select the nearest free point as the backup node
+        nearest_point = find_nearest_point(adjacent_common_node, neighbors)
         if nearest_point:
             # Store as string key for JSON serialization
-            spare_points[str(shared_point)] = nearest_point
+            backup_nodes[str(adjacent_common_node)] = nearest_point
         else:
             # If we can't find a nearest point, allocation fails
             return {}
 
-    return spare_points
+    return backup_nodes
 
 
 def get_free_points(point: int, occupied_points: Set[int]) -> List[int]:
@@ -74,13 +74,13 @@ def get_free_points(point: int, occupied_points: Set[int]) -> List[int]:
     return free_points
 
 
-def find_nearest_point(shared_point: int, candidates: List[int]) -> Optional[int]:
+def find_nearest_point(adjacent_common_node: int, candidates: List[int]) -> Optional[int]:
     """
     Find the nearest point to a shared point from a list of candidates.
     Uses the Connection model's distance field to determine proximity.
 
     Args:
-        shared_point (int): The shared point to find the nearest neighbor for
+        adjacent_common_node (int): The shared point to find the nearest neighbor for
         candidates (List[int]): List of candidate points to check
 
     Returns:
@@ -96,12 +96,12 @@ def find_nearest_point(shared_point: int, candidates: List[int]) -> Optional[int
     for candidate in candidates:
         # Try both orientations since Connection is undirected
         try:
-            conn = Connection.objects.get(node1=shared_point, node2=candidate)
+            conn = Connection.objects.get(node1=adjacent_common_node, node2=candidate)
             distance = conn.distance
         except Connection.DoesNotExist:
             try:
                 conn = Connection.objects.get(
-                    node1=candidate, node2=shared_point)
+                    node1=candidate, node2=adjacent_common_node)
                 distance = conn.distance
             except Connection.DoesNotExist:
                 # If no connection exists between these points, skip

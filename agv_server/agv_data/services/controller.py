@@ -13,7 +13,7 @@ from order_data.models import Order
 from ..models import Agv
 from .travel_information import update_travel_information
 from .movement_conditions import evaluate_movement_conditions
-from .spare_points_manager import remove_current_spare_point, check_and_update_agvs_at_spare_points, apply_for_spare_points
+from .backup_nodes_manager import remove_current_backup_node, check_and_update_agvs_at_backup_nodes, apply_for_backup_nodes
 from .utils import is_node_reserved_by_others
 from .. import direction_to_turn
 
@@ -63,7 +63,7 @@ class ControlPolicyController:
 
             # Update other AGVs if needed
             if agv.motion_state == Agv.MOVING:
-                updated_agvs = check_and_update_agvs_at_spare_points(agv_id)
+                updated_agvs = check_and_update_agvs_at_backup_nodes(agv_id)
                 if updated_agvs:
                     result_info["updated_agvs"] = updated_agvs
                     result_info["message"] += f". Also updated AGVs {updated_agvs} to return from spare points."
@@ -87,12 +87,12 @@ class ControlPolicyController:
     def _handle_movement_decision(self, agv: Agv) -> Dict:
         """Handle AGV movement decision based on current state and conditions."""
         # Check if AGV can return from spare point
-        if self._can_return_from_spare_point(agv):
-            return self._return_agv_from_spare_point(agv)
+        if self._can_return_from_backup_node(agv):
+            return self._return_agv_from_backup_node(agv)
 
         return self._evaluate_and_update_agv_movement(agv)
 
-    def _can_return_from_spare_point(self, agv: Agv) -> bool:
+    def _can_return_from_backup_node(self, agv: Agv) -> bool:
         """Check if AGV can return from spare point to main path."""
         return (agv.spare_flag and
                 agv.next_node and
@@ -133,7 +133,7 @@ class ControlPolicyController:
 
         # Reset DSPA algorithm specific fields
         agv.spare_flag = False
-        agv.spare_points = {}
+        agv.backup_nodes = {}
         agv.common_nodes = []
         agv.adjacent_common_nodes = []
 
@@ -147,10 +147,10 @@ class ControlPolicyController:
         # Save all changes to the database
         agv.save()
 
-    def _return_agv_from_spare_point(self, agv: Agv) -> Dict:
+    def _return_agv_from_backup_node(self, agv: Agv) -> Dict:
         """Move an AGV from its spare point back to its original path."""
         agv.spare_flag = False
-        agv.spare_points = {}
+        agv.backup_nodes = {}
         agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
         # Update direction_change based on movement direction
@@ -167,20 +167,20 @@ class ControlPolicyController:
 
     def _evaluate_and_update_agv_movement(self, agv: Agv) -> Dict:
         """Evaluate movement conditions and update AGV state."""
-        can_move, should_apply_spare_points = evaluate_movement_conditions(agv)
+        can_move, should_apply_backup_nodes = evaluate_movement_conditions(agv)
 
-        if should_apply_spare_points:
-            self._handle_spare_points(agv)
+        if should_apply_backup_nodes:
+            self._handle_backup_nodes(agv)
             can_move, _ = evaluate_movement_conditions(agv)
 
         return self._update_agv_movement_state(agv, can_move)
 
-    def _handle_spare_points(self, agv: Agv) -> None:
+    def _handle_backup_nodes(self, agv: Agv) -> None:
         """Handle spare points application or removal."""
         if agv.spare_flag:
-            remove_current_spare_point(agv)
+            remove_current_backup_node(agv)
         else:
-            apply_for_spare_points(agv)
+            apply_for_backup_nodes(agv)
 
     def _update_agv_movement_state(self, agv: Agv, can_move: bool) -> Dict:
         """Update AGV state based on movement evaluation."""

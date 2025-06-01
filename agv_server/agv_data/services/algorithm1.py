@@ -10,7 +10,7 @@ from map_data.models import Direction, Connection
 from ..models import Agv
 from ..constants import ErrorMessages
 from ..pathfinding.factory import PathfindingFactory
-from .shared_points import SharedPointsCalculator
+from .common_nodes import CommonNodesCalculator
 from .order_processor import OrderProcessor
 
 
@@ -23,7 +23,7 @@ class TaskDispatcher:
     def __init__(self):
         """Initialize TaskDispatcher with required data"""
         self.nodes, self.connections = self._validate_map_data()
-        self.shared_points_calculator = SharedPointsCalculator(
+        self.common_nodes_calculator = CommonNodesCalculator(
             self.connections)
         self.order_processor = None  # Initialized in dispatch_tasks with algorithm
 
@@ -145,15 +145,15 @@ class TaskDispatcher:
                     other_paths.append(other_order["remaining_path"])
 
             # Calculate shared points and sequential shared points
-            shared_points = self.shared_points_calculator.calculate_shared_points(
+            common_nodes = self.common_nodes_calculator.calculate_common_nodes(
                 current_order["remaining_path"], other_paths
             )
-            sequential_shared_points = self.shared_points_calculator.calculate_sequential_shared_points(
-                shared_points)
+            sequential_common_nodes = self.common_nodes_calculator.calculate_sequential_common_nodes(
+                common_nodes)
 
             # Update the order data with calculated points
-            current_order["common_nodes"] = shared_points
-            current_order["adjacent_common_nodes"] = sequential_shared_points
+            current_order["common_nodes"] = common_nodes
+            current_order["adjacent_common_nodes"] = sequential_common_nodes
 
         # Finally, update all AGVs with their order data
         processed_orders = []

@@ -139,12 +139,12 @@ export const columns1 = (
       },
     },
     {
-      accessorKey: "spare_points",
+      accessorKey: "backup_nodes",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Backup Nodes" />
       ),
       cell: ({ row }) => {
-        const value = row.getValue("spare_points") as Record<string, number>;
+        const value = row.getValue("backup_nodes") as Record<string, number>;
         if (Object.keys(value).length === 0) {
           return <div className="text-gray-500">None</div>;
         }

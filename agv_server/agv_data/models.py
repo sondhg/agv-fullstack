@@ -84,9 +84,9 @@ class Agv(models.Model):
         default=False,
         help_text="F^i: indicates if AGV moves along shared points with sufficient spare points"
     )
-    spare_points = models.JSONField(
+    backup_nodes = models.JSONField(
         default=dict,
-        help_text="SP^i: mapping of shared points to their allocated spare points"
+        help_text="SP^i: mapping of shared points to their allocated backup nodes"
     )
 
     # Path information according to Algorithm 1

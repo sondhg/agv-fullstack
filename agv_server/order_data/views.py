@@ -117,7 +117,7 @@ class DeleteOrderView(APIView):
         agv.reserved_node = None
         agv.motion_state = Agv.IDLE
         agv.spare_flag = False
-        agv.spare_points = {}
+        agv.backup_nodes = {}
         agv.initial_path = []
         agv.remaining_path = []
         agv.common_nodes = []
@@ -127,7 +127,7 @@ class DeleteOrderView(APIView):
         # Ensure changes are saved and committed
         agv.save(update_fields=[
             'current_node', 'next_node', 'reserved_node', 'motion_state',
-            'spare_flag', 'spare_points', 'initial_path', 'remaining_path',
+            'spare_flag', 'backup_nodes', 'initial_path', 'remaining_path',
             'common_nodes', 'adjacent_common_nodes', 'active_order'
         ])
 
@@ -200,7 +200,7 @@ class BulkDeleteOrdersView(APIView):
             agv.reserved_node = None
             agv.motion_state = Agv.IDLE
             agv.spare_flag = False
-            agv.spare_points = {}
+            agv.backup_nodes = {}
             agv.initial_path = []
             agv.remaining_path = []
             agv.common_nodes = []
@@ -210,7 +210,7 @@ class BulkDeleteOrdersView(APIView):
             # Save with specific fields to update
             agv.save(update_fields=[
                 'current_node', 'next_node', 'reserved_node', 'motion_state',
-                'spare_flag', 'spare_points', 'initial_path', 'remaining_path',
+                'spare_flag', 'backup_nodes', 'initial_path', 'remaining_path',
                 'common_nodes', 'adjacent_common_nodes', 'active_order'
             ])
 

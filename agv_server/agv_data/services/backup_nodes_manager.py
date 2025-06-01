@@ -6,20 +6,20 @@ in Algorithm 2 of the DSPA algorithm from algorithms-pseudocode.tex.
 """
 from typing import List
 from ..models import Agv
-from .algorithm4 import allocate_spare_points
+from .algorithm4 import allocate_backup_nodes
 from .utils import is_node_reserved_by_others
 from .. import direction_to_turn
 
 
-def _clear_spare_points(agv: Agv) -> None:
+def _clear_backup_nodes(agv: Agv) -> None:
     """
-    Helper method to reset spare points state for an AGV.
+    Helper method to reset backup nodes state for an AGV.
 
     Args:
         agv (Agv): The AGV object to reset spare points for
     """
     agv.spare_flag = False
-    agv.spare_points = {}
+    agv.backup_nodes = {}
 
 
 def _get_all_other_remaining_paths(agv_id: int) -> List[List[int]]:
@@ -39,7 +39,7 @@ def _get_all_other_remaining_paths(agv_id: int) -> List[List[int]]:
     return paths
 
 
-def apply_for_spare_points(agv: Agv) -> None:
+def apply_for_backup_nodes(agv: Agv) -> None:
     """
     Apply for spare points for an AGV's sequential shared points.
 
@@ -50,20 +50,20 @@ def apply_for_spare_points(agv: Agv) -> None:
         agv (Agv): The AGV object requiring spare points
     """
     if not agv.adjacent_common_nodes:
-        _clear_spare_points(agv)
+        _clear_backup_nodes(agv)
         return
 
     all_remaining_paths = _get_all_other_remaining_paths(agv.agv_id)
-    spare_points = allocate_spare_points(agv.adjacent_common_nodes, all_remaining_paths)
+    backup_nodes = allocate_backup_nodes(agv.adjacent_common_nodes, all_remaining_paths)
 
-    if spare_points:
+    if backup_nodes:
         agv.spare_flag = True
-        agv.spare_points = spare_points
+        agv.backup_nodes = backup_nodes
     else:
-        _clear_spare_points(agv)
+        _clear_backup_nodes(agv)
 
 
-def remove_current_spare_point(agv: Agv) -> None:
+def remove_current_backup_node(agv: Agv) -> None:
     """
     Remove the spare point allocated for the AGV's current position.
     According to Algorithm 2 lines 14-16, when F^i = 1, remove SP^i(v_c^i).
@@ -71,20 +71,20 @@ def remove_current_spare_point(agv: Agv) -> None:
     Args:
         agv (Agv): The AGV object to remove current spare point from
     """
-    if not agv.spare_flag or not agv.spare_points:
+    if not agv.spare_flag or not agv.backup_nodes:
         return
 
     current_node_str = str(agv.current_node)
-    if current_node_str in agv.spare_points:
-        spare_points = agv.spare_points.copy()
-        spare_points.pop(current_node_str, None)
-        agv.spare_points = spare_points
+    if current_node_str in agv.backup_nodes:
+        backup_nodes = agv.backup_nodes.copy()
+        backup_nodes.pop(current_node_str, None)
+        agv.backup_nodes = backup_nodes
 
-        if not agv.spare_points:
+        if not agv.backup_nodes:
             agv.spare_flag = False
 
 
-def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
+def check_and_update_agvs_at_backup_nodes(agv_id: int) -> List[int]:
     """
     Check and update AGVs that are at spare points and may need to return to their original path.
 
@@ -99,12 +99,12 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
         List[int]: IDs of AGVs that were updated to return from spare points
     """
     updated_agvs = []
-    spare_point_agvs = Agv.objects.filter(
+    backup_node_agvs = Agv.objects.filter(
         spare_flag=True,
         motion_state=Agv.WAITING
     ).exclude(agv_id=agv_id)
 
-    for agv in spare_point_agvs:
+    for agv in backup_node_agvs:
         if not agv.active_order or not agv.remaining_path:
             continue
 
@@ -137,7 +137,7 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
                 # If no previous_node, default to GO_STRAIGHT
                 agv.direction_change = Agv.GO_STRAIGHT
 
-            _clear_spare_points(agv)
+            _clear_backup_nodes(agv)
             agv.save()
             updated_agvs.append(agv.agv_id)
 

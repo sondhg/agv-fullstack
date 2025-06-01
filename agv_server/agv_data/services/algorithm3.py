@@ -223,10 +223,10 @@ class DeadlockResolver:
         """
         if agv1.spare_flag:
             # AGV1 has spare points, move it to spare point
-            return self._move_to_spare_point(agv1, agv2)
+            return self._move_to_backup_node(agv1, agv2)
         elif agv2.spare_flag:
             # AGV2 has spare points, move it to spare point
-            return self._move_to_spare_point(agv2, agv1)
+            return self._move_to_backup_node(agv2, agv1)
         else:
             # Neither AGV has spare points, deadlock cannot be resolved
             return False, None
@@ -253,13 +253,13 @@ class DeadlockResolver:
                 for other_agv in deadlock_agvs:
                     if other_agv.agv_id != agv.agv_id and other_agv.next_node == agv.current_node:
                         # Move AGV to spare point, let other proceed
-                        return self._move_to_spare_point(agv, other_agv)
+                        return self._move_to_backup_node(agv, other_agv)
 
         # No AGV has spare points, deadlock cannot be resolved
         return False, None
 
     @transaction.atomic
-    def _move_to_spare_point(self, agv_to_move: Agv, agv_to_proceed: Agv) -> Tuple[bool, Optional[Agv]]:
+    def _move_to_backup_node(self, agv_to_move: Agv, agv_to_proceed: Agv) -> Tuple[bool, Optional[Agv]]:
         """
         Move an AGV to its spare point and let another AGV proceed.
 
@@ -277,28 +277,28 @@ class DeadlockResolver:
                 - moved_agv: The AGV that was moved (if successful)
         """
         try:
-            # Get the current node as a string since spare_points keys are stored as strings
+            # Get the current node as a string since backup_nodes keys are stored as strings
             current_node_str = str(agv_to_move.current_node)
 
-            # Check if there's a spare point for the current node
-            if not agv_to_move.spare_points or current_node_str not in agv_to_move.spare_points:
+            # Check if there's a backup node for the current node
+            if not agv_to_move.backup_nodes or current_node_str not in agv_to_move.backup_nodes:
                 return False, None
 
-            # Get the spare point
-            spare_point = agv_to_move.spare_points[current_node_str]
+            # Get the backup node
+            backup_node = agv_to_move.backup_nodes[current_node_str]
 
-            # AGV moves to spare point - modify remaining path to include the spare point
+            # AGV moves to backup node - modify remaining path to include the backup node
             if agv_to_move.active_order:
                 # Create the correct remaining path according to Example 3 in algorithms-pseudocode.tex
-                # The remaining path should be [spare_point, current_node, ...rest of original path]
+                # The remaining path should be [backup_node, current_node, ...rest of original path]
                 # Example: Π_3 = {6, 14, 13, 12, 11, 19}
                 remaining_path = agv_to_move.remaining_path
 
-                # First, create a new remaining path starting with the spare point
-                new_remaining_path = [spare_point]
+                # First, create a new remaining path starting with the backup node
+                new_remaining_path = [backup_node]
 
                 # Then add the current node if it's not already in the new path
-                if agv_to_move.current_node != spare_point:
+                if agv_to_move.current_node != backup_node:
                     new_remaining_path.append(agv_to_move.current_node)
 
                 # Now add the rest of the original path, excluding the current node if it's there
@@ -322,8 +322,8 @@ class DeadlockResolver:
                 agv_to_move.save()
 
                 # Update AGV state and node information
-                agv_to_move.next_node = spare_point
-                agv_to_move.reserved_node = spare_point
+                agv_to_move.next_node = backup_node
+                agv_to_move.reserved_node = backup_node
                 agv_to_move.motion_state = Agv.MOVING
 
                 # Calculate direction_change for AGV moving to spare point
@@ -342,7 +342,7 @@ class DeadlockResolver:
                 agv_to_proceed.save()
 
                 # Log for debugging
-                print(f"Deadlock resolved: AGV {agv_to_move.agv_id} moving to spare point {spare_point} " +
+                print(f"Deadlock resolved: AGV {agv_to_move.agv_id} moving to spare point {backup_node} " +
                       f"with direction_change={agv_to_move.direction_change}, " +
                       f"AGV {agv_to_proceed.agv_id} can proceed with direction_change={agv_to_proceed.direction_change}")
 

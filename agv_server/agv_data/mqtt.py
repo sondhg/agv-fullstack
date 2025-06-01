@@ -115,7 +115,7 @@ def handle_agv_data_message(mqtt_client, msg):
             control_result.update({
                 "reserved_node": updated_agv.reserved_node,
                 "spare_flag": updated_agv.spare_flag,
-                "spare_points": updated_agv.spare_points,
+                "backup_nodes": updated_agv.backup_nodes,
                 "moved_from": previous_position,
                 "previous_node": updated_agv.previous_node,
                 "remaining_path": updated_agv.remaining_path,

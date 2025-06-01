@@ -13,8 +13,8 @@ from .utils import is_node_reserved_by_others
 @dataclass
 class MovementConditionResult:
     can_move: bool
-    should_apply_spare_points: bool
-    clear_spare_points: bool = False
+    should_apply_backup_nodes: bool
+    clear_backup_nodes: bool = False
 
 
 class MovementConditionEvaluator:
@@ -84,15 +84,15 @@ def evaluate_movement_conditions(agv: Agv) -> Tuple[bool, bool]:
         agv (Agv): The AGV to evaluate
 
     Returns:
-        Tuple[bool, bool]: (can_move, should_apply_spare_points)
+        Tuple[bool, bool]: (can_move, should_apply_backup_nodes)
             - can_move: True if any condition is satisfied and AGV can move
-            - should_apply_spare_points: True if AGV needs to apply for spare points
+            - should_apply_backup_nodes: True if AGV needs to apply for spare points
     """
     evaluator = MovementConditionEvaluator(agv)
     result = evaluator.evaluate()
 
-    if result.clear_spare_points:
+    if result.clear_backup_nodes:
         agv.spare_flag = False
-        agv.spare_points = {}
+        agv.backup_nodes = {}
 
-    return result.can_move, result.should_apply_spare_points
+    return result.can_move, result.should_apply_backup_nodes
