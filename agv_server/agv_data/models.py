@@ -102,7 +102,7 @@ class Agv(models.Model):
         help_text="CP: Shared points with other AGVs",
         default=list
     )
-    scp = models.JSONField(
+    adjacent_common_nodes = models.JSONField(
         help_text="SCP: Sequential shared points",
         default=list
     )

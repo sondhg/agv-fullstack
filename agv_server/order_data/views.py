@@ -121,14 +121,14 @@ class DeleteOrderView(APIView):
         agv.initial_path = []
         agv.remaining_path = []
         agv.common_nodes = []
-        agv.scp = []
+        agv.adjacent_common_nodes = []
         agv.active_order = None
 
         # Ensure changes are saved and committed
         agv.save(update_fields=[
             'current_node', 'next_node', 'reserved_node', 'motion_state',
             'spare_flag', 'spare_points', 'initial_path', 'remaining_path',
-            'common_nodes', 'scp', 'active_order'
+            'common_nodes', 'adjacent_common_nodes', 'active_order'
         ])
 
         # Verify that the AGV was reset properly
@@ -204,14 +204,14 @@ class BulkDeleteOrdersView(APIView):
             agv.initial_path = []
             agv.remaining_path = []
             agv.common_nodes = []
-            agv.scp = []
+            agv.adjacent_common_nodes = []
             agv.active_order = None
 
             # Save with specific fields to update
             agv.save(update_fields=[
                 'current_node', 'next_node', 'reserved_node', 'motion_state',
                 'spare_flag', 'spare_points', 'initial_path', 'remaining_path',
-                'common_nodes', 'scp', 'active_order'
+                'common_nodes', 'adjacent_common_nodes', 'active_order'
             ])
 
         # Verify all AGVs were properly reset

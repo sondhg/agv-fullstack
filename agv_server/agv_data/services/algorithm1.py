@@ -153,7 +153,7 @@ class TaskDispatcher:
 
             # Update the order data with calculated points
             current_order["common_nodes"] = shared_points
-            current_order["scp"] = sequential_shared_points
+            current_order["adjacent_common_nodes"] = sequential_shared_points
 
         # Finally, update all AGVs with their order data
         processed_orders = []
@@ -167,7 +167,7 @@ class TaskDispatcher:
                     "agv_id": assigned_agv.agv_id,
                     "initial_path": order_data["initial_path"],
                     "common_nodes": order_data["common_nodes"],
-                    "scp": order_data["scp"]
+                    "adjacent_common_nodes": order_data["adjacent_common_nodes"]
                 })
 
         return processed_orders

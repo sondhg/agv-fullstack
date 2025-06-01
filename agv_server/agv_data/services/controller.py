@@ -135,7 +135,7 @@ class ControlPolicyController:
         agv.spare_flag = False
         agv.spare_points = {}
         agv.common_nodes = []
-        agv.scp = []
+        agv.adjacent_common_nodes = []
 
         # Reset position and movement information
         agv.previous_node = None

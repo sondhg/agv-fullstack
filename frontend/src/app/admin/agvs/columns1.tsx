@@ -107,12 +107,12 @@ export const columns1 = (
       },
     },
     {
-      accessorKey: "scp",
+      accessorKey: "adjacent_common_nodes",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="SCP" />
+        <DataTableColumnHeader column={column} title="Adjacent Common Nodes" />
       ),
       cell: ({ row }) => {
-        const points = row.getValue("scp") as number[];
+        const points = row.getValue("adjacent_common_nodes") as number[];
         if (!points || points.length === 0)
           return <div className="text-gray-500">None</div>;
         return (
@@ -141,7 +141,7 @@ export const columns1 = (
     {
       accessorKey: "spare_points",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="SP" />
+        <DataTableColumnHeader column={column} title="Backup Nodes" />
       ),
       cell: ({ row }) => {
         const value = row.getValue("spare_points") as Record<string, number>;
@@ -150,9 +150,9 @@ export const columns1 = (
         }
         return (
           <div className="space-y-1">
-            {Object.entries(value).map(([pointInSCP, sparePoint], index) => (
+            {Object.entries(value).map(([pointInACN, sparePoint], index) => (
               <div key={index}>
-                SCP <span className="font-semibold">{pointInSCP}</span> → SP{" "}
+                ACN <span className="font-semibold">{pointInACN}</span> → BN{" "}
                 <span className="font-semibold">{sparePoint}</span>
               </div>
             ))}

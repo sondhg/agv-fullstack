@@ -23,7 +23,7 @@ class MovementConditionEvaluator:
     def __init__(self, agv: Agv):
         self.agv = agv
         self.next_node = agv.next_node
-        self.scp = agv.scp
+        self.adjacent_common_nodes = agv.adjacent_common_nodes
         self.reserved_by_others = is_node_reserved_by_others(
             agv.next_node, agv.agv_id) if agv.next_node else True
 
@@ -45,12 +45,12 @@ class MovementConditionEvaluator:
 
     def _check_condition_1(self) -> bool:
         """Check if next node is not in SCP and not reserved by others."""
-        return self.next_node not in self.scp
+        return self.next_node not in self.adjacent_common_nodes
 
     def _check_condition_2(self) -> bool:
         """Check if next node is in SCP but no SCP points are reserved by AGVs without spare points."""
-        return (self.next_node in self.scp and
-                not self._has_scp_with_no_spare_reservations())
+        return (self.next_node in self.adjacent_common_nodes and
+                not self._has_adjacent_common_nodes_with_no_spare_reservations())
 
     def _evaluate_condition_3(self) -> MovementConditionResult:
         """Evaluate condition 3 and determine if spare points should be applied."""
@@ -58,7 +58,7 @@ class MovementConditionEvaluator:
             return MovementConditionResult(True, True)
         return MovementConditionResult(False, True)
 
-    def _has_scp_with_no_spare_reservations(self) -> bool:
+    def _has_adjacent_common_nodes_with_no_spare_reservations(self) -> bool:
         """Check if any SCP point is reserved by an AGV without spare points."""
         return any(
             Agv.objects.filter(
@@ -67,7 +67,7 @@ class MovementConditionEvaluator:
             ).exclude(
                 agv_id=self.agv.agv_id
             ).exists()
-            for point in self.scp
+            for point in self.adjacent_common_nodes
         )
 
 

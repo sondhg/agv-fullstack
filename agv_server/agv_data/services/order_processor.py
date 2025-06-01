@@ -71,7 +71,7 @@ class OrderProcessor:
             "initial_path": path,
             "remaining_path": path,
             "common_nodes": [],  # Will be calculated later in process_tasks
-            "scp": []  # Will be calculated later in process_tasks
+            "adjacent_common_nodes": []  # Will be calculated later in process_tasks
         }
 
         return order_data
@@ -96,7 +96,7 @@ class OrderProcessor:
             agv.initial_path = order_data["initial_path"]
             agv.remaining_path = order_data["remaining_path"]
             agv.common_nodes = order_data["common_nodes"]
-            agv.scp = order_data["scp"]
+            agv.adjacent_common_nodes = order_data["adjacent_common_nodes"]
             agv.save()
 
             return True

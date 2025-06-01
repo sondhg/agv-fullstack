@@ -7,12 +7,12 @@ from typing import Dict, List, Set, Optional
 from map_data.models import Connection
 
 
-def allocate_spare_points(scp: List[int], all_remaining_paths: List[List[int]]) -> Dict[str, int]:
+def allocate_spare_points(adjacent_common_nodes: List[int], all_remaining_paths: List[List[int]]) -> Dict[str, int]:
     """
     Allocate spare points for an AGV's sequential shared points.
 
     Args:
-        scp (List[int]): Sequential shared points (SCP^i) of the AGV
+        adjacent_common_nodes (List[int]): Adjacent common nodes (ACN^i) of the AGV
         all_remaining_paths (List[List[int]]): Remaining paths of all AGVs in the system
 
     Returns:
@@ -26,8 +26,8 @@ def allocate_spare_points(scp: List[int], all_remaining_paths: List[List[int]]) 
 
     spare_points: Dict[str, int] = {}
 
-    # For each sequential shared point
-    for shared_point in scp:
+    # For each adjacent common node
+    for shared_point in adjacent_common_nodes:
         # Get all neighboring points from the Connection model
         neighbors = get_free_points(shared_point, occupied_points)
 

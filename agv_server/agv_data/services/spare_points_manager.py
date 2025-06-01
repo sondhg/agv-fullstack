@@ -49,12 +49,12 @@ def apply_for_spare_points(agv: Agv) -> None:
     Args:
         agv (Agv): The AGV object requiring spare points
     """
-    if not agv.scp:
+    if not agv.adjacent_common_nodes:
         _clear_spare_points(agv)
         return
 
     all_remaining_paths = _get_all_other_remaining_paths(agv.agv_id)
-    spare_points = allocate_spare_points(agv.scp, all_remaining_paths)
+    spare_points = allocate_spare_points(agv.adjacent_common_nodes, all_remaining_paths)
 
     if spare_points:
         agv.spare_flag = True

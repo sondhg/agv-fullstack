@@ -126,9 +126,9 @@ def update_shared_points(agv: Agv) -> None:
     
     # Calculate sequential shared points
     sequential_shared_points = calculate_sequential_shared_points(shared_points)
-    
-    # Update AGV's SCP field
-    agv.scp = sequential_shared_points
+
+    # Update AGV's adjacent_common_nodes field
+    agv.adjacent_common_nodes = sequential_shared_points
     
     agv.save()
 
