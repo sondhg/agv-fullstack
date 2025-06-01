@@ -54,7 +54,7 @@ class SharedPointsCalculator:
 
         Args:
             current_path (List[int]): The path to calculate shared points for (Π_i)
-            other_paths (List[List[int]]): List of other residual paths to compare against (Π_j, j ≠ i)
+            other_paths (List[List[int]]): List of other remaining paths to compare against (Π_j, j ≠ i)
 
         Returns:
             List[int]: List of shared points in order of appearance in current_path
@@ -110,16 +110,16 @@ def update_shared_points(agv: Agv) -> None:
     Args:
         agv (Agv): The AGV to update shared points for
     """
-    # Get all other AGVs' residual paths
+    # Get all other AGVs' remaining paths
     other_paths = []
     other_agvs = Agv.objects.filter(active_order__isnull=False).exclude(agv_id=agv.agv_id)
     
     for other_agv in other_agvs:
-        if other_agv.residual_path:
-            other_paths.append(other_agv.residual_path)
+        if other_agv.remaining_path:
+            other_paths.append(other_agv.remaining_path)
     
     # Calculate shared points
-    shared_points = calculate_shared_points(agv.residual_path, other_paths)
+    shared_points = calculate_shared_points(agv.remaining_path, other_paths)
     
     # Update AGV's CP field
     agv.cp = shared_points
@@ -141,7 +141,7 @@ def calculate_shared_points(current_path: List[int], other_paths: List[List[int]
 
     Args:
         current_path (List[int]): The path to calculate shared points for (Π_i)
-        other_paths (List[List[int]]): List of other residual paths to compare against (Π_j, j ≠ i)
+        other_paths (List[List[int]]): List of other remaining paths to compare against (Π_j, j ≠ i)
 
     Returns:
         List[int]: List of shared points in order of appearance in current_path

@@ -97,8 +97,8 @@ class ControlPolicyController:
         return (agv.spare_flag and
                 agv.next_node and
                 not is_node_reserved_by_others(agv.next_node, agv.agv_id) and
-                agv.residual_path and
-                agv.next_node == agv.residual_path[0])
+                agv.remaining_path and
+                agv.next_node == agv.remaining_path[0])
 
     def _complete_agv_task(self, agv: Agv, order: Order) -> Dict:
         """Complete the current task for an AGV."""
@@ -125,7 +125,7 @@ class ControlPolicyController:
         """
         # Reset path information
         agv.initial_path = []
-        agv.residual_path = []
+        agv.remaining_path = []
 
         # Reset state information
         agv.motion_state = Agv.IDLE

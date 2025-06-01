@@ -74,12 +74,12 @@ export const columns1 = (
       },
     },
     {
-      accessorKey: "residual_path",
+      accessorKey: "remaining_path",
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Residual Path" />
+        <DataTableColumnHeader column={column} title="Remaining Path" />
       ),
       cell: ({ row }) => {
-        const path = row.getValue("residual_path") as number[];
+        const path = row.getValue("remaining_path") as number[];
         if (!path || path.length === 0)
           return <div className="text-gray-500">None</div>;
         return <div className="text-sm">{path.join(" → ")}</div>;

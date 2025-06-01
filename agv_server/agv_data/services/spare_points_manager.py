@@ -22,20 +22,20 @@ def _clear_spare_points(agv: Agv) -> None:
     agv.spare_points = {}
 
 
-def _get_all_other_residual_paths(agv_id: int) -> List[List[int]]:
+def _get_all_other_remaining_paths(agv_id: int) -> List[List[int]]:
     """
-    Helper method to get residual paths of all other active AGVs.
+    Helper method to get remaining paths of all other active AGVs.
 
     Args:
         agv_id (int): ID of the AGV to exclude
 
     Returns:
-        List[List[int]]: List of residual paths from other AGVs
+        List[List[int]]: List of remaining paths from other AGVs
     """
     paths = []
     for other_agv in Agv.objects.exclude(agv_id=agv_id):
         if other_agv.active_order:
-            paths.append(other_agv.residual_path)
+            paths.append(other_agv.remaining_path)
     return paths
 
 
@@ -53,8 +53,8 @@ def apply_for_spare_points(agv: Agv) -> None:
         _clear_spare_points(agv)
         return
 
-    all_residual_paths = _get_all_other_residual_paths(agv.agv_id)
-    spare_points = allocate_spare_points(agv.scp, all_residual_paths)
+    all_remaining_paths = _get_all_other_remaining_paths(agv.agv_id)
+    spare_points = allocate_spare_points(agv.scp, all_remaining_paths)
 
     if spare_points:
         agv.spare_flag = True
@@ -105,10 +105,10 @@ def check_and_update_agvs_at_spare_points(agv_id: int) -> List[int]:
     ).exclude(agv_id=agv_id)
 
     for agv in spare_point_agvs:
-        if not agv.active_order or not agv.residual_path:
+        if not agv.active_order or not agv.remaining_path:
             continue
 
-        next_node = agv.residual_path[0]
+        next_node = agv.remaining_path[0]
         if not is_node_reserved_by_others(next_node, agv.agv_id):
             # Return AGV from spare point to main path
             agv.next_node = next_node

@@ -94,7 +94,7 @@ class Agv(models.Model):
         help_text="P_i^j: Path of AGV i performing task j. Once generated, will not change.",
         default=list
     )
-    residual_path = models.JSONField(
+    remaining_path = models.JSONField(
         help_text="Pi_i: Remaining points to be visited by AGV i.",
         default=list
     )

@@ -264,7 +264,7 @@ class DeadlockResolver:
         Move an AGV to its spare point and let another AGV proceed.
 
         According to Example 3 in algorithms-pseudocode.tex, when an AGV moves to a spare point,
-        its residual path should be updated to include the spare point followed by its current path.
+        its remaining path should be updated to include the spare point followed by its current path.
         For example: Π_3 = {6, 14, 13, 12, 11, 19} after r_3 moves to spare point 6.
 
         Args:
@@ -287,38 +287,38 @@ class DeadlockResolver:
             # Get the spare point
             spare_point = agv_to_move.spare_points[current_node_str]
 
-            # AGV moves to spare point - modify residual path to include the spare point
+            # AGV moves to spare point - modify remaining path to include the spare point
             if agv_to_move.active_order:
-                # Create the correct residual path according to Example 3 in algorithms-pseudocode.tex
-                # The residual path should be [spare_point, current_node, ...rest of original path]
+                # Create the correct remaining path according to Example 3 in algorithms-pseudocode.tex
+                # The remaining path should be [spare_point, current_node, ...rest of original path]
                 # Example: Π_3 = {6, 14, 13, 12, 11, 19}
-                residual_path = agv_to_move.residual_path
+                remaining_path = agv_to_move.remaining_path
 
-                # First, create a new residual path starting with the spare point
-                new_residual_path = [spare_point]
+                # First, create a new remaining path starting with the spare point
+                new_remaining_path = [spare_point]
 
                 # Then add the current node if it's not already in the new path
                 if agv_to_move.current_node != spare_point:
-                    new_residual_path.append(agv_to_move.current_node)
+                    new_remaining_path.append(agv_to_move.current_node)
 
                 # Now add the rest of the original path, excluding the current node if it's there
                 # (since we already added it above)
                 original_path_rest = []
-                if agv_to_move.current_node in residual_path:
-                    # Find the index of the current node in the residual path
-                    current_index = residual_path.index(
+                if agv_to_move.current_node in remaining_path:
+                    # Find the index of the current node in the remaining path
+                    current_index = remaining_path.index(
                         agv_to_move.current_node)
                     # Get the remainder of the path after the current node
-                    original_path_rest = residual_path[current_index + 1:]
+                    original_path_rest = remaining_path[current_index + 1:]
                 else:
-                    # If current node is not in residual path, keep the whole original path
-                    original_path_rest = residual_path
+                    # If current node is not in remaining path, keep the whole original path
+                    original_path_rest = remaining_path
 
                 # Combine the parts
-                new_residual_path.extend(original_path_rest)
+                new_remaining_path.extend(original_path_rest)
 
-                # Update the residual path
-                agv_to_move.residual_path = new_residual_path
+                # Update the remaining path
+                agv_to_move.remaining_path = new_remaining_path
                 agv_to_move.save()
 
                 # Update AGV state and node information

@@ -118,7 +118,7 @@ def handle_agv_data_message(mqtt_client, msg):
                 "spare_points": updated_agv.spare_points,
                 "moved_from": previous_position,
                 "previous_node": updated_agv.previous_node,
-                "residual_path": updated_agv.residual_path,
+                "remaining_path": updated_agv.remaining_path,
                 "direction_change": updated_agv.direction_change,
                 **deadlock_info  # Add deadlock information if applicable
             })

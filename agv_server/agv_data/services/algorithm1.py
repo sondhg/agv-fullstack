@@ -134,19 +134,19 @@ class TaskDispatcher:
                 print(f"Failed to process task {task.order_id}: {str(e)}")
                 continue
 
-        # Now calculate CP for each order using all orders' residual paths
+        # Now calculate CP for each order using all orders' remaining paths
         for i, current_order in enumerate(orders_data_list):
-            # Get all other orders' residual paths
+            # Get all other orders' remaining paths
             other_paths = []
 
-            # Add residual paths from other orders being created
+            # Add remaining paths from other orders being created
             for j, other_order in enumerate(orders_data_list):
                 if i != j:  # Don't include current order
-                    other_paths.append(other_order["residual_path"])
+                    other_paths.append(other_order["remaining_path"])
 
             # Calculate shared points and sequential shared points
             shared_points = self.shared_points_calculator.calculate_shared_points(
-                current_order["residual_path"], other_paths
+                current_order["remaining_path"], other_paths
             )
             sequential_shared_points = self.shared_points_calculator.calculate_sequential_shared_points(
                 shared_points)

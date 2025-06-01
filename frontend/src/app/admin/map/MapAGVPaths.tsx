@@ -12,7 +12,7 @@ type MapAGVPathsProps = {
 };
 
 /**
- * Component for rendering AGV paths based on their residual_path property
+ * Component for rendering AGV paths based on their remaining_path property
  */
 export const MapAGVPaths = ({
   agvs,
@@ -72,14 +72,14 @@ export const MapAGVPaths = ({
       </defs>
 
       {agvs.map((agv) => {
-        // Skip if AGV doesn't have a residual path or it's empty
-        if (!agv.residual_path || agv.residual_path.length < 2) {
+        // Skip if AGV doesn't have a remaining path or it's empty
+        if (!agv.remaining_path || agv.remaining_path.length < 2) {
           return null;
         }
 
-        // Create path segments for each part of the AGV's residual path
-        return agv.residual_path.slice(0, -1).map((currentNode, index) => {
-          const nextNode = agv.residual_path[index + 1];
+        // Create path segments for each part of the AGV's remaining path
+        return agv.remaining_path.slice(0, -1).map((currentNode, index) => {
+          const nextNode = agv.remaining_path[index + 1];
 
           // Skip if the nodes don't exist in our positions or if they're not connected
           if (

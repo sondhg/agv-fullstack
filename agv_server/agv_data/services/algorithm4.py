@@ -7,21 +7,21 @@ from typing import Dict, List, Set, Optional
 from map_data.models import Connection
 
 
-def allocate_spare_points(scp: List[int], all_residual_paths: List[List[int]]) -> Dict[str, int]:
+def allocate_spare_points(scp: List[int], all_remaining_paths: List[List[int]]) -> Dict[str, int]:
     """
     Allocate spare points for an AGV's sequential shared points.
 
     Args:
         scp (List[int]): Sequential shared points (SCP^i) of the AGV
-        all_residual_paths (List[List[int]]): Residual paths of all AGVs in the system
+        all_remaining_paths (List[List[int]]): Remaining paths of all AGVs in the system
 
     Returns:
         Dict[str, int]: Mapping of shared points to their allocated spare points.
                        Empty dict if allocation fails.
     """
-    # Convert residual paths to a set for O(1) lookup
+    # Convert remaining paths to a set for O(1) lookup
     occupied_points: Set[int] = set()
-    for path in all_residual_paths:
+    for path in all_remaining_paths:
         occupied_points.update(path)
 
     spare_points: Dict[str, int] = {}
@@ -50,11 +50,11 @@ def allocate_spare_points(scp: List[int], all_residual_paths: List[List[int]]) -
 def get_free_points(point: int, occupied_points: Set[int]) -> List[int]:
     """
     Get all free points connected to a given point.
-    A point is free if it's not in any AGV's residual path.
+    A point is free if it's not in any AGV's remaining path.
 
     Args:
         point (int): The point to find free neighbors for
-        occupied_points (Set[int]): Set of points that appear in any AGV's residual path
+        occupied_points (Set[int]): Set of points that appear in any AGV's remaining path
 
     Returns:
         List[int]: List of free points connected to the given point
@@ -67,7 +67,7 @@ def get_free_points(point: int, occupied_points: Set[int]) -> List[int]:
     for conn in connections:
         # Get the other node of the connection
         neighbor = conn.node2 if conn.node1 == point else conn.node1
-        # Add to free points if not in any residual path
+        # Add to free points if not in any remaining path
         if neighbor not in occupied_points:
             free_points.append(neighbor)
 

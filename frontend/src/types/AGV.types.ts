@@ -28,7 +28,7 @@ export interface AGV {
   spare_flag: boolean;
   active_order: Order | null; // We'll store the order ID
   active_order_info: Order | null; // Detailed order information from serializer
-  residual_path: number[]; // Remaining points to be visited by the AGV
+  remaining_path: number[]; // Remaining points to be visited by the AGV
 }
 
 export interface CreateAGVDto {

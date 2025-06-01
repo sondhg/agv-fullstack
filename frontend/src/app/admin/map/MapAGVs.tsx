@@ -94,10 +94,10 @@ export const MapAGVs = ({ agvs, positions }: MapAGVsProps) => {
                     <span className="font-medium">Next Node:</span>{" "}
                     {agv.next_node !== null ? agv.next_node : "N/A"}
                   </p>
-                  {agv.residual_path && agv.residual_path.length > 0 && (
+                  {agv.remaining_path && agv.remaining_path.length > 0 && (
                     <p>
-                      <span className="font-medium">Residual Path:</span>{" "}
-                      {agv.residual_path.join(" → ")}
+                      <span className="font-medium">Remaining Path:</span>{" "}
+                      {agv.remaining_path.join(" → ")}
                     </p>
                   )}
                 </div>
