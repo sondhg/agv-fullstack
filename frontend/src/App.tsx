@@ -7,7 +7,6 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistor, store } from "./redux/store";
 import { AllRoutes } from "./routes/AllRoutes";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Create a client
 const queryClient = new QueryClient();
@@ -29,7 +28,6 @@ function App() {
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
               <QueryClientProvider client={queryClient}>
                 <AllRoutes />
-                <ReactQueryDevtools initialIsOpen={false} />
               </QueryClientProvider>
             </ThemeProvider>
           </PersistGate>
