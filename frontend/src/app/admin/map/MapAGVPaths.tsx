@@ -12,7 +12,7 @@ type MapAGVPathsProps = {
 };
 
 /**
- * Component for rendering AGV paths based on their remaining_path property
+ * Component for rendering AGV paths based on their current_node and remaining_path properties
  */
 export const MapAGVPaths = ({
   agvs,
@@ -69,17 +69,35 @@ export const MapAGVPaths = ({
             <polygon points="0 0, 4 1.5, 0 3" fill={agv.color} />
           </marker>
         ))}
-      </defs>
-
+      </defs>{" "}
       {agvs.map((agv) => {
         // Skip if AGV doesn't have a remaining path or it's empty
-        if (!agv.remaining_path || agv.remaining_path.length < 2) {
+        if (!agv.remaining_path || agv.remaining_path.length === 0) {
           return null;
         }
 
-        // Create path segments for each part of the AGV's remaining path
-        return agv.remaining_path.slice(0, -1).map((currentNode, index) => {
-          const nextNode = agv.remaining_path[index + 1];
+        // Create full path including current_node and remaining_path
+        const fullPath: number[] = [];
+
+        // Add current_node if it exists and is not already the first in remaining_path
+        if (
+          agv.current_node !== null &&
+          agv.current_node !== agv.remaining_path[0]
+        ) {
+          fullPath.push(agv.current_node);
+        }
+
+        // Add all nodes from remaining_path
+        fullPath.push(...agv.remaining_path);
+
+        // Skip if the full path has less than 2 nodes
+        if (fullPath.length < 2) {
+          return null;
+        }
+
+        // Create path segments for each part of the AGV's full path
+        return fullPath.slice(0, -1).map((currentNode, index) => {
+          const nextNode = fullPath[index + 1];
 
           // Skip if the nodes don't exist in our positions or if they're not connected
           if (
