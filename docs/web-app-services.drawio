@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36" version="27.1.4">
+  <diagram name="Page-1" id="atAxFWYexZ4S0EY0yqEL">
+    <mxGraphModel dx="1042" dy="562" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-1" target="QTTNShaTg0qZgs1Tme6l-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-1" target="QTTNShaTg0qZgs1Tme6l-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-1" target="QTTNShaTg0qZgs1Tme6l-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-1" target="QTTNShaTg0qZgs1Tme6l-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-1" value="Server" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="30" y="120" width="105" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-2" value="User authentication" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-3" value="Create map layout" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="120" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-4" value="Create orders" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="200" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-5" target="QTTNShaTg0qZgs1Tme6l-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-5" target="QTTNShaTg0qZgs1Tme6l-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-5" target="QTTNShaTg0qZgs1Tme6l-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="QTTNShaTg0qZgs1Tme6l-5" target="QTTNShaTg0qZgs1Tme6l-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-5" value="Manage AGVs" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="200" y="402" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-6" value="Dispatch orders to AGVs" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="260" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-7" value="Schedule start time" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="352" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-8" value="Send navigation instructions" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="452" width="150" height="54" as="geometry" />
+        </mxCell>
+        <mxCell id="QTTNShaTg0qZgs1Tme6l-9" value="Display real-time data" style="whiteSpace=wrap;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="400" y="552" width="150" height="54" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
