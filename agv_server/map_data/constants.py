@@ -17,13 +17,6 @@ class ErrorMessages:
     INVALID_DIRECTION = "Invalid direction value. Must be between 1 and 4."
 
 
-class SuccessMessages:
-    """Success messages used in the map_data module"""
-    CONNECTIONS_IMPORTED = "Connection data imported successfully"
-    DIRECTIONS_IMPORTED = "Direction data imported successfully"
-    DATA_DELETED = "All map data deleted successfully"
-
-
 class LogMessages:
     """Logging messages used in the map_data module"""
     IMPORT_CONNECTIONS = "Imported connections: {}"

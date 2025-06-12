@@ -16,12 +16,6 @@ class ErrorMessages:
     INVALID_ALGORITHM = "Invalid pathfinding algorithm specified."
 
 
-class SuccessMessages:
-    """Success messages used throughout the application"""
-    ORDER_PROCESSED = "Order {} processed successfully."
-    ORDERS_PROCESSED = "{} orders processed successfully."
-
-
 class DefaultValues:
     """Default values used in the application"""
     DEFAULT_ALGORITHM = "dijkstra"
