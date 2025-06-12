@@ -15,7 +15,7 @@ from .travel_information import update_travel_information
 from .movement_conditions import evaluate_movement_conditions
 from .backup_nodes_manager import remove_current_backup_node, check_and_update_agvs_at_backup_nodes, apply_for_backup_nodes
 from .utils import is_node_reserved_by_others
-from .. import direction_to_turn
+from . import direction_to_turn
 
 
 class ControlPolicyController:

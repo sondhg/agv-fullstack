@@ -1,5 +1,5 @@
 from map_data.models import Direction
-from .models import Agv
+from ..models import Agv
 
 # Extract cardinal direction constants directly from the Direction model
 NORTH, EAST, SOUTH, WEST = Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST

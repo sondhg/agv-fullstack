@@ -8,7 +8,7 @@ from typing import List
 from ..models import Agv
 from .algorithm4 import allocate_backup_nodes
 from .utils import is_node_reserved_by_others
-from .. import direction_to_turn
+from . import direction_to_turn
 
 
 def _clear_backup_nodes(agv: Agv) -> None:
