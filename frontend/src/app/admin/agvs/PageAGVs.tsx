@@ -91,10 +91,10 @@ export function PageAGVs() {
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => console.log("WebSocket connection established");
-
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
         if (data.type === "agv_update") {
           const updatedAgv = data.data;
 
@@ -112,6 +112,13 @@ export function PageAGVs() {
               // Add new AGV
               return [...prevAgvs, updatedAgv];
             }
+          });
+        } else if (data.type === "order_assignment_notification") {
+          // Handle order assignment notifications
+          const notificationData = data.data;
+          toast.success(notificationData.message, {
+            description: `Order ${notificationData.order_id} → AGV ${notificationData.agv_id}`,
+            duration: 5000,
           });
         }
       } catch (error) {
@@ -153,17 +160,18 @@ export function PageAGVs() {
   const handleClickActiveOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsOrderDialogOpen(true);
-  };  const handleDispatchOrders = async () => {
+  };
+  const handleDispatchOrders = async () => {
     try {
       setIsDispatching(true);
       const response = await dispatchOrdersToAGVs(selectedAlgorithm);
-      
+
       // Handle the new scheduling response structure
-      if (response && typeof response === 'object') {
+      if (response && typeof response === "object") {
         const scheduledCount = response.scheduled_orders?.length || 0;
         const immediateCount = response.immediate_orders?.length || 0;
         const totalCount = response.total_processed || 0;
-        
+
         if (totalCount > 0) {
           let message = "Orders processed successfully! ";
           if (scheduledCount > 0 && immediateCount > 0) {
@@ -175,12 +183,14 @@ export function PageAGVs() {
           }
           toast.success(message);
         } else {
-          toast.info("No orders were processed. Check that you have available orders and idle AGVs.");
+          toast.info(
+            "No orders were processed. Check that you have available orders and idle AGVs.",
+          );
         }
       } else {
         toast.success("Orders scheduled successfully");
       }
-      
+
       await refreshAgvData();
     } catch (error) {
       let errorMessage = "Failed to schedule orders";
@@ -267,7 +277,9 @@ export function PageAGVs() {
                   resetSelection={resetSelection}
                 />
               </div>
-              <div className="grid w-[28%] grid-rows-2 gap-4">                <Button
+              <div className="grid w-[28%] grid-rows-2 gap-4">
+                {" "}
+                <Button
                   onClick={handleDispatchOrders}
                   disabled={isDispatching}
                   className="w-full"
