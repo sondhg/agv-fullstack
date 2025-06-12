@@ -27,7 +27,7 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
 
     Args:
         motion_state (int): AGV motion state (0=IDLE, 1=MOVING, 2=WAITING)
-        next_node (int): Next node ID for AGV to move to
+        next_node (int or None): Next node ID for AGV to move to (None will be encoded as 0)
         direction_change (int): Direction change instruction
                               (0=GO_STRAIGHT, 1=TURN_AROUND, 
                                2=TURN_LEFT, 3=TURN_RIGHT, 4=STAY_STILL)
@@ -48,7 +48,9 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
     try:
         # Convert values to bytes
         motion_state_bytes = motion_state.to_bytes(1, byteorder='little')
-        next_node_bytes = next_node.to_bytes(2, byteorder='little')
+        # Handle None values for next_node (use 0 as default)
+        next_node_value = next_node if next_node is not None else 0
+        next_node_bytes = next_node_value.to_bytes(2, byteorder='little')
         direction_change_bytes = direction_change.to_bytes(
             1, byteorder='little')
 
