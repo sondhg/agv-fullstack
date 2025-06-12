@@ -51,12 +51,13 @@ class ControlPolicyController:
             # Default state is waiting (as per Algorithm 2, line 4)
             agv.motion_state = Agv.WAITING
 
-            # Check if task is completed
+            # ! Update travel information FIRST (line 6 in Algorithm 2)
+            # ! This must happen before checking task completion to ensure remaining_path is updated
+            update_travel_information(agv)
+
+            # Check if task is completed AFTER updating travel information
             if self._is_task_completed(agv):
                 return self._complete_agv_task(agv, agv.active_order)
-
-            # Update travel information (line 6 in Algorithm 2)
-            update_travel_information(agv)
 
             # Handle movement decision
             result_info = self._handle_movement_decision(agv)
@@ -81,8 +82,30 @@ class ControlPolicyController:
             return None
 
     def _is_task_completed(self, agv: Agv) -> bool:
-        """Check if AGV has reached its destination."""
-        return agv.current_node == agv.active_order.workstation_node
+        """
+        Check if AGV has completed its full journey by returning to its parking node.
+
+        Since the path is now parking_node → storage_node → workstation_node → parking_node,
+        the task is only completed when the AGV has returned to its parking node at the end
+        of the journey (not at the start).
+
+        We verify completion by checking:
+        1. AGV is currently at its parking node
+        2. AGV has no remaining path (indicating it has completed the full journey)
+        """
+        # Debug logging
+        print(f"DEBUG _is_task_completed AGV {agv.agv_id}:")
+        print(f"  current_node: {agv.current_node}")
+        print(f"  parking_node: {agv.active_order.parking_node}")
+        print(f"  remaining_path: {agv.remaining_path}")
+        print(
+            f"  at_parking_node: {agv.current_node == agv.active_order.parking_node}")
+        print(f"  no_remaining_path: {not agv.remaining_path}")
+
+        result = (agv.current_node == agv.active_order.parking_node and
+                  not agv.remaining_path)
+        print(f"  task_completed: {result}")
+        return result
 
     def _handle_movement_decision(self, agv: Agv) -> Dict:
         """Handle AGV movement decision based on current state and conditions."""
