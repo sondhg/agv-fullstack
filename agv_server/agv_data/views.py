@@ -4,14 +4,10 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from .models import Agv
 from .serializers import AGVSerializer
-from .services.algorithm1 import TaskDispatcher
 from django.db import transaction
 import schedule
-import time
 import datetime
-from . import mqtt
 from django.conf import settings
-import threading
 from order_data.models import Order
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -112,18 +108,11 @@ class DispatchOrdersToAGVsView(APIView):
     This replaces the functionality previously in the schedule_generate app.
     """
 
-    # Class variable to track if scheduler is running
-    _scheduler_running = False
-    _scheduler_thread = None
-
-    @classmethod
-    def _run_scheduler(cls):
-        """Run the scheduler in a background thread"""
-        cls._scheduler_running = True
-        while cls._scheduler_running:
-            schedule.run_pending()
-            time.sleep(1)
-        print("Order scheduler thread stopped")
+    def __init__(self):
+        super().__init__()
+        from .services.order_scheduler import OrderSchedulerService, OrderAssignmentService
+        self.scheduler_service = OrderSchedulerService()
+        self.assignment_service = OrderAssignmentService()
 
     def post(self, request):
         """
@@ -137,204 +126,65 @@ class DispatchOrdersToAGVsView(APIView):
             algorithm = request.data.get("algorithm", "dijkstra")
 
             # Get all unassigned orders with their scheduling information
-            unassigned_orders = Order.objects.filter(active_agv__isnull=True)
+            unassigned_orders = self.scheduler_service.get_unassigned_orders()
 
             if not unassigned_orders.exists():
-                return Response(
-                    {
-                        "success": False,
-                        "message": "No unassigned orders available to schedule."
-                    },
-                    status=status.HTTP_200_OK,
-                )
+                return self._create_no_orders_response()
 
             # Clear any existing scheduled jobs to avoid duplicates
             schedule.clear()
 
-            scheduled_orders = []
-            immediate_orders = []
-
-            for order in unassigned_orders:
-                # Check if there's an available AGV for this order's parking node
-                available_agv = Agv.objects.filter(
-                    motion_state=Agv.IDLE,
-                    preferred_parking_node=order.parking_node,
-                    active_order__isnull=True
-                ).first()
-
-                if not available_agv:
-                    print(
-                        f"No available AGV for order {order.order_id} at parking node {order.parking_node}")
-                    continue
-
-                # Combine order date and start time to create a datetime object
-                schedule_datetime = datetime.datetime.combine(
-                    order.order_date, order.start_time)
-                now = datetime.datetime.now()
-
-                if schedule_datetime > now:
-                    # Schedule order for future assignment
-                    def create_assignment_function(order_id_val, algorithm_val):
-                        def assign_order():
-                            self._assign_single_order(
-                                order_id_val, algorithm_val)
-                            return schedule.CancelJob  # Remove job after execution
-                        return assign_order
-
-                    # Schedule at specific time
-                    job = schedule.every().day.at(order.start_time.strftime("%H:%M:%S")).do(
-                        create_assignment_function(order.order_id, algorithm)
-                    )
-                    job.tag(f"order_{order.order_id}")
-
-                    scheduled_orders.append({
-                        "order_id": order.order_id,
-                        "agv_id": available_agv.agv_id,
-                        "parking_node": order.parking_node,
-                        "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-                        "seconds_from_now": (schedule_datetime - now).total_seconds()
-                    })
-                    print(
-                        f"Scheduled order {order.order_id} for AGV {available_agv.agv_id} at {order.start_time.strftime('%H:%M:%S')}")
-                else:
-                    # Assign order immediately if scheduled time has passed
-                    success = self._assign_single_order(
-                        order.order_id, algorithm)
-                    if success:
-                        immediate_orders.append({
-                            "order_id": order.order_id,
-                            "agv_id": available_agv.agv_id,
-                            "parking_node": order.parking_node,
-                            "status": "assigned_immediately"
-                        })
-                        print(
-                            f"Assigned order {order.order_id} to AGV {available_agv.agv_id} immediately (scheduled time already passed)")
-
-            # Start the scheduler thread if not already running and we have scheduled orders
-            if not DispatchOrdersToAGVsView._scheduler_running and scheduled_orders:
-                if DispatchOrdersToAGVsView._scheduler_thread and DispatchOrdersToAGVsView._scheduler_thread.is_alive():
-                    # Reuse existing thread
-                    pass
-                else:
-                    # Create a new thread
-                    DispatchOrdersToAGVsView._scheduler_thread = threading.Thread(
-                        target=DispatchOrdersToAGVsView._run_scheduler,
-                        daemon=True,
-                        name="order_scheduler_thread"
-                    )
-                    DispatchOrdersToAGVsView._scheduler_thread.start()
-
-            total_processed = len(scheduled_orders) + len(immediate_orders)
-
-            return Response(
-                {
-                    "success": True,
-                    "message": f"Successfully scheduled {len(scheduled_orders)} orders and immediately assigned {len(immediate_orders)} orders",
-                    "scheduled_orders": scheduled_orders,
-                    "immediate_orders": immediate_orders,
-                    "total_processed": total_processed
-                },
-                status=status.HTTP_200_OK,
+            # Process orders for scheduling or immediate assignment
+            scheduled_orders, immediate_orders = self.scheduler_service.process_orders_for_scheduling(
+                unassigned_orders, algorithm, self.assignment_service.assign_single_order
             )
 
+            # Start scheduler if needed
+            self.scheduler_service.start_scheduler_if_needed(scheduled_orders)
+
+            return self._create_success_response(scheduled_orders, immediate_orders)
+
         except Exception as e:
-            import traceback
-            traceback_str = traceback.format_exc()
-            return Response(
-                {
-                    "success": False,
-                    "message": f"Error scheduling orders: {str(e)}",
-                    "details": traceback_str
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return self._create_error_response(e)
 
-    def _assign_single_order(self, order_id, algorithm="dijkstra"):
-        """
-        Assign a single order to an available AGV.
+    def _create_no_orders_response(self):
+        """Create response for when no unassigned orders are available."""
+        return Response(
+            {
+                "success": False,
+                "message": "No unassigned orders available to schedule."
+            },
+            status=status.HTTP_200_OK,
+        )
 
-        Args:
-            order_id: The ID of the order to assign
-            algorithm: The pathfinding algorithm to use
+    def _create_success_response(self, scheduled_orders, immediate_orders):
+        """Create success response with order scheduling results."""
+        total_processed = len(scheduled_orders) + len(immediate_orders)
 
-        Returns:
-            bool: True if assignment was successful, False otherwise
-        """
-        try:
-            # Get the order
-            order = Order.objects.get(order_id=order_id)
+        return Response(
+            {
+                "success": True,
+                "message": f"Successfully scheduled {len(scheduled_orders)} orders and immediately assigned {len(immediate_orders)} orders",
+                "scheduled_orders": scheduled_orders,
+                "immediate_orders": immediate_orders,
+                "total_processed": total_processed
+            },
+            status=status.HTTP_200_OK,
+        )
 
-            # Check if order is still unassigned
-            if hasattr(order, 'active_agv') and order.active_agv:
-                print(
-                    f"Order {order_id} is already assigned to AGV {order.active_agv.agv_id}")
-                return False
+    def _create_error_response(self, exception):
+        """Create error response with exception details."""
+        import traceback
+        traceback_str = traceback.format_exc()
 
-            # Find an available AGV for this order
-            available_agv = Agv.objects.filter(
-                motion_state=Agv.IDLE,
-                preferred_parking_node=order.parking_node,
-                active_order__isnull=True
-            ).first()
-
-            if not available_agv:
-                print(
-                    f"No available AGV for order {order_id} at parking node {order.parking_node}")
-                return False            # Use TaskDispatcher to process this single order
-            dispatcher = TaskDispatcher()
-
-            # Get the pathfinding algorithm
-            from .pathfinding.factory import PathfindingFactory
-            from .services.order_processor import OrderProcessor
-
-            nodes, connections = dispatcher._validate_map_data()
-            pathfinding_algorithm = PathfindingFactory.get_algorithm(
-                algorithm, nodes, connections)
-            if not pathfinding_algorithm:
-                print(f"Invalid pathfinding algorithm: {algorithm}")
-                return False
-
-            order_processor = OrderProcessor(pathfinding_algorithm)
-
-            # Validate order data
-            if not order_processor.validate_order_data(order, nodes):
-                print(f"Invalid order data for order {order_id}")
-                return False
-
-            # Process the order
-            order_data = order_processor.process_order(order)
-            if not order_data:
-                print(f"Failed to process order {order_id}")
-                return False
-
-            # For now, set empty common nodes (would need to recalculate with other active orders)
-            order_data["common_nodes"] = []
-            # Update AGV with order data
-            order_data["adjacent_common_nodes"] = []
-            success = order_processor.update_agv_with_order(
-                available_agv, order_data)
-            if success:
-                # Update AGV state to waiting
-                available_agv.motion_state = Agv.WAITING
-                available_agv.save()
-
-                # Send WebSocket notification instead of just printing
-                message = f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}"
-                send_order_assignment_notification(
-                    order_id, available_agv.agv_id, message)
-                print(message)  # Keep console logging for debugging
-                return True
-            else:
-                print(
-                    f"Failed to update AGV {available_agv.agv_id} with order {order_id}")
-                return False
-
-        except Order.DoesNotExist:
-            print(f"Order {order_id} not found")
-            return False
-        except Exception as e:
-            print(f"Error assigning order {order_id}: {str(e)}")
-            return False
+        return Response(
+            {
+                "success": False,
+                "message": f"Error scheduling orders: {str(exception)}",
+                "details": traceback_str
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 class ResetAGVsView(APIView):
@@ -407,31 +257,6 @@ class ResetAGVsView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
 
 
-def send_agv_hello_message(agv_id):
-    """
-    Send a "Hey" message to the MQTT broker topic agvhello/{agv_id}.
-
-    Args:
-        agv_id: The ID of the AGV to send the hello message to
-    """
-    try:
-        topic = f"{settings.MQTT_TOPIC_AGVHELLO}/{agv_id}"
-
-        frame = bytearray()
-        HELLO_FRAME = 0x01
-        frame.append(HELLO_FRAME)
-
-        message = bytes(frame)
-
-        # Use the global MQTT client from the mqtt module
-        mqtt.client.publish(topic, message)
-        print(
-            f"Successfully sent MQTT message {message} to topic '{topic}' for AGV {agv_id}")
-
-    except Exception as e:
-        print(f"Error sending MQTT hello message to AGV {agv_id}: {str(e)}")
-
-
 class ScheduleOrderHellosView(APIView):
     """
     API endpoint to schedule MQTT messages based on their order start_time and order_date.
@@ -440,82 +265,40 @@ class ScheduleOrderHellosView(APIView):
     2. Schedule "Hey" messages to be sent to MQTT topic "agvhello/{agv_id}" at the time that matches start_time and order_date
     """
 
-    # Class variable to track if scheduler is running
-    _scheduler_running = False
-    _scheduler_thread = None
-
-    @classmethod
-    def _run_scheduler(cls):
-        """Run the scheduler in a background thread"""
-        cls._scheduler_running = True
-        while cls._scheduler_running:
-            schedule.run_pending()
-            time.sleep(1)
-        print("Scheduler thread stopped")
+    def __init__(self):
+        super().__init__()
+        from .services.hello_scheduler import HelloSchedulerService
+        self.hello_scheduler_service = HelloSchedulerService()
 
     def get(self, request):
-        # Get all AGVs with active orders
-        agvs_with_orders = Agv.objects.filter(
-            active_order__isnull=False)
+        """
+        Schedule MQTT hello messages for AGVs with active orders.
 
-        # Clear any existing scheduled jobs to avoid duplicates
-        schedule.clear()
+        Returns:
+            Response: Information about scheduled hello messages.
+        """
+        try:
+            # Get all AGVs with active orders
+            agvs_with_orders = self.hello_scheduler_service.get_agvs_with_active_orders()
 
-        scheduled_messages = []
+            # Clear any existing scheduled jobs to avoid duplicates
+            schedule.clear()
 
-        for agv in agvs_with_orders:
-            agv_id = agv.agv_id
-            # Get the active order for this AGV
-            active_order = agv.active_order
-            # Get the order date and start time
-            order_date = active_order.order_date
-            # Combine date and time to create a datetime object
-            start_time = active_order.start_time
-            schedule_datetime = datetime.datetime.combine(
-                order_date, start_time)
+            # Process AGVs for hello message scheduling
+            scheduled_messages = self.hello_scheduler_service.process_agvs_for_hello_scheduling(
+                agvs_with_orders)
 
-            # Only schedule if the time is in the future
-            now = datetime.datetime.now()
-            if schedule_datetime > now:
-                # Create a closure to capture the agv_id correctly
-                def create_hello_function(agv_id_val):
-                    def send_hello():
-                        send_agv_hello_message(agv_id_val)
-                        # Remove this job after it runs once
-                        return schedule.CancelJob
-                    return send_hello
+            # Start scheduler if needed
+            self.hello_scheduler_service.start_scheduler_if_needed(
+                scheduled_messages)
 
-                # Schedule at specific time (hour, minute, second) rather than with a delay
-                job = schedule.every().day.at(start_time.strftime(
-                    "%H:%M:%S")).do(create_hello_function(agv_id))
-                job.tag(f"agv_{agv_id}")
+            return self._create_success_response(scheduled_messages)
 
-                scheduled_messages.append({
-                    "agv_id": agv_id,
-                    "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-                    "seconds_from_now": (schedule_datetime - now).total_seconds()})
-                print(
-                    f"Scheduled MQTT message for AGV {agv_id} at {start_time.strftime('%H:%M:%S')}")
-            else:
-                # If the time is in the past, send MQTT message immediately
-                send_agv_hello_message(agv_id)
-                print(
-                    f"Sent immediate MQTT hello message to AGV {agv_id} (scheduled time already passed)")
+        except Exception as e:
+            return self._create_error_response(e)
 
-        # Start the scheduler thread if not already running
-
-        if not ScheduleOrderHellosView._scheduler_running and scheduled_messages:
-            if ScheduleOrderHellosView._scheduler_thread and ScheduleOrderHellosView._scheduler_thread.is_alive():
-                # Reuse existing thread
-                pass
-            else:                # Create a new thread
-                ScheduleOrderHellosView._scheduler_thread = threading.Thread(
-                    target=ScheduleOrderHellosView._run_scheduler,
-                    daemon=True,
-                    name="scheduler_thread"
-                )
-                ScheduleOrderHellosView._scheduler_thread.start()
-
+    def _create_success_response(self, scheduled_messages):
+        """Create success response with hello message scheduling results."""
         return Response(
             {
                 "success": True,
@@ -523,4 +306,18 @@ class ScheduleOrderHellosView(APIView):
                 "scheduled_messages": scheduled_messages
             },
             status=status.HTTP_200_OK,
+        )
+
+    def _create_error_response(self, exception):
+        """Create error response with exception details."""
+        import traceback
+        traceback_str = traceback.format_exc()
+
+        return Response(
+            {
+                "success": False,
+                "message": f"Error scheduling hello messages: {str(exception)}",
+                "details": traceback_str
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
