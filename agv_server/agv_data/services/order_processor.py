@@ -17,8 +17,7 @@ class OrderProcessor:
         Initialize the processor with a pathfinding algorithm.
 
         Args:
-            pathfinding_algorithm_instance: Instance of a pathfinding algorithm
-        """
+            pathfinding_algorithm_instance: Instance of a pathfinding algorithm        """
         self.pathfinding_algorithm = pathfinding_algorithm_instance
 
     def _compute_path(self, order: Order) -> Optional[List[int]]:
@@ -29,7 +28,7 @@ class OrderProcessor:
             order (Order): The order to compute path for.
 
         Returns:
-            Optional[List[int]]: Computed path from parking → storage → workstation.
+            Optional[List[int]]: Computed path from parking → storage → workstation → parking.
             None if no valid path found.
         """
         # Find path from parking to storage
@@ -42,8 +41,21 @@ class OrderProcessor:
             order.storage_node, order.workstation_node
         )
 
-        # Combine paths, avoiding duplicate storage_node
-        return path_to_storage + path_to_workstation[1:] if path_to_storage and path_to_workstation else None
+        # Find path from workstation back to parking
+        path_to_parking = self.pathfinding_algorithm.find_shortest_path(
+            order.workstation_node, order.parking_node
+        )
+
+        # Combine all paths, avoiding duplicate nodes at connection points
+        if path_to_storage and path_to_workstation and path_to_parking:
+            # Combine: parking → storage → workstation → parking
+            # Remove duplicate storage_node when connecting to workstation path
+            # Remove duplicate workstation_node when connecting to return path
+            complete_path = path_to_storage + \
+                path_to_workstation[1:] + path_to_parking[1:]
+            return complete_path
+
+        return None
 
     def process_order(self, order: Order) -> Optional[Dict]:
         """
