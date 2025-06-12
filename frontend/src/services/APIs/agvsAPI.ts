@@ -22,7 +22,24 @@ const bulkDeleteAGVs = async (agvIds: number[]): Promise<void> => {
 
 const dispatchOrdersToAGVs = async (
   algorithm: string = "dijkstra",
-): Promise<void> => {
+): Promise<{
+  success: boolean;
+  message: string;
+  scheduled_orders?: Array<{
+    order_id: number;
+    agv_id: number;
+    parking_node: number;
+    scheduled_time: string;
+    seconds_from_now: number;
+  }>;
+  immediate_orders?: Array<{
+    order_id: number;
+    agv_id: number;
+    parking_node: number;
+    status: string;
+  }>;
+  total_processed?: number;
+}> => {
   return apiService.post(API_ENDPOINTS.agvs.dispatch, { algorithm });
 };
 

@@ -13,6 +13,7 @@ import datetime
 from . import mqtt
 from django.conf import settings
 import threading
+from order_data.models import Order
 
 
 class ListAGVsView(ListAPIView):
@@ -76,57 +77,218 @@ class BulkDeleteAGVsView(APIView):
 
 class DispatchOrdersToAGVsView(APIView):
     """
-    API endpoint to process orders and assign them to available AGVs.
+    API endpoint to schedule orders to be assigned to available AGVs at their specified times.
     This replaces the functionality previously in the schedule_generate app.
     """
 
+    # Class variable to track if scheduler is running
+    _scheduler_running = False
+    _scheduler_thread = None
+
+    @classmethod
+    def _run_scheduler(cls):
+        """Run the scheduler in a background thread"""
+        cls._scheduler_running = True
+        while cls._scheduler_running:
+            schedule.run_pending()
+            time.sleep(1)
+        print("Order scheduler thread stopped")
+
     def post(self, request):
         """
-        Process available orders and assign them to idle AGVs.
+        Schedule orders to be assigned to idle AGVs at their specified start_time and order_date.
 
         Returns:
-            Response: Information about processed orders and assigned AGVs.
+            Response: Information about scheduled orders.
         """
         try:
-            # Initialize the task dispatcher (Algorithm 1)
-            dispatcher = TaskDispatcher()
-
-            # Dispatch tasks (orders) to available AGVs
-            processed_orders = dispatcher.dispatch_tasks()
-
-            if processed_orders:
-                return Response(
-                    {
-                        "success": True,
-                        "message": SuccessMessages.ORDERS_PROCESSED.format(len(processed_orders)),
-                        "processed_orders": processed_orders
-                    },
-                    status=status.HTTP_200_OK,
-                )
-            else:
+            # Get the algorithm parameter (defaults to dijkstra)
+            algorithm = request.data.get("algorithm", "dijkstra")
+            
+            # Get all unassigned orders with their scheduling information
+            unassigned_orders = Order.objects.filter(active_agv__isnull=True)
+            
+            if not unassigned_orders.exists():
                 return Response(
                     {
                         "success": False,
-                        "message": "No orders were processed. Check that you have available orders and idle AGVs."
+                        "message": "No unassigned orders available to schedule."
                     },
                     status=status.HTTP_200_OK,
                 )
-        except ValueError as e:
+
+            # Clear any existing scheduled jobs to avoid duplicates
+            schedule.clear()
+
+            scheduled_orders = []
+            immediate_orders = []
+
+            for order in unassigned_orders:
+                # Check if there's an available AGV for this order's parking node
+                available_agv = Agv.objects.filter(
+                    motion_state=Agv.IDLE,
+                    preferred_parking_node=order.parking_node,
+                    active_order__isnull=True
+                ).first()
+
+                if not available_agv:
+                    print(f"No available AGV for order {order.order_id} at parking node {order.parking_node}")
+                    continue
+
+                # Combine order date and start time to create a datetime object
+                schedule_datetime = datetime.datetime.combine(order.order_date, order.start_time)
+                now = datetime.datetime.now()
+
+                if schedule_datetime > now:
+                    # Schedule order for future assignment
+                    def create_assignment_function(order_id_val, algorithm_val):
+                        def assign_order():
+                            self._assign_single_order(order_id_val, algorithm_val)
+                            return schedule.CancelJob  # Remove job after execution
+                        return assign_order
+
+                    # Schedule at specific time
+                    job = schedule.every().day.at(order.start_time.strftime("%H:%M:%S")).do(
+                        create_assignment_function(order.order_id, algorithm)
+                    )
+                    job.tag(f"order_{order.order_id}")
+
+                    scheduled_orders.append({
+                        "order_id": order.order_id,
+                        "agv_id": available_agv.agv_id,
+                        "parking_node": order.parking_node,
+                        "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+                        "seconds_from_now": (schedule_datetime - now).total_seconds()
+                    })
+                    print(f"Scheduled order {order.order_id} for AGV {available_agv.agv_id} at {order.start_time.strftime('%H:%M:%S')}")
+                else:
+                    # Assign order immediately if scheduled time has passed
+                    success = self._assign_single_order(order.order_id, algorithm)
+                    if success:
+                        immediate_orders.append({
+                            "order_id": order.order_id,
+                            "agv_id": available_agv.agv_id,
+                            "parking_node": order.parking_node,
+                            "status": "assigned_immediately"
+                        })
+                        print(f"Assigned order {order.order_id} to AGV {available_agv.agv_id} immediately (scheduled time already passed)")
+
+            # Start the scheduler thread if not already running and we have scheduled orders
+            if not DispatchOrdersToAGVsView._scheduler_running and scheduled_orders:
+                if DispatchOrdersToAGVsView._scheduler_thread and DispatchOrdersToAGVsView._scheduler_thread.is_alive():
+                    # Reuse existing thread
+                    pass
+                else:
+                    # Create a new thread
+                    DispatchOrdersToAGVsView._scheduler_thread = threading.Thread(
+                        target=DispatchOrdersToAGVsView._run_scheduler,
+                        daemon=True,
+                        name="order_scheduler_thread"
+                    )
+                    DispatchOrdersToAGVsView._scheduler_thread.start()
+
+            total_processed = len(scheduled_orders) + len(immediate_orders)
+            
             return Response(
-                {"success": False, "message": str(e)},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    "success": True,
+                    "message": f"Successfully scheduled {len(scheduled_orders)} orders and immediately assigned {len(immediate_orders)} orders",
+                    "scheduled_orders": scheduled_orders,
+                    "immediate_orders": immediate_orders,
+                    "total_processed": total_processed
+                },
+                status=status.HTTP_200_OK,
             )
+
         except Exception as e:
             import traceback
             traceback_str = traceback.format_exc()
             return Response(
                 {
                     "success": False,
-                    "message": f"Error processing orders: {str(e)}",
+                    "message": f"Error scheduling orders: {str(e)}",
                     "details": traceback_str
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    def _assign_single_order(self, order_id, algorithm="dijkstra"):
+        """
+        Assign a single order to an available AGV.
+        
+        Args:
+            order_id: The ID of the order to assign
+            algorithm: The pathfinding algorithm to use
+            
+        Returns:
+            bool: True if assignment was successful, False otherwise
+        """
+        try:
+            # Get the order
+            order = Order.objects.get(order_id=order_id)
+            
+            # Check if order is still unassigned
+            if hasattr(order, 'active_agv') and order.active_agv:
+                print(f"Order {order_id} is already assigned to AGV {order.active_agv.agv_id}")
+                return False
+
+            # Find an available AGV for this order
+            available_agv = Agv.objects.filter(
+                motion_state=Agv.IDLE,
+                preferred_parking_node=order.parking_node,
+                active_order__isnull=True
+            ).first()
+
+            if not available_agv:
+                print(f"No available AGV for order {order_id} at parking node {order.parking_node}")
+                return False            # Use TaskDispatcher to process this single order
+            dispatcher = TaskDispatcher()
+            
+            # Get the pathfinding algorithm
+            from .pathfinding.factory import PathfindingFactory
+            from .services.order_processor import OrderProcessor
+            
+            nodes, connections = dispatcher._validate_map_data()
+            pathfinding_algorithm = PathfindingFactory.get_algorithm(algorithm, nodes, connections)
+            if not pathfinding_algorithm:
+                print(f"Invalid pathfinding algorithm: {algorithm}")
+                return False
+
+            order_processor = OrderProcessor(pathfinding_algorithm)
+            
+            # Validate order data
+            if not order_processor.validate_order_data(order, nodes):
+                print(f"Invalid order data for order {order_id}")
+                return False
+
+            # Process the order
+            order_data = order_processor.process_order(order)
+            if not order_data:
+                print(f"Failed to process order {order_id}")
+                return False
+
+            # For now, set empty common nodes (would need to recalculate with other active orders)
+            order_data["common_nodes"] = []
+            order_data["adjacent_common_nodes"] = []
+
+            # Update AGV with order data
+            success = order_processor.update_agv_with_order(available_agv, order_data)
+            if success:
+                # Update AGV state to waiting
+                available_agv.motion_state = Agv.WAITING
+                available_agv.save()
+                print(f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}")
+                return True
+            else:
+                print(f"Failed to update AGV {available_agv.agv_id} with order {order_id}")
+                return False
+
+        except Order.DoesNotExist:
+            print(f"Order {order_id} not found")
+            return False
+        except Exception as e:
+            print(f"Error assigning order {order_id}: {str(e)}")
+            return False
 
 
 class ResetAGVsView(APIView):

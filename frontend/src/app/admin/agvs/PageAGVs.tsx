@@ -153,27 +153,51 @@ export function PageAGVs() {
   const handleClickActiveOrder = (order: Order) => {
     setSelectedOrder(order);
     setIsOrderDialogOpen(true);
-  };
-  const handleDispatchOrders = async () => {
+  };  const handleDispatchOrders = async () => {
     try {
       setIsDispatching(true);
-      await dispatchOrdersToAGVs(selectedAlgorithm);
-      toast.success("Orders dispatched successfully");
+      const response = await dispatchOrdersToAGVs(selectedAlgorithm);
+      
+      // Handle the new scheduling response structure
+      if (response && typeof response === 'object') {
+        const scheduledCount = response.scheduled_orders?.length || 0;
+        const immediateCount = response.immediate_orders?.length || 0;
+        const totalCount = response.total_processed || 0;
+        
+        if (totalCount > 0) {
+          let message = "Orders processed successfully! ";
+          if (scheduledCount > 0 && immediateCount > 0) {
+            message += `Scheduled ${scheduledCount} orders for future execution and assigned ${immediateCount} orders immediately.`;
+          } else if (scheduledCount > 0) {
+            message += `Scheduled ${scheduledCount} orders for future execution.`;
+          } else if (immediateCount > 0) {
+            message += `Assigned ${immediateCount} orders immediately.`;
+          }
+          toast.success(message);
+        } else {
+          toast.info("No orders were processed. Check that you have available orders and idle AGVs.");
+        }
+      } else {
+        toast.success("Orders scheduled successfully");
+      }
+      
       await refreshAgvData();
     } catch (error) {
-      let errorMessage = "Failed to dispatch orders";
+      let errorMessage = "Failed to schedule orders";
 
       if (error instanceof Response) {
         try {
           const errorData = await error.json();
-          errorMessage = errorData.error || errorMessage;
+          errorMessage = errorData.message || errorData.error || errorMessage;
         } catch {
           // If error parsing fails, use default message
         }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
 
       toast.error(errorMessage);
-      console.error("Error dispatching orders:", error);
+      console.error("Error scheduling orders:", error);
     } finally {
       setIsDispatching(false);
     }
@@ -243,16 +267,15 @@ export function PageAGVs() {
                   resetSelection={resetSelection}
                 />
               </div>
-              <div className="grid w-[28%] grid-rows-2 gap-4">
-                <Button
+              <div className="grid w-[28%] grid-rows-2 gap-4">                <Button
                   onClick={handleDispatchOrders}
                   disabled={isDispatching}
                   className="w-full"
                 >
                   <CalendarPlus className="mr-2 h-4 w-4" />
                   {isDispatching
-                    ? "Dispatching..."
-                    : "Dispatch orders to AGVs"}{" "}
+                    ? "Scheduling..."
+                    : "Schedule orders to AGVs"}{" "}
                 </Button>
                 <AlgorithmSelect
                   selectedAlgorithm={selectedAlgorithm}
