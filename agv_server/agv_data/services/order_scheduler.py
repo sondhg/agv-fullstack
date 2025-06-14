@@ -319,21 +319,39 @@ class OrderAssignmentService:
                 print(f"Failed to process order {order.order_id}")
                 return False
 
-            # Set common nodes (empty for now - would need recalculation with other active orders)
-            order_data["common_nodes"] = []
-            order_data["adjacent_common_nodes"] = []
-
             # Update AGV with order data
             success = order_processor.update_agv_with_order(agv, order_data)
-            if success:
-                # Update AGV state to waiting
-                agv.motion_state = Agv.WAITING
-                agv.save()
-                return True
-            else:
+            if not success:
                 print(
                     f"Failed to update AGV {agv.agv_id} with order {order.order_id}")
                 return False
+
+            # At this point, the AGV has been assigned the order but common nodes haven't been calculated
+
+            # Calculate common nodes for all AGVs with active orders
+            from .common_nodes import recalculate_all_common_nodes
+
+            # Update AGV state to waiting
+            agv.motion_state = Agv.WAITING
+            agv.save()
+
+            # Recalculate common nodes for all AGVs (including the newly assigned AGV)
+            active_agvs_count = Agv.objects.filter(
+                active_order__isnull=False).count()
+
+            if active_agvs_count > 1:
+                print(
+                    f"Recalculating common nodes for all AGVs after assigning order {order.order_id} to AGV {agv.agv_id}")
+                recalculate_all_common_nodes()
+            else:
+                # If this is the only active AGV, ensure its common_nodes are empty
+                agv.common_nodes = []
+                agv.adjacent_common_nodes = []
+                agv.save()
+                print(
+                    f"No other active AGVs, cleared common nodes for AGV {agv.agv_id}")
+
+            return True
 
         except Exception as e:
             print(

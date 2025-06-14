@@ -2,7 +2,7 @@
 Order processing module for the DSPA algorithm.
 This replaces the schedule generator module from the schedule_generate app.
 """
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from order_data.models import Order
 from ..models import Agv
 
@@ -20,16 +20,19 @@ class OrderProcessor:
             pathfinding_algorithm_instance: Instance of a pathfinding algorithm        """
         self.pathfinding_algorithm = pathfinding_algorithm_instance
 
-    def _compute_path(self, order: Order) -> Optional[List[int]]:
+    def _compute_path(self, order: Order) -> Tuple[Optional[List[int]], Optional[List[int]]]:
         """
         Compute shortest path for an order using the pathfinding algorithm.
+        Separates the path into outbound and return segments.
 
         Args:
             order (Order): The order to compute path for.
 
         Returns:
-            Optional[List[int]]: Computed path from parking → storage → workstation → parking.
-            None if no valid path found.
+            Tuple[Optional[List[int]], Optional[List[int]]]: Tuple of computed paths:
+            (outbound_path from parking → storage → workstation,
+             return_path from workstation → parking)
+            None for either path if it could not be computed.
         """
         # Find path from parking to storage
         path_to_storage = self.pathfinding_algorithm.find_shortest_path(
@@ -46,16 +49,18 @@ class OrderProcessor:
             order.workstation_node, order.parking_node
         )
 
-        # Combine all paths, avoiding duplicate nodes at connection points
-        if path_to_storage and path_to_workstation and path_to_parking:
-            # Combine: parking → storage → workstation → parking
-            # Remove duplicate storage_node when connecting to workstation path
-            # Remove duplicate workstation_node when connecting to return path
-            complete_path = path_to_storage + \
-                path_to_workstation[1:] + path_to_parking[1:]
-            return complete_path
+        # Check if all paths were found successfully
+        if not all([path_to_storage, path_to_workstation, path_to_parking]):
+            return None, None
 
-        return None
+        # Combine outbound path: parking → storage → workstation
+        # Remove duplicate storage_node when connecting to workstation path
+        outbound_path = path_to_storage + path_to_workstation[1:]
+
+        # Return path is simply workstation → parking
+        return_path = path_to_parking
+
+        return outbound_path, return_path
 
     def process_order(self, order: Order) -> Optional[Dict]:
         """
@@ -67,10 +72,13 @@ class OrderProcessor:
         Returns:
             Optional[Dict]: Generated order data dictionary or None if path not found
         """
-        # Find shortest route path P_i^j
-        path = self._compute_path(order)
-        if not path:
+        # Find shortest route paths for outbound and return journeys
+        outbound_path, return_path = self._compute_path(order)
+        if not outbound_path or not return_path:
             return None
+
+        # Store complete path for reference (used by UI and for history)
+        complete_path = outbound_path + return_path[1:]
 
         # Prepare order process data
         order_data = {
@@ -80,8 +88,11 @@ class OrderProcessor:
             "parking_node": order.parking_node,
             "storage_node": order.storage_node,
             "workstation_node": order.workstation_node,
-            "initial_path": path,
-            "remaining_path": path,
+            "initial_path": complete_path,
+            "outbound_path": outbound_path,
+            "return_path": return_path,
+            # Initially, remaining_path is the outbound path
+            "remaining_path": outbound_path,
             "common_nodes": [],  # Will be calculated later in process_tasks
             "adjacent_common_nodes": []  # Will be calculated later in process_tasks
         }
@@ -101,14 +112,20 @@ class OrderProcessor:
         """
         try:
             # Get the order instance
-            order = Order.objects.get(order_id=order_data["order_id"])
-
             # Update AGV with order data
+            order = Order.objects.get(order_id=order_data["order_id"])
             agv.active_order = order
             agv.initial_path = order_data["initial_path"]
+            # Initially the outbound path
             agv.remaining_path = order_data["remaining_path"]
             agv.common_nodes = order_data["common_nodes"]
             agv.adjacent_common_nodes = order_data["adjacent_common_nodes"]
+            agv.journey_phase = Agv.OUTBOUND  # Start with the outbound journey
+
+            # Store outbound and return paths in model fields
+            agv.outbound_path = order_data["outbound_path"]
+            agv.return_path = order_data["return_path"]
+
             agv.save()
 
             return True
