@@ -156,7 +156,9 @@ class TaskDispatcher:
             current_order["adjacent_common_nodes"] = sequential_common_nodes
 
         # Finally, update all AGVs with their order data
-        processed_orders = []
+        processed_orders = []        # Keep track of successfully assigned AGVs and their paths for updating common nodes
+        newly_assigned_agvs = []
+        
         for order_data in orders_data_list:
             assigned_agv = order_data.pop('assigned_agv')
             success = self.order_processor.update_agv_with_order(
@@ -167,7 +169,41 @@ class TaskDispatcher:
                     "agv_id": assigned_agv.agv_id,
                     "initial_path": order_data["initial_path"],
                     "common_nodes": order_data["common_nodes"],
-                    "adjacent_common_nodes": order_data["adjacent_common_nodes"]
+                    "adjacent_common_nodes": order_data["adjacent_common_nodes"]                })
+                
+                # Store successful assignments for later common nodes update
+                newly_assigned_agvs.append({
+                    "agv_id": assigned_agv.agv_id,
+                    "remaining_path": order_data["remaining_path"]
                 })
+                
+                # Log the successful assignment
+                print(f"Successfully assigned order {order_data['order_id']} to AGV {assigned_agv.agv_id}")
 
+        # After all new orders are assigned, update the common nodes of existing AGVs
+        # This ensures that AGVs assigned earlier will have their common_nodes updated
+        # when new AGVs are assigned with potentially overlapping paths
+        self._update_existing_agvs_common_nodes(newly_assigned_agvs)        
         return processed_orders
+        
+    def _update_existing_agvs_common_nodes(self, newly_assigned_agvs):
+        """
+        Update common nodes of existing AGVs when new orders are assigned.
+        
+        This solves the scenario where:
+        1. AGV1 is assigned an order at time T1
+        2. AGV2 is assigned an order at time T2 > T1
+        3. AGV1's common_nodes needs to be updated to include shared points with AGV2
+        
+        Args:
+            newly_assigned_agvs (list): List of dictionaries with agv_id and remaining_path of newly assigned AGVs
+        """
+        if not newly_assigned_agvs:
+            return
+            
+        from .common_nodes import recalculate_all_common_nodes
+        
+        # After assigning new orders, recalculate common nodes for ALL active AGVs
+        # This ensures that existing AGVs have their common_nodes updated correctly
+        print("Recalculating common nodes for all active AGVs after new order assignments")
+        recalculate_all_common_nodes()
