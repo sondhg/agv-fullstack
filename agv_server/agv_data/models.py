@@ -21,6 +21,16 @@ class Agv(models.Model):
         WAITING: "Waiting"
     }
 
+    # Define choices for journey phase
+    OUTBOUND = 0  # Moving from parking → storage → workstation
+    RETURN = 1    # Moving from workstation → parking
+
+    # Human readable names
+    JOURNEY_PHASE_CHOICES = {
+        OUTBOUND: "Outbound",
+        RETURN: "Return"
+    }
+
     # Define choices for direction_change
     # Actual integer values to be set on model
     GO_STRAIGHT = 0  # Go straight
@@ -79,6 +89,12 @@ class Agv(models.Model):
         help_text="AGV state (SA^i) as defined in Definition 7"
     )
 
+    journey_phase = models.IntegerField(
+        choices=JOURNEY_PHASE_CHOICES,
+        default=OUTBOUND,
+        help_text="Whether AGV is on outbound (parking→storage→workstation) or return (workstation→parking) journey"
+    )
+
     # DSPA algorithm specific fields from Algorithm 2
     spare_flag = models.BooleanField(
         default=False,
@@ -96,6 +112,14 @@ class Agv(models.Model):
     )
     remaining_path = models.JSONField(
         help_text="Pi_i: Remaining points to be visited by AGV i.",
+        default=list
+    )
+    outbound_path = models.JSONField(
+        help_text="Path from parking node to workstation node.",
+        default=list
+    )
+    return_path = models.JSONField(
+        help_text="Path from workstation node back to parking node.",
         default=list
     )
     common_nodes = models.JSONField(
