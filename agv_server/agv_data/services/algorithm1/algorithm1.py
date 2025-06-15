@@ -12,9 +12,9 @@ from typing import List, Dict, Optional, Tuple
 from django.db.models import QuerySet
 from order_data.models import Order
 from map_data.models import Direction, Connection
-from ..models import Agv
-from ..constants import ErrorMessages
-from ..pathfinding.factory import PathfindingFactory
+from ...models import Agv
+from ...constants import ErrorMessages
+from ...pathfinding.factory import PathfindingFactory
 from .common_nodes import CommonNodesCalculator
 from .order_processor import OrderProcessor
 
@@ -234,7 +234,7 @@ class TaskDispatcher:
             if success:
                 # Send notification with common nodes information
                 try:
-                    from ..views import send_order_assignment_notification
+                    from ...views import send_order_assignment_notification
                     # Refresh AGV from database to get updated common_nodes
                     available_agv.refresh_from_db()
                     message = f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}"

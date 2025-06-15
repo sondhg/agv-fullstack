@@ -48,7 +48,7 @@ def send_order_assignment_notification(order_id, agv_id, message, additional_dat
                 "agv_details": agv_data
             }
         }
-        
+
         # Add any additional data if provided
         if additional_data:
             notification_data["data"].update(additional_data)
@@ -132,7 +132,7 @@ class DispatchOrdersToAGVsView(APIView):
 
     def __init__(self):
         super().__init__()
-        from .services.algorithm1 import TaskDispatcher
+        from .services.algorithm1.algorithm1 import TaskDispatcher
         self.task_dispatcher = TaskDispatcher()
 
     def post(self, request):
@@ -159,14 +159,17 @@ class DispatchOrdersToAGVsView(APIView):
                 algorithm)
 
             # Start scheduler if needed
-            self.task_dispatcher.start_scheduler_if_needed(scheduled_orders)            # Recalculate common nodes for all active AGVs after immediate assignments
+            # Recalculate common nodes for all active AGVs after immediate assignments
+            self.task_dispatcher.start_scheduler_if_needed(scheduled_orders)
             if immediate_orders:
                 try:
-                    from .services.common_nodes import recalculate_all_common_nodes
+                    from .services.algorithm1.common_nodes import recalculate_all_common_nodes
                     recalculate_all_common_nodes(log_summary=True)
-                    print(f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments")
+                    print(
+                        f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments")
                 except Exception as e:
-                    print(f"Error recalculating common nodes after immediate assignments: {str(e)}")
+                    print(
+                        f"Error recalculating common nodes after immediate assignments: {str(e)}")
 
             return self._create_success_response(scheduled_orders, immediate_orders)
 
