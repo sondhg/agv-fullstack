@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from order_data.models import Order
 
 
@@ -105,30 +106,42 @@ class Agv(models.Model):
         help_text="SP^i: mapping of shared points to their allocated backup nodes"
     )
 
-    # Path information according to Algorithm 1
-    initial_path = models.JSONField(
+    # Path information according to Algorithm 1 - Using ArrayField for better type clarity
+    initial_path = ArrayField(
+        models.IntegerField(),
         help_text="P_i^j: Path of AGV i performing task j. Once generated, will not change.",
-        default=list
+        default=list,
+        size=None  # No size limit
     )
-    remaining_path = models.JSONField(
-        help_text="Pi_i: Remaining points to be visited by AGV i.",
-        default=list
+    remaining_path = ArrayField(
+        models.IntegerField(),
+        help_text="Pi_i: Remaining points to be visited by AGV i. Name in research paper: residual path",
+        default=list,
+        size=None  # No size limit
     )
-    outbound_path = models.JSONField(
+    outbound_path = ArrayField(
+        models.IntegerField(),
         help_text="Path from parking node to workstation node.",
-        default=list
+        default=list,
+        size=None
     )
-    return_path = models.JSONField(
+    return_path = ArrayField(
+        models.IntegerField(),
         help_text="Path from workstation node back to parking node.",
-        default=list
+        default=list,
+        size=None
     )
-    common_nodes = models.JSONField(
-        help_text="CP: Shared points with other AGVs",
-        default=list
+    common_nodes = ArrayField(
+        models.IntegerField(),
+        help_text="CN (Common nodes). Name in research paper: CP (Shared points with other AGVs)",
+        default=list,
+        size=None
     )
-    adjacent_common_nodes = models.JSONField(
-        help_text="SCP: Sequential shared points",
-        default=list
+    adjacent_common_nodes = ArrayField(
+        models.IntegerField(),
+        help_text="ACN (Adjacent common nodes). Name in research paper: SCP (Sequential shared points)",
+        default=list,
+        size=None
     )
 
     # Current order
