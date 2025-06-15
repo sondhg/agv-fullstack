@@ -6,7 +6,6 @@ import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { AGV } from "@/types/AGV.types";
 import { Order } from "@/types/Order.types";
 import { ColumnDef } from "@tanstack/react-table";
-import { Check, X } from "lucide-react";
 
 export const columns1 = (
   handleClickBtnDelete: (agvId: number) => void,
@@ -74,6 +73,24 @@ export const columns1 = (
       },
     },
     {
+      accessorKey: "journey_phase",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Journey Phase" />
+      ),
+      cell: ({ row }) => {
+        const journeyPhase = row.getValue("journey_phase") as number;
+        return (
+          <div>
+            {journeyPhase === 0
+              ? "Outbound"
+              : journeyPhase === 1
+                ? "Return"
+                : "Unknown"}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "remaining_path",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Remaining Path" />
@@ -121,40 +138,6 @@ export const columns1 = (
               <Badge key={point} variant="outline" className="mr-1">
                 {point}
               </Badge>
-            ))}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "spare_flag",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Spare Flag" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue("spare_flag") as boolean;
-        return (
-          <div>{value ? <Check color="#00ff00" /> : <X color="#ff0000" />}</div>
-        );
-      },
-    },
-    {
-      accessorKey: "backup_nodes",
-      header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Backup Nodes" />
-      ),
-      cell: ({ row }) => {
-        const value = row.getValue("backup_nodes") as Record<string, number>;
-        if (Object.keys(value).length === 0) {
-          return <div className="text-gray-500">None</div>;
-        }
-        return (
-          <div className="space-y-1">
-            {Object.entries(value).map(([pointInACN, sparePoint], index) => (
-              <div key={index}>
-                ACN <span className="font-semibold">{pointInACN}</span> → BN{" "}
-                <span className="font-semibold">{sparePoint}</span>
-              </div>
             ))}
           </div>
         );

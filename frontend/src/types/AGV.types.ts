@@ -8,6 +8,11 @@ export enum AGVMotionState {
   WAITING = 2,
 }
 
+export enum AGVJourneyPhase {
+  OUTBOUND = 0,
+  RETURN = 1,
+}
+
 export const CreateAgvZod = z.object({
   agv_id: z.preprocess((agv_id) => parseInt(agv_id as string, 10), z.number()),
   preferred_parking_node: z.preprocess(
@@ -24,11 +29,20 @@ export interface AGV {
   current_node: number | null;
   next_node: number | null;
   reserved_node: number | null;
+  previous_node: number | null;
+  direction_change: number | null;
   motion_state: AGVMotionState;
+  journey_phase: AGVJourneyPhase;
   spare_flag: boolean;
+  backup_nodes: Record<string, number>;
+  initial_path: number[];
+  remaining_path: number[];
+  outbound_path: number[];
+  return_path: number[];
+  common_nodes: number[];
+  adjacent_common_nodes: number[];
   active_order: Order | null; // We'll store the order ID
   active_order_info: Order | null; // Detailed order information from serializer
-  remaining_path: number[]; // Remaining points to be visited by the AGV
 }
 
 export interface CreateAGVDto {
