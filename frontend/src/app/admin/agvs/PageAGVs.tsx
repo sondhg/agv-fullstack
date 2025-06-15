@@ -11,13 +11,12 @@ import {
   dispatchOrdersToAGVs,
   getAGVs,
   resetAGVs,
-  scheduleHelloMessage,
 } from "@/services/APIs/agvsAPI";
 import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
 import { Order } from "@/types/Order.types";
-import { Bell, CalendarPlus, RefreshCcw } from "lucide-react";
+import { CalendarPlus, RefreshCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
@@ -36,7 +35,6 @@ export function PageAGVs() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDispatching, setIsDispatching] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
-  const [isSchedulingHello, setIsSchedulingHello] = useState(false);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("dijkstra");
   // Table selection state
   const {
@@ -45,9 +43,6 @@ export function PageAGVs() {
     selectedIds: selectedAgvIds,
     resetSelection,
   } = useTableSelection<AGV>(agvs, "agv_id");
-
-  // Check if any AGV has orders dispatched to them
-  const hasAGVsWithOrders = agvs.some((agv) => agv.active_order_info !== null);
 
   // Load initial data
   useEffect(() => {
@@ -226,21 +221,6 @@ export function PageAGVs() {
     }
   };
 
-  const handleScheduleHelloMessage = async () => {
-    try {
-      setIsSchedulingHello(true);
-      const response = await scheduleHelloMessage();
-      console.log(">>> response:", response);
-      toast.success("Hello messages scheduled successfully");
-      await refreshAgvData();
-    } catch (error) {
-      toast.error("Failed to schedule hello messages");
-      console.error("Error scheduling hello messages:", error);
-    } finally {
-      setIsSchedulingHello(false);
-    }
-  };
-
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">AGVs</h2>
@@ -295,17 +275,6 @@ export function PageAGVs() {
                 />
               </div>{" "}
               <div className="grid w-[28%] grid-rows-2 gap-4">
-                <Button
-                  onClick={handleScheduleHelloMessage}
-                  disabled={isSchedulingHello || !hasAGVsWithOrders}
-                  variant="default"
-                  className="w-full"
-                >
-                  <Bell className="mr-2 h-4 w-4" />
-                  {isSchedulingHello
-                    ? "Scheduling..."
-                    : "Schedule Hello Messages"}
-                </Button>
                 <Button
                   onClick={handleResetAGVs}
                   disabled={isResetting}

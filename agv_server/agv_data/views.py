@@ -13,7 +13,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
 
-def send_order_assignment_notification(order_id, agv_id, message):
+def send_order_assignment_notification(order_id, agv_id, message, additional_data=None):
     """
     Send order assignment notification through WebSocket.
 
@@ -21,22 +21,44 @@ def send_order_assignment_notification(order_id, agv_id, message):
         order_id: The ID of the assigned order
         agv_id: The ID of the AGV that received the order
         message: The notification message to display
+        additional_data: Additional data to include in the notification (optional)
     """
     try:
+        # Get AGV details for enhanced notification
+        agv_data = {}
+        try:
+            from .models import Agv
+            agv = Agv.objects.get(agv_id=agv_id)
+            agv_data = {
+                "current_node": agv.current_node,
+                "common_nodes_count": len(agv.common_nodes) if agv.common_nodes else 0,
+                "adjacent_common_nodes_count": len(agv.adjacent_common_nodes) if agv.adjacent_common_nodes else 0,
+                "remaining_path_length": len(agv.remaining_path) if agv.remaining_path else 0
+            }
+        except Exception as e:
+            print(f"Error getting AGV details for notification: {str(e)}")
+
+        notification_data = {
+            "type": "order_assignment_notification",
+            "data": {
+                "order_id": order_id,
+                "agv_id": agv_id,
+                "message": message,
+                "timestamp": datetime.datetime.now().isoformat(),
+                "agv_details": agv_data
+            }
+        }
+        
+        # Add any additional data if provided
+        if additional_data:
+            notification_data["data"].update(additional_data)
+
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "agv_group",
             {
                 "type": "agv_message",
-                "message": {
-                    "type": "order_assignment_notification",
-                    "data": {
-                        "order_id": order_id,
-                        "agv_id": agv_id,
-                        "message": message,
-                        "timestamp": datetime.datetime.now().isoformat()
-                    }
-                }
+                "message": notification_data
             }
         )
     except Exception as e:
@@ -110,9 +132,8 @@ class DispatchOrdersToAGVsView(APIView):
 
     def __init__(self):
         super().__init__()
-        from .services.order_scheduler import OrderSchedulerService, OrderAssignmentService
-        self.scheduler_service = OrderSchedulerService()
-        self.assignment_service = OrderAssignmentService()
+        from .services.algorithm1 import TaskDispatcher
+        self.task_dispatcher = TaskDispatcher()
 
     def post(self, request):
         """
@@ -121,12 +142,11 @@ class DispatchOrdersToAGVsView(APIView):
         Returns:
             Response: Information about scheduled orders.
         """
-        try:
-            # Get the algorithm parameter (defaults to dijkstra)
+        try:            # Get the algorithm parameter (defaults to dijkstra)
             algorithm = request.data.get("algorithm", "dijkstra")
 
             # Get all unassigned orders with their scheduling information
-            unassigned_orders = self.scheduler_service.get_unassigned_orders()
+            unassigned_orders = self.task_dispatcher.get_unassigned_orders()
 
             if not unassigned_orders.exists():
                 return self._create_no_orders_response()
@@ -135,12 +155,18 @@ class DispatchOrdersToAGVsView(APIView):
             schedule.clear()
 
             # Process orders for scheduling or immediate assignment
-            scheduled_orders, immediate_orders = self.scheduler_service.process_orders_for_scheduling(
-                unassigned_orders, algorithm, self.assignment_service.assign_single_order
-            )
+            scheduled_orders, immediate_orders = self.task_dispatcher.process_orders_for_scheduling(
+                algorithm)
 
             # Start scheduler if needed
-            self.scheduler_service.start_scheduler_if_needed(scheduled_orders)
+            self.task_dispatcher.start_scheduler_if_needed(scheduled_orders)            # Recalculate common nodes for all active AGVs after immediate assignments
+            if immediate_orders:
+                try:
+                    from .services.common_nodes import recalculate_all_common_nodes
+                    recalculate_all_common_nodes(log_summary=True)
+                    print(f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments")
+                except Exception as e:
+                    print(f"Error recalculating common nodes after immediate assignments: {str(e)}")
 
             return self._create_success_response(scheduled_orders, immediate_orders)
 
@@ -255,69 +281,3 @@ class ResetAGVsView(APIView):
                     "details": traceback_str
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
-
-
-class ScheduleOrderHellosView(APIView):
-    """
-    API endpoint to schedule MQTT messages based on their order start_time and order_date.
-    When the frontend sends a GET request to this endpoint, it will:
-    1. Get list of all AGVs with active_order_info
-    2. Schedule "Hey" messages to be sent to MQTT topic "agvhello/{agv_id}" at the time that matches start_time and order_date
-    """
-
-    def __init__(self):
-        super().__init__()
-        from .services.hello_scheduler import HelloSchedulerService
-        self.hello_scheduler_service = HelloSchedulerService()
-
-    def get(self, request):
-        """
-        Schedule MQTT hello messages for AGVs with active orders.
-
-        Returns:
-            Response: Information about scheduled hello messages.
-        """
-        try:
-            # Get all AGVs with active orders
-            agvs_with_orders = self.hello_scheduler_service.get_agvs_with_active_orders()
-
-            # Clear any existing scheduled jobs to avoid duplicates
-            schedule.clear()
-
-            # Process AGVs for hello message scheduling
-            scheduled_messages = self.hello_scheduler_service.process_agvs_for_hello_scheduling(
-                agvs_with_orders)
-
-            # Start scheduler if needed
-            self.hello_scheduler_service.start_scheduler_if_needed(
-                scheduled_messages)
-
-            return self._create_success_response(scheduled_messages)
-
-        except Exception as e:
-            return self._create_error_response(e)
-
-    def _create_success_response(self, scheduled_messages):
-        """Create success response with hello message scheduling results."""
-        return Response(
-            {
-                "success": True,
-                "message": f"Scheduled MQTT hello messages for {len(scheduled_messages)} AGVs",
-                "scheduled_messages": scheduled_messages
-            },
-            status=status.HTTP_200_OK,
-        )
-
-    def _create_error_response(self, exception):
-        """Create error response with exception details."""
-        import traceback
-        traceback_str = traceback.format_exc()
-
-        return Response(
-            {
-                "success": False,
-                "message": f"Error scheduling hello messages: {str(exception)}",
-                "details": traceback_str
-            },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
