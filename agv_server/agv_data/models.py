@@ -105,6 +105,16 @@ class Agv(models.Model):
         default=dict,
         help_text="SP^i: mapping of shared points to their allocated backup nodes"
     )
+    # Track deadlock resolution state
+    waiting_for_deadlock_resolution = models.BooleanField(
+        default=False,
+        help_text="Indicates if AGV is waiting due to being moved to backup node during deadlock resolution"
+    )
+    deadlock_partner_agv_id = models.BigIntegerField(
+        null=True,
+        blank=True,
+        help_text="ID of the AGV that this AGV had head-on deadlock with (used to trigger control policy when partner moves)"
+    )
 
     # Path information according to Algorithm 1 - Using ArrayField for better type clarity
     initial_path = ArrayField(
