@@ -258,3 +258,14 @@ class ControlPolicy:
         """
         self.agv.motion_state = Agv.WAITING
         self.agv.save(update_fields=['motion_state'])
+        
+    def is_none_of_three_conditions_satisfied(self) -> bool:
+        """
+        Check if none of the three movement conditions are satisfied.
+        This is used to determine if the AGV should wait.
+        """
+        reserved_nodes = self._get_reserved_nodes_of_other_agvs()
+        if self.agv.next_node in reserved_nodes:
+            return True
+        else:
+            return False

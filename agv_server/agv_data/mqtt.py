@@ -83,18 +83,31 @@ def handle_agv_data_message(mqtt_client, msg):
             if is_movement_condition_1_satisfied or is_movement_condition_2_satisfied:
                 control_policy._set_agv_moving_without_spare_flag_and_empty_backup_nodes()
             else:
-                spare_flag_of_this_agv = agv.spare_flag
-                if spare_flag_of_this_agv:
-                    control_policy.remove_backup_node_associated_with_current_node()
-                else:
-                    # Apply for backup nodes using Algorithm 4
-                    backup_allocator = BackupNodesAllocator(agv=agv)
-                    backup_allocator.apply_for_backup_nodes()
-                is_movement_condition_3_satisfied = control_policy.is_movement_condition_3_satisfied()
-                if is_movement_condition_3_satisfied:
-                    control_policy._set_agv_moving_with_spare_flag()
-                else:
-                    control_policy._set_agv_waiting()
+                reserved_nodes_of_other_agvs = control_policy._get_reserved_nodes_of_other_agvs()
+                if agv.next_node not in reserved_nodes_of_other_agvs:
+                    spare_flag_of_this_agv = agv.spare_flag
+                    if spare_flag_of_this_agv:
+                        control_policy.remove_backup_node_associated_with_current_node()
+                    else:
+                        # Apply for backup nodes using Algorithm 4
+                        backup_allocator = BackupNodesAllocator(agv=agv)
+                        backup_allocator.apply_for_backup_nodes()
+                    is_movement_condition_3_satisfied = control_policy.is_movement_condition_3_satisfied()
+                    if is_movement_condition_3_satisfied:
+                        control_policy._set_agv_moving_with_spare_flag()
+                else:  # agv.next_node in reserved_nodes_of_other_agvs
+                    is_none_of_three_conditions_satisfied = control_policy.is_none_of_three_conditions_satisfied()
+                    if is_none_of_three_conditions_satisfied:
+                        control_policy._set_agv_waiting()
+                        deadlock_resolver = DeadlockResolver(agv=agv)
+                        is_loop_deadlock_detected = deadlock_resolver.is_loop_deadlock_detected()
+                        is_heading_on_deadlock_detected = deadlock_resolver.is_heading_on_deadlock_detected()
+                        if is_heading_on_deadlock_detected:
+                            deadlock_resolver.resolve_heading_on_deadlock()
+                        elif is_loop_deadlock_detected:
+                            deadlock_resolver.resolve_loop_deadlock()
+                        else:  # No deadlock detected
+                            deadlock_resolver._set_reserved_node_as_current_node()
 
             logger.info(
                 f"Updated AGV {agv_id} location to node {current_node}")

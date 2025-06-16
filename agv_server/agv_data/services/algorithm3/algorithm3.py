@@ -29,7 +29,7 @@ class DeadlockResolver():
     def get_deadlocked_agv_in_head_on_situation(self) -> Agv:
         """
         Get the other AGV that is in a head-on deadlock with this AGV.
-        
+
         Returns:
             Agv: The other AGV in the deadlock, or None if no deadlock exists
         """
@@ -43,7 +43,7 @@ class DeadlockResolver():
     def resolve_heading_on_deadlock(self):
         """
         Resolve head-on deadlock based on Algorithm 3 from the research paper.
-        
+
         From the paper:
         If v_n^i = v_c^j and v_n^j = v_c^i (head-on deadlock detected):
             If F^i = 1 (this AGV has spare_flag = True):
@@ -56,7 +56,7 @@ class DeadlockResolver():
         other_agv = self.get_deadlocked_agv_in_head_on_situation()
         if other_agv is None:
             return  # No deadlock to resolve
-              # Determine which AGV should move to backup node based on spare_flag (F^i)
+            # Determine which AGV should move to backup node based on spare_flag (F^i)
         if self.agv.spare_flag:
             # This AGV (r_i) has spare_flag=True, so it moves to backup node
             self._move_agv_to_backup_node(self.agv)
@@ -81,28 +81,35 @@ class DeadlockResolver():
         current_node_str = str(agv.current_node)
         if current_node_str not in agv.backup_nodes:
             # No backup node available for current position
-            logger.warning(f"No backup node available for AGV {agv.agv_id} at current node {agv.current_node}")
+            logger.warning(
+                f"No backup node available for AGV {agv.agv_id} at current node {agv.current_node}")
             return
-            
+
         backup_node = agv.backup_nodes[current_node_str]
-        logger.info(f"Moving AGV {agv.agv_id} to backup node {backup_node} from current node {agv.current_node}")
-        
+        logger.info(
+            f"Moving AGV {agv.agv_id} to backup node {backup_node} from current node {agv.current_node}")
+
         # Update the remaining path: backup_node -> current_node -> rest of path
-        new_remaining_path = [backup_node, agv.current_node] + agv.remaining_path
-        
+        new_remaining_path = [backup_node,
+                              agv.current_node] + agv.remaining_path
+
         # Update AGV state
         agv.remaining_path = new_remaining_path
-        agv.next_node = backup_node  # Next node is now the backup node        agv.motion_state = Agv.MOVING
+        # Next node is now the backup node
+        agv.next_node = backup_node
         agv.reserved_node = backup_node
-        
+        agv.motion_state = Agv.MOVING
+
         # Save the updated AGV state
-        agv.save(update_fields=['remaining_path', 'next_node', 'motion_state', 'reserved_node'])
+        agv.save(update_fields=['remaining_path',
+                 'next_node', 'motion_state', 'reserved_node'])
 
     def _move_agv_to_next_node(self, agv: Agv):
         """
         Move AGV to its next node normally.
         """
-        logger.info(f"Moving AGV {agv.agv_id} to its next node {agv.next_node}")
+        logger.info(
+            f"Moving AGV {agv.agv_id} to its next node {agv.next_node}")
         agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
         agv.save(update_fields=['motion_state', 'reserved_node'])
@@ -153,3 +160,11 @@ class DeadlockResolver():
 
         # Start the loop detection from the current AGV
         return detect_loop(self.agv, self.agv)
+
+    def _set_reserved_node_as_current_node(self):
+        """
+        Set the reserved node of the AGV to its current node.
+        This is used when the AGV is waiting and needs to reserve its current position.
+        """
+        self.agv.reserved_node = self.agv.current_node
+        self.agv.save(update_fields=['reserved_node'])
