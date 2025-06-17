@@ -12,9 +12,84 @@ CLIENT_ID = "test_client"
 
 # Message format constants
 FRAME_START = 0x7A
-FRAME_LENGTH = 0x08
+FRAME_LENGTH = 0x09  # Total frame length: 9 bytes
 MESSAGE_TYPE = 0x02  # Type for AGV to server messages
 FRAME_END = 0x7F
+
+
+def calculate_crc(data: bytearray) -> int:
+    """
+    Calculate CRC-8 for the given data using polynomial 0x07 (x^8 + x^2 + x + 1).
+    This function generates the CRC that will be appended to the data for transmission.
+
+    Args:
+        data (bytearray): Data bytes to calculate CRC for
+
+    Returns:
+        int: Calculated CRC value (0-255)
+    """
+    # CRC-8 polynomial: 0x07 (x^8 + x^2 + x + 1)
+    polynomial = 0x07
+    crc = 0x00  # Initial CRC value
+
+    # Process each byte in the data
+    for byte in data:
+        # XOR the current byte with the CRC
+        crc ^= byte
+
+        # Process each bit
+        for _ in range(8):
+            if crc & 0x80:  # If MSB is set
+                crc = (crc << 1) ^ polynomial
+            else:
+                crc = crc << 1
+            # Keep only 8 bits
+            crc &= 0xFF
+
+    return crc
+
+
+# def test_crc_compatibility():
+#     """
+#     Test that our CRC generation is compatible with the decoder's verification.
+#     This simulates the decoder's verify_crc function to ensure compatibility.
+#     """
+#     # Test with sample data
+#     test_agv_id = 123
+#     test_node = 45
+
+#     # Generate a message using our encoding
+#     message = encode_agv_position(test_agv_id, test_node)
+
+#     # Extract the codeword (data + CRC, excluding frame markers)
+#     # Frame structure: [START, LENGTH, TYPE, AGV_ID(2), NODE(2), CRC, END]
+#     codeword = bytearray(message[1:8])  # [LENGTH, TYPE, AGV_ID(2), NODE(2), CRC]
+
+#     # Simulate decoder's verify_crc function
+#     polynomial = 0x07
+#     crc = 0x00
+
+#     for byte in codeword:
+#         crc ^= byte
+#         for _ in range(8):
+#             if crc & 0x80:
+#                 crc = (crc << 1) ^ polynomial
+#             else:
+#                 crc = crc << 1
+#             crc &= 0xFF
+
+#     # If CRC verification passes, result should be 0
+#     verification_passed = (crc == 0)
+
+#     print(f"CRC Compatibility Test:")
+#     print(f"  Test AGV ID: {test_agv_id}")
+#     print(f"  Test Node: {test_node}")
+#     print(f"  Generated message: {message.hex()}")
+#     print(f"  Codeword: {codeword.hex()}")
+#     print(f"  Verification result: {crc}")
+#     print(f"  Verification passed: {verification_passed}")
+
+#     return verification_passed
 
 
 def validate_input(value: str, min_val: int, max_val: int, name: str) -> int:
@@ -46,27 +121,37 @@ def validate_input(value: str, min_val: int, max_val: int, name: str) -> int:
 
 def encode_agv_position(agv_id: int, current_node: int) -> bytes:
     """
-    Encode AGV position update into byte array format.
+    Encode AGV position update into byte array format with CRC.
 
     Args:
         agv_id (int): AGV identifier
         current_node (int): Current node ID where AGV is located
 
     Returns:
-        bytes: Encoded message
+        bytes: Encoded message with CRC
     """
     try:
         # Convert values to bytes (little-endian)
         agv_id_bytes = agv_id.to_bytes(2, byteorder='little')
         node_bytes = current_node.to_bytes(2, byteorder='little')
 
-        # Create frame
+        # Create data for CRC calculation (excluding frame start/end markers)
+        data_for_crc = bytearray()
+        data_for_crc.append(FRAME_LENGTH)
+        data_for_crc.append(MESSAGE_TYPE)
+        data_for_crc.extend(agv_id_bytes)
+        data_for_crc.extend(node_bytes)
+
+        # Calculate CRC for the data
+        crc_value = calculate_crc(data_for_crc)
+        crc_bytes = crc_value.to_bytes(1, byteorder='little')
+
+        # Create complete frame
         frame = bytearray()
         frame.append(FRAME_START)
-        frame.append(FRAME_LENGTH)
-        frame.append(MESSAGE_TYPE)
-        frame.extend(agv_id_bytes)
-        frame.extend(node_bytes)
+        # This includes frame length, message type, agv_id, and current_node
+        frame.extend(data_for_crc)
+        frame.extend(crc_bytes)
         frame.append(FRAME_END)
 
         return bytes(frame)
@@ -93,13 +178,16 @@ def on_message(client, userdata, msg):
     print(f"Raw message (hex): {msg.payload.hex()}")
     print("Raw message content:")
     data = msg.payload
-    print(f"Frame start: 0x{data[0]:02x}")
-    print(f"Frame length: 0x{data[1]:02x}")
-    print(f"Message type: 0x{data[2]:02x}")
-    print(f"Motion state: {data[3]}")
-    print(f"Next node: {int.from_bytes(data[4:6], byteorder='little')}")
-    print(f"Direction change: {data[6]}")
-    print(f"Frame end: 0x{data[7]:02x}")
+    if len(data) >= 8:  # Server messages are 8 bytes
+        print(f"Frame start: 0x{data[0]:02x}")
+        print(f"Frame length: 0x{data[1]:02x}")
+        print(f"Message type: 0x{data[2]:02x}")
+        print(f"Motion state: {data[3]}")
+        print(f"Next node: {int.from_bytes(data[4:6], byteorder='little')}")
+        print(f"Direction change: {data[6]}")
+        print(f"Frame end: 0x{data[7]:02x}")
+    else:
+        print("Message too short to decode")
     print("")  # Add extra newline to ensure prompt appears immediately
 
 
@@ -114,6 +202,14 @@ def signal_handler(sig, frame):
 
 def main():
     global client
+
+    # # Test CRC compatibility first
+    # print("Testing CRC compatibility with decoder...")
+    # if test_crc_compatibility():
+    #     print("✓ CRC compatibility test passed!\n")
+    # else:
+    #     print("✗ CRC compatibility test failed!\n")
+    #     return
 
     # Set up Ctrl+C handler
     signal.signal(signal.SIGINT, signal_handler)
@@ -157,14 +253,24 @@ def main():
                         current_node_input, 1, 999, "Current node")
                     break
                 except ValueError as e:
-                    print(f"Error: {e}")
-
-            # Encode message
+                    print(f"Error: {e}")            # Encode message
             print("\nPreparing to send AGV position update:")
             print(f"Raw data - AGV ID: {agv_id}, Current Node: {current_node}")
 
             message = encode_agv_position(agv_id, current_node)
             print(f"Encoded message (hex): {message.hex()}")
+
+            # Show frame breakdown
+            print("Frame breakdown:")
+            print(f"  Frame start: {hex(message[0])}")
+            print(f"  Frame length: {hex(message[1])}")
+            print(f"  Message type: {hex(message[2])}")
+            print(
+                f"  AGV ID: {int.from_bytes(message[3:5], byteorder='little')}")
+            print(
+                f"  Current node: {int.from_bytes(message[5:7], byteorder='little')}")
+            print(f"  CRC: {hex(message[7])}")
+            print(f"  Frame end: {hex(message[8])}")
 
             # Publish to AGV data topic
             topic = f"agvdata/{agv_id}"

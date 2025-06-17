@@ -1,24 +1,15 @@
+from calculate_crc import calculate_crc
+
 """
 Encoder for messages sent from server to AGVs via MQTT.
 Converts JSON format instructions into byte array messages.
 """
-from ..models import Agv
 # Frame constants
 FRAME_START = 0x7A
-FRAME_LENGTH = 0x08
+# Include frame start, frame length, frame end, CRC, and all other fields
+FRAME_LENGTH = 0x09
 MESSAGE_TYPE = 0x03
 FRAME_END = 0x7F
-
-# Motion states
-IDLE = Agv.IDLE
-MOVING = Agv.MOVING
-WAITING = Agv.WAITING
-
-# Direction changes
-GO_STRAIGHT = Agv.GO_STRAIGHT
-TURN_AROUND = Agv.TURN_AROUND
-TURN_LEFT = Agv.TURN_LEFT
-TURN_RIGHT = Agv.TURN_RIGHT
 
 
 def encode_message(motion_state: int, next_node: int, direction_change: int) -> bytes:
@@ -38,15 +29,8 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
     Raises:
         ValueError: If input parameters are invalid
     """
-    # # Validate inputs
-    # if motion_state not in (IDLE, MOVING, WAITING):
-    #     raise ValueError(f"Invalid motion state: {motion_state}")
 
-    # if direction_change not in (GO_STRAIGHT, TURN_AROUND, TURN_LEFT, TURN_RIGHT):
-    #     raise ValueError(f"Invalid direction change: {direction_change}")
-
-    try:
-        # Convert values to bytes
+    try:        # Convert values to bytes
         motion_state_bytes = motion_state.to_bytes(1, byteorder='little')
         # Handle None values for next_node (use 0 as default)
         next_node_value = next_node if next_node is not None else 0
@@ -54,14 +38,24 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
         direction_change_bytes = direction_change.to_bytes(
             1, byteorder='little')
 
+        # Prepare data for CRC calculation (without CRC field itself)
+        data_for_crc = bytearray()
+        data_for_crc.append(FRAME_LENGTH)
+        data_for_crc.append(MESSAGE_TYPE)
+        data_for_crc.extend(motion_state_bytes)
+        data_for_crc.extend(next_node_bytes)
+        data_for_crc.extend(direction_change_bytes)
+
+        crc = calculate_crc(data_for_crc)
+        crc_bytes = crc.to_bytes(1, byteorder='little')
+
         # Create frame
         frame = bytearray()
         frame.append(FRAME_START)
-        frame.append(FRAME_LENGTH)
-        frame.append(MESSAGE_TYPE)
-        frame.extend(motion_state_bytes)
-        frame.extend(next_node_bytes)
-        frame.extend(direction_change_bytes)
+
+        frame.extend(data_for_crc)
+        frame.extend(crc_bytes)
+
         frame.append(FRAME_END)
 
         return bytes(frame)
