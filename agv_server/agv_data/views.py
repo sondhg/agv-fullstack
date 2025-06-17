@@ -132,7 +132,7 @@ class DispatchOrdersToAGVsView(APIView):
 
     def __init__(self):
         super().__init__()
-        from .services.algorithm1.algorithm1 import TaskDispatcher
+        from .main_algorithms.algorithm1.algorithm1 import TaskDispatcher
         self.task_dispatcher = TaskDispatcher()
 
     def post(self, request):
@@ -163,7 +163,7 @@ class DispatchOrdersToAGVsView(APIView):
             self.task_dispatcher.start_scheduler_if_needed(scheduled_orders)
             if immediate_orders:
                 try:
-                    from .services.algorithm1.common_nodes import recalculate_all_common_nodes
+                    from .main_algorithms.algorithm1.common_nodes import recalculate_all_common_nodes
                     recalculate_all_common_nodes(log_summary=True)
                     print(
                         f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments")

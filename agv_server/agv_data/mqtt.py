@@ -4,9 +4,9 @@ import json
 import logging
 from .agv_to_server_decoder import decode_message
 from .models import Agv
-from .services.algorithm2.algorithm2 import ControlPolicy
-from .services.algorithm3.algorithm3 import DeadlockResolver
-from .services.algorithm4.algorithm4 import BackupNodesAllocator
+from .main_algorithms.algorithm2.algorithm2 import ControlPolicy
+from .main_algorithms.algorithm3.algorithm3 import DeadlockResolver
+from .main_algorithms.algorithm4.algorithm4 import BackupNodesAllocator
 
 MQTT_BROKER = settings.MQTT_BROKER
 MQTT_PORT = settings.MQTT_PORT
