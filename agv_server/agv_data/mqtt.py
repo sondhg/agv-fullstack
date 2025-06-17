@@ -1,16 +1,12 @@
 import paho.mqtt.client as mqtt
+
 from django.conf import settings
 import logging
-from .encode_decode_data_frames.agv_to_server_decoder import decode_message
 from typing import Optional, Tuple
 
-from .apply_main_algorithms.apply_main_algorithms import _update_agv_position, _get_agv_by_id, _apply_control_policy, _trigger_deadlock_partner_control_policy
+from .encode_decode_data_frames.agv_to_server_decoder import decode_message
 
-MQTT_BROKER = settings.MQTT_BROKER
-MQTT_PORT = settings.MQTT_PORT
-MQTT_KEEPALIVE = settings.MQTT_KEEPALIVE
-MQTT_USER = settings.MQTT_USER
-MQTT_PASSWORD = settings.MQTT_PASSWORD
+from .apply_main_algorithms.apply_main_algorithms import _update_agv_position, _get_agv_by_id, _apply_control_policy, _trigger_deadlock_partner_control_policy
 
 MQTT_TOPIC_AGVDATA = settings.MQTT_TOPIC_AGVDATA
 MQTT_TOPIC_AGVROUTE = settings.MQTT_TOPIC_AGVROUTE
@@ -19,7 +15,7 @@ MQTT_TOPIC_AGVHELLO = settings.MQTT_TOPIC_AGVHELLO
 logger = logging.getLogger(__name__)
 
 
-def _on_connect(client, userdata, flags, rc):
+def _on_connect(client: mqtt.Client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker successfully")
         client.subscribe(f"{MQTT_TOPIC_AGVDATA}/#")
@@ -27,20 +23,21 @@ def _on_connect(client, userdata, flags, rc):
         print('Bad connection. Code:', rc)
 
 
-def _on_message(client, userdata, message):
+def _on_message(client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
     """
     Route incoming MQTT messages to appropriate handlers based on topic.
     """
     print(
         f'Received message on topic: {message.topic} with payload: {message.payload}')
     # Route message to appropriate handler based on topic prefix
-    if message.topic.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
-        handle_agv_data_message(client, message)
+    topic_name = str(message.topic)
+    if topic_name.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
+        handle_agv_data_message(message)
     else:
         print(f"Received message on unhandled topic: {message.topic}")
 
 
-def handle_agv_data_message(client, message):
+def handle_agv_data_message(message: mqtt.MQTTMessage) -> None:
     """
     Handle AGV data messages containing location updates.
     Processes AGV location update and applies DSPA control policy.
@@ -76,7 +73,7 @@ def handle_agv_data_message(client, message):
         logger.error(f"Unexpected error in AGV data handler: {str(e)}")
 
 
-def _parse_agv_message(payload) -> Optional[Tuple[str, int]]:
+def _parse_agv_message(payload) -> Optional[Tuple[int, int]]:
     """Parse and validate AGV message payload."""
     try:
         decoded_data = decode_message(payload)
@@ -87,7 +84,7 @@ def _parse_agv_message(payload) -> Optional[Tuple[str, int]]:
             logger.error("Missing required fields in AGV data message")
             return None
 
-        return agv_id, current_node
+        return int(agv_id), int(current_node)
     except ValueError as e:
         logger.error(f"Failed to decode AGV data message: {str(e)}")
         return None
