@@ -38,7 +38,7 @@ export interface AGV {
   initial_path: number[];
   remaining_path: number[];
   outbound_path: number[];
-  return_path: number[];
+  inbound_path: number[];
   common_nodes: number[];
   adjacent_common_nodes: number[];
   active_order: Order | null; // We'll store the order ID

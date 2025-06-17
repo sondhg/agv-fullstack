@@ -31,7 +31,7 @@ class OrderProcessor:
         Returns:
             Tuple[Optional[List[int]], Optional[List[int]]]: Tuple of computed paths:
             (outbound_path from parking → storage → workstation,
-             return_path from workstation → parking)
+             inbound_path from workstation → parking)
             None for either path if it could not be computed.
         """
         # Find path from parking to storage
@@ -58,9 +58,9 @@ class OrderProcessor:
         outbound_path = path_to_storage + path_to_workstation[1:]
 
         # Return path is simply workstation → parking
-        return_path = path_to_parking
+        inbound_path = path_to_parking
 
-        return outbound_path, return_path
+        return outbound_path, inbound_path
 
     def process_order(self, order: Order) -> Optional[Dict]:
         """
@@ -73,12 +73,12 @@ class OrderProcessor:
             Optional[Dict]: Generated order data dictionary or None if path not found
         """
         # Find shortest route paths for outbound and return journeys
-        outbound_path, return_path = self._compute_path(order)
-        if not outbound_path or not return_path:
+        outbound_path, inbound_path = self._compute_path(order)
+        if not outbound_path or not inbound_path:
             return None
 
         # Store complete path for reference (used by UI and for history)
-        complete_path = outbound_path + return_path[1:]
+        complete_path = outbound_path + inbound_path[1:]
 
         # Prepare order process data
         order_data = {
@@ -90,7 +90,7 @@ class OrderProcessor:
             "workstation_node": order.workstation_node,
             "initial_path": complete_path,
             "outbound_path": outbound_path,
-            "return_path": return_path,
+            "inbound_path": inbound_path,
             # Initially, remaining_path is the outbound path
             "remaining_path": outbound_path,
             "common_nodes": [],  # Will be calculated later in process_tasks
@@ -124,7 +124,7 @@ class OrderProcessor:
 
             # Store outbound and return paths in model fields
             agv.outbound_path = order_data["outbound_path"]
-            agv.return_path = order_data["return_path"]
+            agv.inbound_path = order_data["inbound_path"]
 
             agv.save()
 

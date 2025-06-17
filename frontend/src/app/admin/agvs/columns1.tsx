@@ -84,7 +84,7 @@ export const columns1 = (
             {journeyPhase === 0
               ? "Outbound"
               : journeyPhase === 1
-                ? "Return"
+                ? "Inbound"
                 : "Unknown"}
           </div>
         );
