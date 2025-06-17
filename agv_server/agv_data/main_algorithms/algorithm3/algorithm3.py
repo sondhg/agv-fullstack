@@ -1,5 +1,6 @@
 from ...models import Agv
 import logging
+from ...direction_change.direction_to_turn import determine_direction_change
 
 logger = logging.getLogger(__name__)
 
@@ -137,12 +138,10 @@ class DeadlockResolver:
         backup_node = agv.backup_nodes[current_node_str]
 
         logger.info(
+            # Create detour path: backup_node -> current_node -> remaining_path
             f"Moving AGV {agv.agv_id} to backup node {backup_node} to resolve deadlock")
-
-        # Create detour path: backup_node -> current_node -> remaining_path
-        new_path = [backup_node, agv.current_node] + agv.remaining_path
-
         # Update AGV state for backup node movement and track deadlock resolution
+        new_path = [backup_node, agv.current_node] + agv.remaining_path
         agv.remaining_path = new_path
         agv.next_node = backup_node
         agv.reserved_node = backup_node
@@ -154,10 +153,15 @@ class DeadlockResolver:
                                 'motion_state', 'waiting_for_deadlock_resolution',
                                 'deadlock_partner_agv_id'])
 
+        determine_direction_change(agv)
+
     def _move_to_next_node(self, agv: Agv):
         """Move AGV to its next node normally."""
         logger.info(f"Moving AGV {agv.agv_id} to next node {agv.next_node}")
 
         agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
+
         agv.save(update_fields=['motion_state', 'reserved_node'])
+
+        determine_direction_change(agv)

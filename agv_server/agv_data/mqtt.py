@@ -59,7 +59,8 @@ def handle_agv_data_message(client, message):
         (this_agv_id, this_agv_current_node) = this_agv_data
         this_agv = _get_agv_by_id(this_agv_id)
         if not this_agv:
-            return        # Update AGV position and path information
+            return
+        # Update AGV position and path information
         _update_agv_position(agv=this_agv, current_node=this_agv_current_node)
 
         # Apply DSPA control policy to determine next action

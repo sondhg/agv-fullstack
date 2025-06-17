@@ -4,6 +4,8 @@ from ..main_algorithms.algorithm2.algorithm2 import ControlPolicy
 from ..main_algorithms.algorithm3.algorithm3 import DeadlockResolver
 from ..main_algorithms.algorithm4.algorithm4 import BackupNodesAllocator
 
+from ..direction_change.direction_to_turn import get_action, determine_direction_change
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,24 +26,33 @@ def _update_agv_position(agv: Agv, current_node: int):
 
 def _apply_control_policy(agv: Agv) -> None:
     """Apply DSPA control policy to determine AGV's next action."""
-    control_policy = ControlPolicy(agv)
-
-    # Check if AGV can move based on basic conditions
+    control_policy = ControlPolicy(
+        agv)    # Check if AGV can move based on basic conditions
     if control_policy.can_move_freely():
         control_policy.set_moving_state()
         # Clear deadlock resolution state if it was set
         if agv.waiting_for_deadlock_resolution:
             deadlock_resolver = DeadlockResolver(agv)
             deadlock_resolver.clear_deadlock_resolution_state()
+            logger.info(
+                f"AGV {agv.agv_id} cleared from deadlock resolution and moving normally")
+
+        determine_direction_change(agv)
+
         return
 
     # Handle backup node scenarios
     if control_policy.should_use_backup_nodes():
         _handle_backup_node_scenario(agv)
+
+        determine_direction_change(agv)
+
         return
 
     # Handle waiting and deadlock scenarios
     _handle_waiting_scenario(agv)
+
+    determine_direction_change(agv)
 
 
 def _trigger_deadlock_partner_control_policy(moved_agv_id: int) -> None:
