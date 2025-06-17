@@ -2,7 +2,7 @@
 Encoder for messages sent from server to AGVs via MQTT.
 Converts JSON format instructions into byte array messages.
 """
-from .models import Agv
+from ..models import Agv
 # Frame constants
 FRAME_START = 0x7A
 FRAME_LENGTH = 0x08

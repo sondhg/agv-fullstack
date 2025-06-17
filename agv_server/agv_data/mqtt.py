@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 from django.conf import settings
 import logging
-from .agv_to_server_decoder import decode_message
+from .encode_decode_data_frames.agv_to_server_decoder import decode_message
 from typing import Optional, Tuple
 
 from .apply_main_algorithms.apply_main_algorithms import _update_agv_position, _get_agv_by_id, _apply_control_policy, _trigger_deadlock_partner_control_policy
