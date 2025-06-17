@@ -19,39 +19,39 @@ MQTT_TOPIC_AGVHELLO = settings.MQTT_TOPIC_AGVHELLO
 logger = logging.getLogger(__name__)
 
 
-def on_connect(mqtt_client, userdata, flags, rc):
+def _on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker successfully")
-        mqtt_client.subscribe(f"{MQTT_TOPIC_AGVDATA}/#")
+        client.subscribe(f"{MQTT_TOPIC_AGVDATA}/#")
     else:
         print('Bad connection. Code:', rc)
 
 
-def on_message(mqtt_client, userdata, msg):
+def _on_message(client, userdata, message):
     """
     Route incoming MQTT messages to appropriate handlers based on topic.
     """
     print(
-        f'Received message on topic: {msg.topic} with payload: {msg.payload}')
+        f'Received message on topic: {message.topic} with payload: {message.payload}')
     # Route message to appropriate handler based on topic prefix
-    if msg.topic.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
-        handle_agv_data_message(mqtt_client, msg)
+    if message.topic.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
+        handle_agv_data_message(client, message)
     else:
-        print(f"Received message on unhandled topic: {msg.topic}")
+        print(f"Received message on unhandled topic: {message.topic}")
 
 
-def handle_agv_data_message(mqtt_client, msg):
+def handle_agv_data_message(client, message):
     """
     Handle AGV data messages containing location updates.
     Processes AGV location update and applies DSPA control policy.
 
     Args:
         mqtt_client: MQTT client instance
-        msg: MQTT message object with payload containing AGV data
+        message: MQTT message object with payload containing AGV data
     """
     try:
         # Parse and validate message
-        this_agv_data = _parse_agv_message(msg.payload)
+        this_agv_data = _parse_agv_message(message.payload)
         if this_agv_data is None:
             logger.warning("Skipping invalid AGV message")
             return
@@ -93,9 +93,10 @@ def _parse_agv_message(payload) -> Optional[Tuple[str, int]]:
 
 
 client = mqtt.Client()
-client.on_connect = on_connect
-client.on_message = on_message
-client.username_pw_set(settings.MQTT_USER, settings.MQTT_PASSWORD)
+client.on_connect = _on_connect
+client.on_message = _on_message
+client.username_pw_set(username=settings.MQTT_USER,
+                       password=settings.MQTT_PASSWORD)
 client.connect(
     host=settings.MQTT_BROKER,
     port=settings.MQTT_PORT,

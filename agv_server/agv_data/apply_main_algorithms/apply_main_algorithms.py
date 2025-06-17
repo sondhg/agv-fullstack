@@ -16,13 +16,13 @@ def _get_agv_by_id(agv_id):
         return None
 
 
-def _update_agv_position(agv, current_node):
+def _update_agv_position(agv: Agv, current_node: int):
     """Update AGV's position and path information."""
     control_policy = ControlPolicy(agv)
     control_policy.update_position_info(current_node)
 
 
-def _apply_control_policy(agv):
+def _apply_control_policy(agv: Agv) -> None:
     """Apply DSPA control policy to determine AGV's next action."""
     control_policy = ControlPolicy(agv)
 
@@ -44,7 +44,7 @@ def _apply_control_policy(agv):
     _handle_waiting_scenario(agv)
 
 
-def _trigger_deadlock_partner_control_policy(moved_agv_id):
+def _trigger_deadlock_partner_control_policy(moved_agv_id: int) -> None:
     """
     When an AGV moves, check if any other AGVs were waiting for this AGV
     due to deadlock resolution, and trigger their control policy.
@@ -67,7 +67,7 @@ def _trigger_deadlock_partner_control_policy(moved_agv_id):
             f"Error triggering deadlock partner control policy: {str(e)}")
 
 
-def _handle_backup_node_scenario(agv):
+def _handle_backup_node_scenario(agv: Agv) -> None:
     """Handle scenarios involving backup nodes."""
     control_policy = ControlPolicy(agv)
     if agv.spare_flag:
@@ -80,7 +80,7 @@ def _handle_backup_node_scenario(agv):
         control_policy.set_moving_with_backup_state()
 
 
-def _handle_waiting_scenario(agv):
+def _handle_waiting_scenario(agv: Agv) -> None:
     """Handle waiting scenarios and potential deadlocks."""
     control_policy = ControlPolicy(agv)
     control_policy.set_waiting_state()
