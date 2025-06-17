@@ -135,7 +135,7 @@ class Agv(models.Model):
         default=list,
         size=None
     )
-    return_path = ArrayField(
+    inbound_path = ArrayField(
         models.IntegerField(),
         help_text="Path from workstation node back to parking node.",
         default=list,
