@@ -255,7 +255,7 @@ class ResetAGVsView(APIView):
                 agv.adjacent_common_nodes = []
                 agv.active_order = None
                 agv.previous_node = None
-                agv.direction_change = Agv.STAY_STILL
+                agv.direction_change = Agv.GO_STRAIGHT
 
                 # Save the changes
                 agv.save(update_fields=[

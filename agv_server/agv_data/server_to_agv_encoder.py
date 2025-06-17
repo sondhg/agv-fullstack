@@ -30,7 +30,7 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
         next_node (int or None): Next node ID for AGV to move to (None will be encoded as 0)
         direction_change (int): Direction change instruction
                               (0=GO_STRAIGHT, 1=TURN_AROUND, 
-                               2=TURN_LEFT, 3=TURN_RIGHT, 4=STAY_STILL)
+                               2=TURN_LEFT, 3=TURN_RIGHT)
 
     Returns:
         bytes: Encoded message as byte array

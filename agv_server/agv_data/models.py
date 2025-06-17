@@ -38,7 +38,6 @@ class Agv(models.Model):
     TURN_AROUND = 1  # Reverse
     TURN_LEFT = 2  # Turn left
     TURN_RIGHT = 3  # Turn right
-    STAY_STILL = 4  # Do nothing
 
     # Human readable names
     DIRECTION_CHANGE_CHOICES = {
@@ -46,7 +45,6 @@ class Agv(models.Model):
         TURN_AROUND: "Turn around",
         TURN_LEFT: "Turn left",
         TURN_RIGHT: "Turn right",
-        STAY_STILL: "Do nothing"
     }
 
     # Model fields

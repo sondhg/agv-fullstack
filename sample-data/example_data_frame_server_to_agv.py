@@ -8,7 +8,7 @@ MESSAGE_TYPE = 0x03  # fixed value
 # Example for motion_state=1. motion_state can be 0 (IDLE), 1 (MOVING), or 2 (WAITING)
 MOTION_STATE = 1
 NEXT_NODE = 18  # Example for next_node=18
-# Example for direction_change=0. direction_change can be 0 (GO_STRAIGHT) or 1 (TURN_AROUND) or 2 (TURN_LEFT) OR 3 (TURN_RIGHT) or 4 (STAY_STILL)
+# Example for direction_change=0. direction_change can be 0 (GO_STRAIGHT) or 1 (TURN_AROUND) or 2 (TURN_LEFT) OR 3 (TURN_RIGHT)
 DIRECTION_CHANGE = 0
 
 FRAME_END = 0x7F  # fixed value
