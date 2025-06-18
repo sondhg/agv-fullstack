@@ -24,12 +24,12 @@ class Agv(models.Model):
 
     # Define choices for journey phase
     OUTBOUND = 0  # Moving from parking → storage → workstation
-    RETURN = 1    # Moving from workstation → parking
+    INBOUND = 1    # Moving from workstation → parking
 
     # Human readable names
     JOURNEY_PHASE_CHOICES = {
         OUTBOUND: "Outbound",
-        RETURN: "Return"
+        INBOUND: "Inbound"
     }
 
     # Define choices for direction_change
@@ -91,7 +91,7 @@ class Agv(models.Model):
     journey_phase = models.IntegerField(
         choices=JOURNEY_PHASE_CHOICES,
         default=OUTBOUND,
-        help_text="Whether AGV is on outbound (parking→storage→workstation) or return (workstation→parking) journey"
+        help_text="Whether AGV is on outbound (parking→storage→workstation) or inbound (workstation→parking) journey"
     )
 
     # DSPA algorithm specific fields from Algorithm 2

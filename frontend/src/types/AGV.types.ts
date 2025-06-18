@@ -10,7 +10,7 @@ export enum AGVMotionState {
 
 export enum AGVJourneyPhase {
   OUTBOUND = 0,
-  RETURN = 1,
+  INBOUND = 1,
 }
 
 export const CreateAgvZod = z.object({
