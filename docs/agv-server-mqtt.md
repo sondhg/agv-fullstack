@@ -11,6 +11,6 @@ sequenceDiagram
     loop When AGV reaches a node
         agv->>agvdata: Report position:<br/>Publish agv_id, current_node<br/>to "agvdata/{agv_id}"
         server->>server: Generate appropriate response
-        server->>agvroute: Give instructions:<br/>Publish direction_change, motion_state, next_node<br/>to "agvroute/{agv_id}"
+        server->>agvroute: Give instructions:<br/>Publish direction_change, motion_state, reserved_node<br/>to "agvroute/{agv_id}"
     end
 ```

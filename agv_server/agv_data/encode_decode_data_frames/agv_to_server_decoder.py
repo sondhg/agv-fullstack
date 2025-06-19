@@ -8,36 +8,33 @@ Converts byte array messages into JSON format for server processing.
 
 def verify_crc(codeword: bytearray) -> bool:
     """
-    Verify CRC by performing CRC calculation on the entire codeword.
-    According to CRC protocol, the receiver should calculate CRC on the entire
-    received codeword (data + CRC). If the result is zero, the data is error-free.
+    Verify CRC using modulo-2 binary division approach.
+    According to CRC protocol, the receiver performs modulo-2 division on the entire
+    received codeword (data + CRC). If the remainder is zero, the data is error-free.
+
+    This implements the classic modulo-2 division algorithm where:
+    - We convert bytes to binary representation
+    - Perform XOR-based division (modulo-2 arithmetic)
+    - Check if the final remainder is zero
 
     Args:
         codeword (bytearray): The complete received data including CRC
 
     Returns:
-        bool: True if CRC verification passes (result is zero), False otherwise
+        bool: True if remainder is zero (no errors), False otherwise
     """
-    # CRC-8 polynomial: 0x07 (x^8 + x^2 + x + 1) - same as used by sender
-    polynomial = 0x07
-    crc = 0x00  # Initial CRC value
+    # Convert the entire codeword to binary string
+    dividend = ''.join(format(byte, '08b') for byte in codeword)
 
-    # Process the entire codeword (data + CRC)
-    for byte in codeword:
-        # XOR the current byte with the CRC
-        crc ^= byte
+    # CRC-8 polynomial: 0x07 (x^8 + x^2 + x + 1) -> 100000111 in binary
+    # But for modulo-2 division, we use the 9-bit representation
+    divisor = '100000111'  # 9 bits for CRC-8 polynomial
 
-        # Process each bit
-        for _ in range(8):
-            if crc & 0x80:  # If MSB is set
-                crc = (crc << 1) ^ polynomial
-            else:
-                crc = crc << 1
-            # Keep only 8 bits
-            crc &= 0xFF
+    # Perform modulo-2 division
+    remainder = _modulo2_division(dividend, divisor)
 
-    # If CRC calculation on the entire codeword results in 0, data is valid
-    return crc == 0
+    # If remainder is all zeros, no error detected
+    return remainder == '0' * len(remainder)
 
 
 def example_frame_from_agv_to_server() -> bytes:
@@ -161,3 +158,36 @@ def decode_message(payload: bytes) -> dict:
 
     except Exception as e:
         raise ValueError(f"Failed to decode message: {str(e)}")
+
+
+def _modulo2_division(dividend: str, divisor: str) -> str:
+    """
+    Perform modulo-2 binary division using XOR operations.
+    This implements the classic polynomial division algorithm used in CRC.
+
+    Args:
+        dividend (str): Binary string representation of the data
+        divisor (str): Binary string representation of the generator polynomial
+
+    Returns:
+        str: Binary string representation of the remainder
+    """
+    # Make a copy of dividend to work with
+    dividend = dividend[:]
+    divisor_len = len(divisor)
+
+    # Perform the division
+    for i in range(len(dividend) - divisor_len + 1):
+        # If the current bit is 1, perform XOR with divisor
+        if dividend[i] == '1':
+            # XOR divisor with current window of dividend
+            for j in range(divisor_len):
+                # XOR operation: '0' XOR '0' = '0', '1' XOR '1' = '0', '0' XOR '1' = '1', '1' XOR '0' = '1'
+                dividend = (dividend[:i+j] +
+                            str(int(dividend[i+j]) ^ int(divisor[j])) +
+                            dividend[i+j+1:])
+
+    # The remainder is the last (divisor_len - 1) bits
+    remainder = dividend[-(divisor_len - 1):]
+
+    return remainder

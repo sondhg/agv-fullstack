@@ -180,6 +180,8 @@ def on_message(client, userdata, msg):
     hex_data = raw_data.hex()
     print(f"Raw message (bytes): {raw_data}")
     print(f"Raw message (hex): {hex_data}")
+    # Display data as binary
+    print("Raw message (binary):", ' '.join(format(byte, '08b') for byte in raw_data))
     if len(data) >= 8:  # Server messages are 8 bytes
         print(f"Frame start: {hex(raw_data[0])}")
         print(f"Frame length: {hex(raw_data[1])}")
