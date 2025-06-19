@@ -26,10 +26,15 @@ class DeadlockResolver:
         return self._detect_loop_deadlock()
 
     def resolve_heading_on_deadlock(self):
-        """Resolve head-on deadlock based on spare_flag priority."""
+        """
+        Resolve head-on deadlock based on spare_flag priority.
+
+        Returns:
+            List[Agv]: List of other AGVs that were affected by the deadlock resolution
+        """
         other_agv = self._find_deadlocked_agv_in_head_on()
         if not other_agv:
-            return
+            return []
 
         if self.agv.spare_flag:
             # This AGV moves to backup, other AGV moves normally
@@ -40,11 +45,19 @@ class DeadlockResolver:
             self._move_to_backup_node(other_agv, self.agv.agv_id)
             self._move_to_next_node(self.agv)
 
+        return [other_agv]
+
     def resolve_loop_deadlock(self):
-        """Resolve loop deadlock (implementation depends on specific strategy)."""
+        """
+        Resolve loop deadlock (implementation depends on specific strategy).
+
+        Returns:
+            List[Agv]: List of other AGVs that were affected by the deadlock resolution
+        """
         # For now, just reserve current position
         # This can be extended with more sophisticated loop breaking logic
         self.reserve_current_position()
+        return []
 
     def reserve_current_position(self):
         """Reserve the current position of the AGV."""

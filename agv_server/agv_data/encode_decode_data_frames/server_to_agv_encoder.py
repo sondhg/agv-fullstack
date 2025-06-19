@@ -1,4 +1,4 @@
-from calculate_crc import calculate_crc
+from .calculate_crc import calculate_crc
 
 """
 Encoder for messages sent from server to AGVs via MQTT.
@@ -12,13 +12,13 @@ MESSAGE_TYPE = 0x03
 FRAME_END = 0x7F
 
 
-def encode_message(motion_state: int, next_node: int, direction_change: int) -> bytes:
+def encode_message(motion_state: int, reserved_node: int, direction_change: int) -> bytes:
     """
     Encode server message into byte array format.
 
     Args:
         motion_state (int): AGV motion state (0=IDLE, 1=MOVING, 2=WAITING)
-        next_node (int or None): Next node ID for AGV to move to (None will be encoded as 0)
+        reserved_node (int or None): Reserved node ID for AGV to move to (None will be encoded as 0)
         direction_change (int): Direction change instruction
                               (0=GO_STRAIGHT, 1=TURN_AROUND, 
                                2=TURN_LEFT, 3=TURN_RIGHT)
@@ -32,9 +32,10 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
 
     try:        # Convert values to bytes
         motion_state_bytes = motion_state.to_bytes(1, byteorder='little')
-        # Handle None values for next_node (use 0 as default)
-        next_node_value = next_node if next_node is not None else 0
-        next_node_bytes = next_node_value.to_bytes(2, byteorder='little')
+        # Handle None values for reserved_node (use 0 as default)
+        reserved_node_value = reserved_node if reserved_node is not None else 0
+        reserved_node_bytes = reserved_node_value.to_bytes(
+            2, byteorder='little')
         direction_change_bytes = direction_change.to_bytes(
             1, byteorder='little')
 
@@ -43,7 +44,7 @@ def encode_message(motion_state: int, next_node: int, direction_change: int) -> 
         data_for_crc.append(FRAME_LENGTH)
         data_for_crc.append(MESSAGE_TYPE)
         data_for_crc.extend(motion_state_bytes)
-        data_for_crc.extend(next_node_bytes)
+        data_for_crc.extend(reserved_node_bytes)
         data_for_crc.extend(direction_change_bytes)
 
         crc = calculate_crc(data_for_crc)
