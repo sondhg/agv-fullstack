@@ -175,17 +175,21 @@ def on_message(client, userdata, msg):
     """Handle incoming MQTT messages from server"""
     print("\nReceived message from server:")
     print(f"Topic: {msg.topic}")
-    print(f"Raw message (hex): {msg.payload.hex()}")
-    print("Raw message content:")
     data = msg.payload
+    raw_data = bytes(data)
+    hex_data = raw_data.hex()
+    print(f"Raw message (bytes): {raw_data}")
+    print(f"Raw message (hex): {hex_data}")
     if len(data) >= 8:  # Server messages are 8 bytes
-        print(f"Frame start: 0x{data[0]:02x}")
-        print(f"Frame length: 0x{data[1]:02x}")
-        print(f"Message type: 0x{data[2]:02x}")
-        print(f"Motion state: {data[3]}")
-        print(f"Next node: {int.from_bytes(data[4:6], byteorder='little')}")
-        print(f"Direction change: {data[6]}")
-        print(f"Frame end: 0x{data[7]:02x}")
+        print(f"Frame start: {hex(raw_data[0])}")
+        print(f"Frame length: {hex(raw_data[1])}")
+        print(f"Message type: {hex(raw_data[2])}")
+        print(f"Motion state: {raw_data[3]}")
+        print(
+            f"Reserved node: {int.from_bytes(raw_data[4:6], byteorder='little')}")
+        print(f"Direction change: {raw_data[6]}")
+        print(f"CRC: {hex(raw_data[7])}")
+        print(f"Frame end: {hex(raw_data[8])}")
     else:
         print("Message too short to decode")
     print("")  # Add extra newline to ensure prompt appears immediately
