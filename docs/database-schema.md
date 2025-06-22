@@ -1,7 +1,6 @@
 ```mermaid
 erDiagram
     direction LR
-
     Agv {
         bigint agv_id PK
         int preferred_parking_node
@@ -11,12 +10,17 @@ erDiagram
         int next_node
         int reserved_node
         int motion_state
-        list initial_path
-        list remaining_path
-        list common_nodes
-        list adjacent_common_nodes
+        int journey_phase
         boolean spare_flag
         dict backup_nodes
+        boolean waiting_for_deadlock_resolution
+        bigint deadlock_partner_agv_id
+        list initial_path
+        list remaining_path
+        list outbound_path
+        list inbound_path
+        list common_nodes
+        list adjacent_common_nodes
         bigint active_order_id FK
     }
 

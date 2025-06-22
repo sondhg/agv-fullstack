@@ -38,7 +38,7 @@ function App() {
           theme="light"
           toastOptions={{}}
           position="top-right"
-          duration={1500}
+          duration={3000}
         />
         <ToasterToast />
       </ErrorBoundary>

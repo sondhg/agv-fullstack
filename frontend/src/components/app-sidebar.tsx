@@ -35,7 +35,7 @@ const data = {
   ],
   navMain: [
     {
-      title: "Admin pages",
+      title: "Admin",
       url: "#",
       icon: Navigation,
       isActive: true,
@@ -55,11 +55,11 @@ const data = {
           url: FRONTEND_ROUTES.orders.path,
           icon: FRONTEND_ROUTES.orders.icon,
         },
-        {
-          title: FRONTEND_ROUTES.dashboard.title,
-          url: FRONTEND_ROUTES.dashboard.path,
-          icon: FRONTEND_ROUTES.dashboard.icon,
-        },
+        // {
+        //   title: FRONTEND_ROUTES.dashboard.title,
+        //   url: FRONTEND_ROUTES.dashboard.path,
+        //   icon: FRONTEND_ROUTES.dashboard.icon,
+        // },
       ],
     },
     {

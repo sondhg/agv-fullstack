@@ -7,7 +7,7 @@ import {
 
 export function AccordionCSVMapGuide() {
   return (
-    <Accordion type="single" collapsible className="w-full">
+    <Accordion type="multiple"  className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>Purpose of 1st CSV</AccordionTrigger>
         <AccordionContent>

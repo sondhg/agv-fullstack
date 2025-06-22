@@ -33,9 +33,8 @@ const steps = [
       "Go to AGVs page to assign created orders to AGVs and calculate initial pathfinding parameters.",
   },
   {
-    title: "Simulate AGVs movement and see data being updated.",
-    description:
-      "Go to AGVs page to use the 24-step simulation program and view data changes as AGVs travel.",
+    title: "View live AGV data",
+    description: "Stay on AGVs page to see real-time data updates of AGVs.",
   },
 ];
 
