@@ -75,3 +75,5 @@ db-data/
 
 # Personal
 tex/
+
+*.log.error
