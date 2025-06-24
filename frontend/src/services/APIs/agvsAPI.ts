@@ -51,9 +51,25 @@ const scheduleHelloMessage = async (): Promise<AGV[]> => {
   return apiService.get(API_ENDPOINTS.agvs.scheduleHelloMessage);
 };
 
+const createAGVsViaCSV = async (
+  csvFile: File,
+): Promise<{ success: boolean; message: string; created_agvs: AGV[] }> => {
+  const formData = new FormData();
+  formData.append("csv_file", csvFile);
+
+  // For FormData, we need to let the browser set the Content-Type header
+  // to include the proper boundary parameter
+  return apiService.post(API_ENDPOINTS.agvs.createViaCSV, formData, {
+    headers: {
+      "Content-Type": undefined, // This allows axios to set the proper Content-Type with boundary
+    },
+  });
+};
+
 export {
   bulkDeleteAGVs,
   createAGV,
+  createAGVsViaCSV,
   deleteAGV,
   dispatchOrdersToAGVs,
   getAGVs,

@@ -11,6 +11,9 @@ from django.conf import settings
 from order_data.models import Order
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import csv
+import io
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 def send_order_assignment_notification(order_id, agv_id, message, additional_data=None):
@@ -283,4 +286,152 @@ class ResetAGVsView(APIView):
                     "message": f"Error resetting AGVs: {str(e)}",
                     "details": traceback_str
                 },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,)
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class CreateAGVsViaCSVView(APIView):
+    """
+    API endpoint to create multiple AGVs from a CSV file.
+    Expected CSV format: agv_id,preferred_parking_node
+    """
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        try:
+            # Check if CSV file is provided
+            if 'csv_file' not in request.FILES:
+                return Response(
+                    {"error": "No CSV file provided. Please upload a file with the key 'csv_file'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            csv_file = request.FILES['csv_file']
+
+            # Validate file extension
+            if not csv_file.name.lower().endswith('.csv'):
+                return Response(
+                    {"error": "File must be a CSV file."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Read and parse CSV file
+            try:
+                file_content = csv_file.read().decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(file_content))
+
+                # Validate CSV headers
+                expected_headers = {'agv_id', 'preferred_parking_node'}
+                actual_headers = set(
+                    csv_reader.fieldnames) if csv_reader.fieldnames else set()
+
+                if not expected_headers.issubset(actual_headers):
+                    missing_headers = expected_headers - actual_headers
+                    return Response(
+                        {
+                            "error": f"CSV file is missing required headers: {', '.join(missing_headers)}. "
+                            f"Expected headers: agv_id, preferred_parking_node"
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Parse CSV rows and prepare data for AGV creation
+                agv_data_list = []
+                row_number = 1  # Start from 1 since header is row 0
+
+                for row in csv_reader:
+                    row_number += 1
+
+                    # Skip empty rows
+                    if not any(row.values()):
+                        continue
+
+                    # Validate and clean data
+                    try:
+                        agv_id = int(row['agv_id'])
+                        preferred_parking_node = int(
+                            row['preferred_parking_node']) if row['preferred_parking_node'].strip() else None
+                    except ValueError as e:
+                        return Response(
+                            {
+                                "error": f"Invalid data in row {row_number}: {str(e)}. "
+                                f"agv_id and preferred_parking_node must be integers."
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                    # Check for duplicate AGV IDs in the CSV
+                    if any(agv_data['agv_id'] == agv_id for agv_data in agv_data_list):
+                        return Response(
+                            {
+                                "error": f"Duplicate agv_id {agv_id} found in row {row_number}. "
+                                f"Each AGV ID must be unique."
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
+
+                    agv_data_list.append({
+                        'agv_id': agv_id,
+                        'preferred_parking_node': preferred_parking_node
+                    })
+
+                if not agv_data_list:
+                    return Response(
+                        {"error": "No valid data rows found in the CSV file."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+            except Exception as e:
+                return Response(
+                    {"error": f"Error reading CSV file: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Check for existing AGV IDs in database
+            existing_agv_ids = list(Agv.objects.filter(
+                agv_id__in=[agv_data['agv_id'] for agv_data in agv_data_list]
+            ).values_list('agv_id', flat=True))
+
+            if existing_agv_ids:
+                return Response(
+                    {
+                        "error": f"AGVs with the following IDs already exist: {', '.join(map(str, existing_agv_ids))}. "
+                        f"Please use unique AGV IDs."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # Create AGVs using the existing serializer
+            with transaction.atomic():
+                serializer = AGVSerializer(data=agv_data_list, many=True)
+
+                if serializer.is_valid():
+                    created_agvs = serializer.save()
+
+                    return Response(
+                        {
+                            "success": True,
+                            "message": f"Successfully created {len(created_agvs)} AGVs from CSV file.",
+                            "created_agvs": AGVSerializer(created_agvs, many=True).data
+                        },
+                        status=status.HTTP_201_CREATED,
+                    )
+                else:
+                    return Response(
+                        {
+                            "error": "Validation failed for AGV data.",
+                            "details": serializer.errors
+                        },
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+        except Exception as e:
+            import traceback
+            traceback_str = traceback.format_exc()
+            return Response(
+                {
+                    "error": f"An unexpected error occurred: {str(e)}",
+                    "details": traceback_str
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

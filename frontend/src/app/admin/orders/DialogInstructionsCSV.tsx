@@ -93,21 +93,22 @@ export function DialogInstructionsCSV() {
                 <code>
                   order_id,order_date,start_time,parking_node,storage_node,workstation_node
                   <br />
-                  1,2025-04-07,10:00:00,7,15,23,
+                  1,2025-04-13,14:00:00,7,15,23,
                   <br />
-                  2,2025-04-07,10:00:05,19,11,16,
+                  2,2025-04-13,14:00:05,19,11,16,
                   <br />
-                  3,2025-04-07,10:00:10,13,11,9,
+                  3,2025-04-13,14:00:10,13,11,9,
                 </code>
               </pre>
               {/* Button to download the first CSV file */}
-              <Button onClick={handleDownloadCSVexample1and2}>
+              {/* Hide for final screenshots */}
+              {/* <Button onClick={handleDownloadCSVexample1and2}>
                 Download sample orders-example-1-2.csv
-              </Button>
+              </Button> */}
               {/* Button to download the second CSV file */}
-              <Button variant={"secondary"} onClick={handleDownloadCSVexample3}>
+              {/* <Button variant={"secondary"} onClick={handleDownloadCSVexample3}>
                 Download sample orders-example-3.csv
-              </Button>
+              </Button> */}
             </div>
           </AlertDescription>
         </Alert>

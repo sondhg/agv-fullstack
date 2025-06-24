@@ -16,22 +16,23 @@ import { fetchMapData } from "@/services/APIs/mapAPI";
 import { AGV } from "@/types/AGV.types";
 import { MapData } from "@/types/Map.types";
 import { Order } from "@/types/Order.types";
-import { CalendarPlus, RefreshCcw } from "lucide-react";
+import { CalendarPlus, RefreshCcw, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MapVisualizer } from "../map/MapVisualizer";
 import { AlgorithmSelect } from "./AlgorithmSelect";
 import { columns1 } from "./columns1";
 import { columns2 } from "./columns2";
+import { DialogCSVUpload } from "./DialogCSVUpload";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { DialogViewOrderInfo } from "./DialogViewOrderInfo";
 
-export function PageAGVs() {
-  // Core state
+export function PageAGVs() {  // Core state
   const [agvs, setAgvs] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  const [isCSVDialogOpen, setIsCSVDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDispatching, setIsDispatching] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -273,8 +274,7 @@ export function PageAGVs() {
                   selectedAlgorithm={selectedAlgorithm}
                   onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
                 />
-              </div>{" "}
-              <div className="grid w-[28%] grid-rows-2 gap-4">
+              </div>{" "}              <div className="grid w-[28%] grid-rows-3 gap-4">
                 <Button
                   onClick={handleResetAGVs}
                   disabled={isResetting}
@@ -283,6 +283,14 @@ export function PageAGVs() {
                 >
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   {isResetting ? "Resetting..." : "Reset AGVs"}
+                </Button>
+                <Button
+                  onClick={() => setIsCSVDialogOpen(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Create AGVs via CSV
                 </Button>
               </div>
             </div>{" "}
@@ -303,12 +311,16 @@ export function PageAGVs() {
             />{" "}
           </div>
         </div>
-      </div>
-
-      <DialogViewOrderInfo
+      </div>      <DialogViewOrderInfo
         isDialogOpen={isOrderDialogOpen}
         setIsDialogOpen={setIsOrderDialogOpen}
         orderToView={selectedOrder}
+      />
+
+      <DialogCSVUpload
+        isDialogOpen={isCSVDialogOpen}
+        setIsDialogOpen={setIsCSVDialogOpen}
+        onSuccess={refreshAgvData}
       />
     </div>
   );

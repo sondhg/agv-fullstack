@@ -186,7 +186,7 @@ export function DialogFormCreateOrders({
                   <FormItem>
                     <FormLabel>Storage Node</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter load name" {...field} />
+                      <Input {...field} />
                     </FormControl>
                     <FormDescription>
                       Where AGV picks up materials.

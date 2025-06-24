@@ -44,7 +44,8 @@ export function OrdersActionButtons({
         orderToUpdate={orderToUpdate}
       />
       <OrdersCSVActions listOrders={listOrders} fetchListData={fetchListData} />
-      <OrdersExampleGenerator fetchListData={fetchListData} />
+      {/* Hide for final screenshots */}
+      {/* <OrdersExampleGenerator fetchListData={fetchListData} /> */}
       <MassDeleteButton
         selectedIds={selectedOrderIds}
         onDelete={bulkDeleteOrders}
