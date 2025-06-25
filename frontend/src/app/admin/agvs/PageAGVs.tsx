@@ -27,7 +27,8 @@ import { DialogCSVUpload } from "./DialogCSVUpload";
 import { DialogFormCreateAGVs } from "./DialogFormCreateAGVs";
 import { DialogViewOrderInfo } from "./DialogViewOrderInfo";
 
-export function PageAGVs() {  // Core state
+export function PageAGVs() {
+  // Core state
   const [agvs, setAgvs] = useState<AGV[]>([]);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -225,7 +226,6 @@ export function PageAGVs() {  // Core state
   return (
     <div className="space-y-5">
       <h2 className="text-3xl font-bold">AGVs</h2>
-
       <div className="flex flex-1 flex-col">
         <div className="gap-2">
           <div className="flex flex-col gap-4 md:gap-6">
@@ -250,6 +250,16 @@ export function PageAGVs() {  // Core state
                   setIsDialogOpen={setIsDialogOpen}
                   fetchListData={refreshAgvData}
                 />
+                <Button
+                  onClick={() => setIsCSVDialogOpen(true)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Create AGVs via CSV
+                </Button>
+              </div>
+              <div className="grid w-[28%] grid-rows-3 gap-4">
                 <MassDeleteButton
                   selectedIds={selectedAgvIds}
                   onDelete={bulkDeleteAGVs}
@@ -257,6 +267,15 @@ export function PageAGVs() {  // Core state
                   onSuccess={refreshAgvData}
                   resetSelection={resetSelection}
                 />
+                <Button
+                  onClick={handleResetAGVs}
+                  disabled={isResetting}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  {isResetting ? "Resetting..." : "Reset AGVs"}
+                </Button>
               </div>
               <div className="grid w-[28%] grid-rows-2 gap-4">
                 {" "}
@@ -274,25 +293,7 @@ export function PageAGVs() {  // Core state
                   selectedAlgorithm={selectedAlgorithm}
                   onAlgorithmChange={(value) => setSelectedAlgorithm(value)}
                 />
-              </div>{" "}              <div className="grid w-[28%] grid-rows-3 gap-4">
-                <Button
-                  onClick={handleResetAGVs}
-                  disabled={isResetting}
-                  variant="destructive"
-                  className="w-full"
-                >
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  {isResetting ? "Resetting..." : "Reset AGVs"}
-                </Button>
-                <Button
-                  onClick={() => setIsCSVDialogOpen(true)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  Create AGVs via CSV
-                </Button>
-              </div>
+              </div>{" "}
             </div>{" "}
             <DataTable
               data={agvs}
@@ -311,12 +312,12 @@ export function PageAGVs() {  // Core state
             />{" "}
           </div>
         </div>
-      </div>      <DialogViewOrderInfo
+      </div>{" "}
+      <DialogViewOrderInfo
         isDialogOpen={isOrderDialogOpen}
         setIsDialogOpen={setIsOrderDialogOpen}
         orderToView={selectedOrder}
       />
-
       <DialogCSVUpload
         isDialogOpen={isCSVDialogOpen}
         setIsDialogOpen={setIsCSVDialogOpen}

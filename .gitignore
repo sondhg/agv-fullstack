@@ -77,3 +77,5 @@ db-data/
 tex/
 
 *.log.error
+
+dev-processes.json
