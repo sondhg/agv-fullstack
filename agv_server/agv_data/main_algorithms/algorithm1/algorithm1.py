@@ -137,7 +137,9 @@ class TaskDispatcher:
                     orders_data_list.append(order_data)
 
                     # Update AGV state to waiting (according to Algorithm 2 in paper)
-                    assigned_agv.motion_state = Agv.WAITING
+                    # ! Comment out because these do not work. These are done in the _process_and_assign_order method
+                    # assigned_agv.motion_state = Agv.WAITING
+                    # assigned_agv.direction_change = Agv.GO_STRAIGHT
                     assigned_agv.save()
             except Exception as e:
                 print(f"Failed to process task {task.order_id}: {str(e)}")
@@ -324,6 +326,7 @@ class TaskDispatcher:
 
             # Update AGV state to waiting
             agv.motion_state = Agv.WAITING
+            agv.direction_change = Agv.GO_STRAIGHT
             # Recalculate common nodes for all AGVs (including the newly assigned AGV)
             agv.save()
             active_agvs_count = Agv.objects.filter(
