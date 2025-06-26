@@ -43,6 +43,8 @@ class ControlPolicy:
             len(self.agv.remaining_path) > 0 and
                 current_node == self.agv.remaining_path[0]):
 
+            logger.debug(
+                f"AGV {self.agv.agv_id} reached node {current_node}, removing from remaining path")
             self.agv.remaining_path = self.agv.remaining_path[1:]
             self.agv.save(update_fields=['remaining_path'])
 
@@ -55,6 +57,8 @@ class ControlPolicy:
             self.agv.save(update_fields=['next_node'])
         else:
             # Clear next_node if no remaining path
+            logger.debug(
+                f"AGV {self.agv.agv_id} has no remaining path, clearing next_node")
             self.agv.next_node = None
             self.agv.save(update_fields=['next_node'])
 
@@ -113,6 +117,10 @@ class ControlPolicy:
 
         # Handle order completion on inbound journey
         elif self.agv.journey_phase == Agv.INBOUND:
+            # ADDITIONAL CHECK: Fix remaining path if AGV is already in inbound phase
+            # but remaining path wasn't properly updated during transition
+            self._validate_inbound_remaining_path(current_node)
+
             parking_node = self.agv.active_order.parking_node
 
             # If AGV has reached parking node and inbound journey is complete
@@ -122,9 +130,100 @@ class ControlPolicy:
     def _is_inbound_journey_complete(self):
         """
         Check if the inbound journey is complete.
-        Returns True if the remaining path is empty (reached parking node).
+        Returns True if:
+        1. The remaining path is empty (reached parking node), OR
+        2. AGV is at the parking node (last node of inbound path)
         """
-        return not self.agv.remaining_path or len(self.agv.remaining_path) == 0
+        # If no remaining path, inbound journey is complete
+        if not self.agv.remaining_path or len(self.agv.remaining_path) == 0:
+            return True
+
+        # Check if AGV has reached the parking node (last node of inbound path)
+        if (self.agv.active_order and
+                self.agv.current_node == self.agv.active_order.parking_node):
+            return True
+
+        return False
+
+    def _validate_inbound_remaining_path(self, current_node):
+        """
+        Validate and fix the remaining path for AGVs already in inbound phase.
+        This handles cases where AGV is in inbound phase but remaining path wasn't properly updated.
+        """
+        if not self.agv.inbound_path:
+            return
+
+        # Special case: If AGV is at the parking node (end of inbound journey), clear remaining path
+        if (self.agv.active_order and
+                current_node == self.agv.active_order.parking_node):
+
+            if self.agv.remaining_path:
+                logger.info(
+                    f"AGV {self.agv.agv_id} has reached parking node {current_node}, clearing remaining path for order completion")
+                self.agv.remaining_path = []
+                self.agv.next_node = None
+                self.agv.reserved_node = None
+                self.agv.save(
+                    update_fields=['remaining_path', 'next_node', 'reserved_node'])
+            return
+
+        # Check if remaining path needs correction for AGVs not at parking node
+        should_fix = False
+
+        # Case 1: Remaining path doesn't match inbound path structure
+        if not self.agv.remaining_path:
+            logger.warning(
+                f"AGV {self.agv.agv_id} in inbound phase but has no remaining path")
+            should_fix = True
+        elif (len(self.agv.remaining_path) > len(self.agv.inbound_path) or
+              not self._is_valid_inbound_remaining_path()):
+            logger.warning(
+                f"AGV {self.agv.agv_id} in inbound phase but remaining path doesn't match inbound structure")
+            should_fix = True
+
+        if should_fix:
+            logger.info(
+                f"Fixing remaining path for AGV {self.agv.agv_id} in inbound phase")
+
+            # Set remaining path to inbound path
+            self.agv.remaining_path = self.agv.inbound_path.copy()
+
+            # Remove current node if it's at the start of the path
+            if (self.agv.remaining_path and
+                len(self.agv.remaining_path) > 0 and
+                    current_node == self.agv.remaining_path[0]):
+
+                logger.info(
+                    f"AGV {self.agv.agv_id} is at node {current_node}, removing from remaining path")
+                self.agv.remaining_path = self.agv.remaining_path[1:]
+
+            # Update next_node
+            if self.agv.remaining_path and len(self.agv.remaining_path) > 0:
+                self.agv.next_node = self.agv.remaining_path[0]
+            else:
+                self.agv.next_node = None
+
+            # Clear reserved_node
+            self.agv.reserved_node = None
+
+            # Save changes
+            self.agv.save(
+                update_fields=['remaining_path', 'next_node', 'reserved_node'])
+
+            logger.info(
+                f"Fixed AGV {self.agv.agv_id} remaining path: {self.agv.remaining_path}")
+
+    def _is_valid_inbound_remaining_path(self):
+        """Check if the current remaining path is a valid subset of the inbound path."""
+        if not self.agv.inbound_path or not self.agv.remaining_path:
+            return False
+
+        # Find where remaining path should start in inbound path
+        for i in range(len(self.agv.inbound_path)):
+            if (len(self.agv.remaining_path) <= len(self.agv.inbound_path) - i and
+                    self.agv.remaining_path == self.agv.inbound_path[i:i + len(self.agv.remaining_path)]):
+                return True
+        return False
 
     def _is_outbound_journey_complete(self):
         """
@@ -182,8 +281,29 @@ class ControlPolicy:
         # Set remaining path to the inbound path
         self.agv.remaining_path = self.agv.inbound_path.copy()
 
+        # CRITICAL FIX: If AGV is already at the workstation (first node of inbound path),
+        # remove it from remaining path since the AGV is already there
+        if (self.agv.remaining_path and
+            len(self.agv.remaining_path) > 0 and
+                self.agv.current_node == self.agv.remaining_path[0]):
+
+            logger.info(
+                f"AGV {self.agv.agv_id} is already at workstation node {self.agv.current_node}, removing from remaining path")
+            self.agv.remaining_path = self.agv.remaining_path[1:]
+
+        # Update next_node based on the new remaining path
+        if self.agv.remaining_path and len(self.agv.remaining_path) > 0:
+            self.agv.next_node = self.agv.remaining_path[0]
+        else:
+            self.agv.next_node = None
+
+        # Clear reserved_node so it gets updated by the control policy
+        # The control policy will set the correct reserved_node based on the new next_node
+        self.agv.reserved_node = None
+
         # Save the changes
-        self.agv.save(update_fields=['journey_phase', 'remaining_path'])
+        self.agv.save(update_fields=[
+                      'journey_phase', 'remaining_path', 'next_node', 'reserved_node'])
 
         logger.info(
             f"AGV {self.agv.agv_id} now on inbound journey with remaining path: {self.agv.remaining_path}")
@@ -228,7 +348,10 @@ class ControlPolicy:
         self.agv.next_node = None
         self.agv.reserved_node = None
 
-        # Clear deadlock-related flags
+        # Set direction to turn around when AGV finishes its inbound path at parking node
+        self.agv.direction_change = Agv.TURN_AROUND
+
+        # Clear deadlock-related flags and spare flag
         self.agv.spare_flag = False
         self.agv.backup_nodes = {}
         self.agv.waiting_for_deadlock_resolution = False
@@ -238,7 +361,7 @@ class ControlPolicy:
         self.agv.save(update_fields=[
             'active_order', 'initial_path', 'remaining_path', 'outbound_path',
             'inbound_path', 'common_nodes', 'adjacent_common_nodes', 'journey_phase',
-            'motion_state', 'next_node', 'reserved_node', 'spare_flag', 'backup_nodes',
+            'motion_state', 'next_node', 'reserved_node', 'direction_change', 'spare_flag', 'backup_nodes',
             'waiting_for_deadlock_resolution', 'deadlock_partner_agv_id'
         ])
 
@@ -288,11 +411,19 @@ class ControlPolicy:
 
     def should_use_backup_nodes(self):
         """Check if backup node handling is needed."""
+        # If AGV has no next_node (idle), no backup nodes are needed
+        if not self.agv.next_node:
+            return False
+
         reserved_nodes = self._get_reserved_nodes_by_others()
         return self.agv.next_node not in reserved_nodes
 
     def can_move_with_backup(self):
         """Check if AGV can move after backup node allocation (condition 3)."""
+        # If AGV has no next_node (idle), it cannot move with backup
+        if not self.agv.next_node:
+            return False
+
         if not self.agv.backup_nodes:
             return False
 

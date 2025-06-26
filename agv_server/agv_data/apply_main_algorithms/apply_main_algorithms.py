@@ -34,6 +34,11 @@ def _apply_control_policy(agv: Agv) -> List[Agv]:
     """
     control_policy = ControlPolicy(agv)
 
+    # If AGV is idle (no active order and no next node), no control policy needed
+    if not agv.active_order and not agv.next_node:
+        logger.debug(f"AGV {agv.agv_id} is idle, no control policy needed")
+        return []
+
     # Check if AGV can move based on basic conditions
     if control_policy.can_move_freely():
         control_policy.set_moving_state()

@@ -24,8 +24,29 @@
   { "agv_id": 3, "current_node": 13 },
   { "agv_id": 3, "current_node": 12 },
   { "agv_id": 3, "current_node": 11 },
-  { "agv_id": 3, "current_node": 19 }
+  { "agv_id": 3, "current_node": 19 },
   // Inbound path
+  { "agv_id": 1, "current_node": 21 },
+  { "agv_id": 2, "current_node": 22 },
+  { "agv_id": 1, "current_node": 13 },
+  { "agv_id": 1, "current_node": 5 },
+  { "agv_id": 1, "current_node": 6 },
+  { "agv_id": 1, "current_node": 7 },
+  { "agv_id": 1, "current_node": 8 },
+  { "agv_id": 3, "current_node": 11 },
+  { "agv_id": 2, "current_node": 14 },
+  { "agv_id": 3, "current_node": 12 },
+  { "agv_id": 2, "current_node": 13 },
+  { "agv_id": 2, "current_node": 21 },
+  { "agv_id": 3, "current_node": 13 },
+  { "agv_id": 3, "current_node": 14 },
+  { "agv_id": 3, "current_node": 15 },
+  { "agv_id": 3, "current_node": 16 },
+  { "agv_id": 2, "current_node": 13 },
+  { "agv_id": 2, "current_node": 12 },
+  { "agv_id": 2, "current_node": 11 },
+  { "agv_id": 2, "current_node": 10 },
+  { "agv_id": 2, "current_node": 9 }
 ]
 
 // ! Do Duc Toan
