@@ -1,5 +1,6 @@
 // ! Dinh Hoang Son
 [
+  // Outbound path
   { "agv_id": 1, "current_node": 8 },
   { "agv_id": 2, "current_node": 9 },
   { "agv_id": 3, "current_node": 16 },
@@ -24,6 +25,7 @@
   { "agv_id": 3, "current_node": 12 },
   { "agv_id": 3, "current_node": 11 },
   { "agv_id": 3, "current_node": 19 }
+  // Inbound path
 ]
 
 // ! Do Duc Toan

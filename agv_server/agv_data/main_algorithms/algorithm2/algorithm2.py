@@ -1,4 +1,7 @@
 from ...models import Agv
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ControlPolicy:
@@ -43,9 +46,16 @@ class ControlPolicy:
             self.agv.remaining_path = self.agv.remaining_path[1:]
             self.agv.save(update_fields=['remaining_path'])
 
+        # Check for journey phase transition after updating remaining path
+        self._check_journey_phase_transition(current_node)
+
         # Update next node based on remaining path
         if self.agv.remaining_path and len(self.agv.remaining_path) > 0:
             self.agv.next_node = self.agv.remaining_path[0]
+            self.agv.save(update_fields=['next_node'])
+        else:
+            # Clear next_node if no remaining path
+            self.agv.next_node = None
             self.agv.save(update_fields=['next_node'])
 
     def _update_shared_nodes(self, current_node):
@@ -83,6 +93,167 @@ class ControlPolicy:
             if len(agv.adjacent_common_nodes) < 2:
                 agv.adjacent_common_nodes = []
                 agv.save(update_fields=['adjacent_common_nodes'])
+
+    def _check_journey_phase_transition(self, current_node):
+        """
+        Check if the AGV has completed its outbound journey and should transition to inbound journey,
+        or if it has completed the entire order journey.
+        """
+        # Only check transition if AGV has an active order
+        if not self.agv.active_order:
+            return
+
+        # Handle outbound to inbound transition
+        if self.agv.journey_phase == Agv.OUTBOUND:
+            workstation_node = self.agv.active_order.workstation_node
+
+            # If AGV has reached workstation and outbound journey is complete
+            if current_node == workstation_node and self._is_outbound_journey_complete():
+                self._transition_to_inbound_journey()
+
+        # Handle order completion on inbound journey
+        elif self.agv.journey_phase == Agv.INBOUND:
+            parking_node = self.agv.active_order.parking_node
+
+            # If AGV has reached parking node and inbound journey is complete
+            if current_node == parking_node and self._is_inbound_journey_complete():
+                self._complete_order_journey()
+
+    def _is_inbound_journey_complete(self):
+        """
+        Check if the inbound journey is complete.
+        Returns True if the remaining path is empty (reached parking node).
+        """
+        return not self.agv.remaining_path or len(self.agv.remaining_path) == 0
+
+    def _is_outbound_journey_complete(self):
+        """
+        Check if the outbound journey is complete.
+        Returns True if the remaining path matches the inbound path or if remaining path is empty
+        and we're at the workstation.
+        """
+        # If no remaining path, outbound journey is complete
+        if not self.agv.remaining_path or len(self.agv.remaining_path) == 0:
+            logger.debug(
+                f"AGV {self.agv.agv_id} outbound journey complete: no remaining path")
+            return True
+
+        # If no inbound path is set, this is an error - log it but allow completion
+        if not self.agv.inbound_path:
+            logger.warning(
+                f"AGV {self.agv.agv_id} has no inbound path set, treating outbound as complete")
+            return True
+
+        # If remaining path matches inbound path, outbound journey is complete
+        if self.agv.remaining_path == self.agv.inbound_path:
+            logger.debug(
+                f"AGV {self.agv.agv_id} outbound journey complete: remaining path matches inbound path")
+            return True
+
+        # If current remaining path is a subset starting from the inbound path
+        # This handles cases where remaining_path contains both outbound and inbound segments
+        if (len(self.agv.remaining_path) <= len(self.agv.inbound_path) and
+                self.agv.remaining_path == self.agv.inbound_path[:len(self.agv.remaining_path)]):
+            logger.debug(
+                f"AGV {self.agv.agv_id} outbound journey complete: remaining path is subset of inbound path")
+            return True
+
+        logger.debug(
+            f"AGV {self.agv.agv_id} outbound journey not complete. Remaining: {self.agv.remaining_path}, Inbound: {self.agv.inbound_path}")
+        return False
+
+    def _transition_to_inbound_journey(self):
+        """
+        Transition AGV from outbound to inbound journey phase.
+        Updates journey_phase and sets remaining_path to inbound_path.
+        """
+        logger.info(
+            f"AGV {self.agv.agv_id} transitioning from outbound to inbound journey")
+
+        # Validate that inbound path exists
+        if not self.agv.inbound_path:
+            logger.error(
+                f"AGV {self.agv.agv_id} cannot transition to inbound: no inbound path set")
+            return
+
+        # Update journey phase to inbound
+        self.agv.journey_phase = Agv.INBOUND
+
+        # Set remaining path to the inbound path
+        self.agv.remaining_path = self.agv.inbound_path.copy()
+
+        # Save the changes
+        self.agv.save(update_fields=['journey_phase', 'remaining_path'])
+
+        logger.info(
+            f"AGV {self.agv.agv_id} now on inbound journey with remaining path: {self.agv.remaining_path}")
+
+        # Recalculate common nodes for all AGVs since this AGV's path has changed
+        try:
+            from ..algorithm1.common_nodes import recalculate_all_common_nodes
+            recalculate_all_common_nodes(log_summary=True)
+            logger.info(
+                f"Recalculated common nodes after AGV {self.agv.agv_id} inbound transition")
+        except Exception as e:
+            logger.error(
+                f"Failed to recalculate common nodes after inbound transition: {str(e)}")
+
+    def _complete_order_journey(self):
+        """
+        Complete the AGV's order journey when it reaches the parking node on inbound journey.
+        This clears the active order and resets the AGV to idle state.
+        """
+        if not self.agv.active_order:
+            logger.warning(
+                f"AGV {self.agv.agv_id} cannot complete journey: no active order")
+            return
+
+        order_id = self.agv.active_order.order_id
+        logger.info(f"AGV {self.agv.agv_id} completing order {order_id}")
+
+        # Clear order-related data
+        self.agv.active_order = None
+        self.agv.initial_path = []
+        self.agv.remaining_path = []
+        self.agv.outbound_path = []
+        self.agv.inbound_path = []
+        self.agv.common_nodes = []
+        self.agv.adjacent_common_nodes = []
+
+        # Reset journey phase to outbound for next order
+        self.agv.journey_phase = Agv.OUTBOUND
+
+        # Set AGV to idle state
+        self.agv.motion_state = Agv.IDLE
+        self.agv.next_node = None
+        self.agv.reserved_node = None
+
+        # Clear deadlock-related flags
+        self.agv.spare_flag = False
+        self.agv.backup_nodes = {}
+        self.agv.waiting_for_deadlock_resolution = False
+        self.agv.deadlock_partner_agv_id = None
+
+        # Save all changes
+        self.agv.save(update_fields=[
+            'active_order', 'initial_path', 'remaining_path', 'outbound_path',
+            'inbound_path', 'common_nodes', 'adjacent_common_nodes', 'journey_phase',
+            'motion_state', 'next_node', 'reserved_node', 'spare_flag', 'backup_nodes',
+            'waiting_for_deadlock_resolution', 'deadlock_partner_agv_id'
+        ])
+
+        # Recalculate common nodes for all AGVs since this AGV is now idle
+        try:
+            from ..algorithm1.common_nodes import recalculate_all_common_nodes
+            recalculate_all_common_nodes(log_summary=True)
+            logger.info(
+                f"Recalculated common nodes after AGV {self.agv.agv_id} order completion")
+        except Exception as e:
+            logger.error(
+                f"Failed to recalculate common nodes after order completion: {str(e)}")
+
+        logger.info(
+            f"AGV {self.agv.agv_id} order {order_id} completion finished - now idle")
 
     # === Movement Decision Logic ===
 
