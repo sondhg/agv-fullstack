@@ -93,10 +93,10 @@ def encode_agv_position(agv_id: int, current_node: int) -> bytes:
 
 def load_simulation_steps(file_path: str) -> list:
     """
-    Load simulation steps from JSON file.
+    Load simulation steps from JSON or JSONC file.
 
     Args:
-        file_path (str): Path to the JSON file containing simulation steps
+        file_path (str): Path to the JSON/JSONC file containing simulation steps
 
     Returns:
         list: List of simulation steps
@@ -107,7 +107,21 @@ def load_simulation_steps(file_path: str) -> list:
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            steps = json.load(f)
+            content = f.read()
+
+        # Remove comments from JSONC format
+        # This is a simple implementation that removes lines starting with //
+        lines = content.split('\n')
+        json_lines = []
+        for line in lines:
+            stripped_line = line.strip()
+            # Skip lines that are comments or empty
+            if not stripped_line.startswith('//') and stripped_line:
+                json_lines.append(line)
+
+        # Join the lines back and parse as JSON
+        json_content = '\n'.join(json_lines)
+        steps = json.loads(json_content)
 
         if not isinstance(steps, list):
             raise ValueError(
@@ -187,7 +201,7 @@ def main():
 
     # Load simulation steps
     simulation_file = os.path.join(os.path.dirname(
-        __file__), 'sample-data', 'mqttSimulationSteps.json')
+        __file__), 'sample-data', 'mqttSimulationSteps.jsonc')
     print(f"Loading simulation steps from: {simulation_file}")
 
     try:
