@@ -49,6 +49,43 @@ def calculate_crc(data: bytearray) -> int:
     return crc
 
 
+def get_motion_state_display(state_value: int) -> str:
+    """
+    Get human-readable display for motion state value.
+    Based on AGV model choices.
+    """
+    motion_state_choices = {
+        0: "Idle",
+        1: "Moving",
+        2: "Waiting"
+    }
+    return motion_state_choices.get(state_value, f"Unknown ({state_value})")
+
+
+def get_direction_change_display(direction_value: int) -> str:
+    """
+    Get human-readable display for direction change value.
+    Based on AGV model choices.
+    """
+    direction_change_choices = {
+        0: "Go straight",
+        1: "Turn around",
+        2: "Turn left",
+        3: "Turn right"
+    }
+    return direction_change_choices.get(direction_value, f"Unknown ({direction_value})")
+
+
+def get_reserved_node_display(node_value: int) -> str:
+    """
+    Get human-readable display for reserved node value.
+    """
+    if node_value == 0:
+        return "None (0)"
+    else:
+        return f"Node {node_value}"
+
+
 # def test_crc_compatibility():
 #     """
 #     Test that our CRC generation is compatible with the decoder's verification.
@@ -173,7 +210,7 @@ def on_connect(client, userdata, flags, rc, properties=None):
 
 def on_message(client, userdata, msg):
     """Handle incoming MQTT messages from server"""
-    print("\nReceived message from server:")
+    print("\nServer instructions:")
     print(f"Topic: {msg.topic}")
     data = msg.payload
     raw_data = bytes(data)
@@ -181,17 +218,28 @@ def on_message(client, userdata, msg):
     print(f"Raw message (bytes): {raw_data}")
     print(f"Raw message (hex): {hex_data}")
     # Display data as binary
-    print("Raw message (binary):", ' '.join(format(byte, '08b') for byte in raw_data))
+    # print("Raw message (binary):", ' '.join(format(byte, '08b') for byte in raw_data))
     if len(data) >= 8:  # Server messages are 8 bytes
-        print(f"Frame start: {hex(raw_data[0])}")
-        print(f"Frame length: {hex(raw_data[1])}")
-        print(f"Message type: {hex(raw_data[2])}")
-        print(f"Motion state: {raw_data[3]}")
+        frame_start = raw_data[0]
+        frame_length = raw_data[1]
+        message_type = raw_data[2]
+        motion_state = raw_data[3]
+        reserved_node = int.from_bytes(raw_data[4:6], byteorder='little')
+        direction_change = raw_data[6]
+        crc = raw_data[7]
+        frame_end = raw_data[8]
+
+        print(f"Frame start: {hex(frame_start)}")
+        print(f"Frame length: {hex(frame_length)}")
+        print(f"Message type: {hex(message_type)}")
         print(
-            f"Reserved node: {int.from_bytes(raw_data[4:6], byteorder='little')}")
-        print(f"Direction change: {raw_data[6]}")
-        print(f"CRC: {hex(raw_data[7])}")
-        print(f"Frame end: {hex(raw_data[8])}")
+            f"Motion state: {motion_state} ({get_motion_state_display(motion_state)})")
+        print(
+            f"Reserved node: {reserved_node} ({get_reserved_node_display(reserved_node)})")
+        print(
+            f"Direction change: {direction_change} ({get_direction_change_display(direction_change)})")
+        print(f"CRC: {hex(crc)}")
+        print(f"Frame end: {hex(frame_end)}")
     else:
         print("Message too short to decode")
     print("")  # Add extra newline to ensure prompt appears immediately
@@ -282,6 +330,7 @@ def main():
             topic = f"agvdata/{agv_id}"
             client.publish(topic, message)
             print(f"\nPublished position update to {topic}")
+            print(f"AGV {agv_id} arrived at node {current_node}")
             print("Waiting for server response...")
 
         except Exception as e:
