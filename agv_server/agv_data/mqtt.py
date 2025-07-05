@@ -1,7 +1,5 @@
 import paho.mqtt.client as mqtt
-
 from django.conf import settings
-import logging
 from typing import Optional, Tuple, List
 
 from .models import Agv
@@ -14,13 +12,11 @@ MQTT_TOPIC_AGVDATA = settings.MQTT_TOPIC_AGVDATA
 MQTT_TOPIC_AGVROUTE = settings.MQTT_TOPIC_AGVROUTE
 MQTT_TOPIC_AGVHELLO = settings.MQTT_TOPIC_AGVHELLO
 
-logger = logging.getLogger(__name__)
-
 
 def _on_connect(client: mqtt.Client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker successfully")
-        client.subscribe(f"{MQTT_TOPIC_AGVDATA}/#")
+        client.subscribe(f"{settings.MQTT_TOPIC_AGVDATA}/#")
     else:
         print('Bad connection. Code:', rc)
 
@@ -34,6 +30,7 @@ def _on_message(client: mqtt.Client, userdata, message: mqtt.MQTTMessage):
     # Route message to appropriate handler based on topic prefix
     topic_name = str(message.topic)
     if topic_name.startswith(f"{MQTT_TOPIC_AGVDATA}/"):
+        # include decoding and processing logic
         handle_agv_data_message(client, message)
     else:
         print(f"Received message on unhandled topic: {message.topic}")
@@ -52,7 +49,6 @@ def handle_agv_data_message(client: mqtt.Client, message: mqtt.MQTTMessage) -> N
         # Parse and validate message
         this_agv_data = _parse_agv_message(message.payload)
         if this_agv_data is None:
-            logger.warning("Skipping invalid AGV message")
             return
 
         (this_agv_id, this_agv_current_node) = this_agv_data
@@ -76,21 +72,14 @@ def handle_agv_data_message(client: mqtt.Client, message: mqtt.MQTTMessage) -> N
         if initially_affected_agvs:
             for affected_agv in initially_affected_agvs:
                 _send_mqtt_message_to_agv(client, affected_agv)
-                logger.info(
-                    f"Sent MQTT message to initially affected AGV {affected_agv.agv_id} from deadlock resolution")
 
         # Send MQTT messages to any partner AGVs that were affected by deadlock resolution
         if partner_agvs:
             for partner_agv in partner_agvs:
                 _send_mqtt_message_to_agv(client, partner_agv)
-                logger.info(
-                    f"Sent MQTT message to deadlock partner AGV {partner_agv.agv_id}")
-
-        logger.info(
-            f"Updated AGV {this_agv_id} location to node {this_agv_current_node}")
 
     except Exception as e:
-        logger.error(f"Unexpected error in AGV data handler: {str(e)}")
+        pass
 
 
 def _parse_agv_message(payload) -> Optional[Tuple[int, int]]:
@@ -101,12 +90,10 @@ def _parse_agv_message(payload) -> Optional[Tuple[int, int]]:
         current_node = decoded_data.get('current_node')
 
         if not agv_id or current_node is None:
-            logger.error("Missing required fields in AGV data message")
             return None
 
         return int(agv_id), int(current_node)
     except ValueError as e:
-        logger.error(f"Failed to decode AGV data message: {str(e)}")
         return None
 
 
@@ -131,11 +118,8 @@ def _send_mqtt_message_to_agv(client: mqtt.Client, agv: Agv) -> None:
             qos=2
         )
 
-        logger.debug(f"Sent MQTT message to AGV {agv.agv_id}")
-
     except Exception as e:
-        logger.error(
-            f"Failed to send MQTT message to AGV {agv.agv_id}: {str(e)}")
+        pass
 
 
 client = mqtt.Client()

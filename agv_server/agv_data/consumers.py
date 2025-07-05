@@ -15,11 +15,6 @@ class AgvConsumer(AsyncWebsocketConsumer):
         print(f"WebSocket connection closed with code: {close_code}")
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    async def receive(self, text_data):
-        # Handle messages from clients if needed
-        # Not necessary for this implementation as the server initiates the updates
-        pass
-
     async def agv_message(self, event):
         # Send AGV update message to WebSocket client
         message = event['message']
