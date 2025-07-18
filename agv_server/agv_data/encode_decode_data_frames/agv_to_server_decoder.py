@@ -24,17 +24,17 @@ def verify_crc(codeword: bytearray) -> bool:
         bool: True if remainder is zero (no errors), False otherwise
     """
     # Convert the entire codeword to binary string
-    dividend = ''.join(format(byte, '08b') for byte in codeword)
+    dividend = "".join(format(byte, "08b") for byte in codeword)
 
     # CRC-8 polynomial: 0x07 (x^8 + x^2 + x + 1) -> 100000111 in binary
     # But for modulo-2 division, we use the 9-bit representation
-    divisor = '100000111'  # 9 bits for CRC-8 polynomial
+    divisor = "100000111"  # 9 bits for CRC-8 polynomial
 
     # Perform modulo-2 division
     remainder = _modulo2_division(dividend, divisor)
 
     # If remainder is all zeros, no error detected
-    return remainder == '0' * len(remainder)
+    return remainder == "0" * len(remainder)
 
 
 def example_frame_from_agv_to_server() -> bytes:
@@ -52,8 +52,8 @@ def example_frame_from_agv_to_server() -> bytes:
     agv_id = random.randint(1, 999)
     current_node = random.randint(1, 100)
 
-    agv_id_bytes = agv_id.to_bytes(2, byteorder='little')
-    current_node_bytes = current_node.to_bytes(2, byteorder='little')
+    agv_id_bytes = agv_id.to_bytes(2, byteorder="little")
+    current_node_bytes = current_node.to_bytes(2, byteorder="little")
 
     data_for_crc = bytearray()
     data_for_crc.append(FRAME_LENGTH)
@@ -78,7 +78,7 @@ def example_frame_from_agv_to_server() -> bytes:
             # Keep only 8 bits
             crc &= 0xFF
 
-    crc_bytes = crc.to_bytes(1, byteorder='little')
+    crc_bytes = crc.to_bytes(1, byteorder="little")
 
     frame = bytearray()
     frame.append(FRAME_START)
@@ -148,13 +148,10 @@ def decode_message(payload: bytes) -> dict:
         if not validate_frame(data):
             # Extract payload data using little-endian byte order
             raise ValueError("Invalid frame format")
-        agv_id = int.from_bytes(data[3:5], byteorder='little')
-        current_node = int.from_bytes(data[5:7], byteorder='little')
+        agv_id = int.from_bytes(data[3:5], byteorder="little")
+        current_node = int.from_bytes(data[5:7], byteorder="little")
 
-        return {
-            "agv_id": agv_id,
-            "current_node": current_node
-        }
+        return {"agv_id": agv_id, "current_node": current_node}
 
     except Exception as e:
         raise ValueError(f"Failed to decode message: {str(e)}")
@@ -179,15 +176,17 @@ def _modulo2_division(dividend: str, divisor: str) -> str:
     # Perform the division
     for i in range(len(dividend) - divisor_len + 1):
         # If the current bit is 1, perform XOR with divisor
-        if dividend[i] == '1':
+        if dividend[i] == "1":
             # XOR divisor with current window of dividend
             for j in range(divisor_len):
                 # XOR operation: '0' XOR '0' = '0', '1' XOR '1' = '0', '0' XOR '1' = '1', '1' XOR '0' = '1'
-                dividend = (dividend[:i+j] +
-                            str(int(dividend[i+j]) ^ int(divisor[j])) +
-                            dividend[i+j+1:])
+                dividend = (
+                    dividend[: i + j]
+                    + str(int(dividend[i + j]) ^ int(divisor[j]))
+                    + dividend[i + j + 1 :]
+                )
 
     # The remainder is the last (divisor_len - 1) bits
-    remainder = dividend[-(divisor_len - 1):]
+    remainder = dividend[-(divisor_len - 1) :]
 
     return remainder

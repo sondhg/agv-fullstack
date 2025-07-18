@@ -43,8 +43,7 @@ class UpdateOrderView(APIView):
         """
         try:
             order = Order.objects.get(order_id=order_id)
-            serializer = OrderSerializer(
-                order, data=request.data, partial=True)
+            serializer = OrderSerializer(order, data=request.data, partial=True)
 
             if serializer.is_valid():
                 serializer.save()
@@ -80,15 +79,15 @@ class DeleteOrderView(APIView):
                     # Get the AGV directly with a query instead of through relationship
                     # This ensures we're getting the most up-to-date data
                     associated_agv = Agv.objects.filter(
-                        active_order_id=order_id).first()
+                        active_order_id=order_id
+                    ).first()
                     if associated_agv:
                         # Reset AGV fields to default values
                         self._reset_agv(associated_agv)
 
                 except Exception as agv_error:
                     # Log the error but continue with order deletion
-                    print(
-                        f"Error resetting AGV for order {order_id}: {str(agv_error)}")
+                    print(f"Error resetting AGV for order {order_id}: {str(agv_error)}")
 
                 # Delete the order
                 order.delete()
@@ -125,17 +124,26 @@ class DeleteOrderView(APIView):
         agv.active_order = None
 
         # Ensure changes are saved and committed
-        agv.save(update_fields=[
-            'current_node', 'next_node', 'reserved_node', 'motion_state',
-            'spare_flag', 'backup_nodes', 'initial_path', 'remaining_path',
-            'common_nodes', 'adjacent_common_nodes', 'active_order'
-        ])
+        agv.save(
+            update_fields=[
+                "current_node",
+                "next_node",
+                "reserved_node",
+                "motion_state",
+                "spare_flag",
+                "backup_nodes",
+                "initial_path",
+                "remaining_path",
+                "common_nodes",
+                "adjacent_common_nodes",
+                "active_order",
+            ]
+        )
 
         # Verify that the AGV was reset properly
         refreshed_agv = Agv.objects.get(pk=agv.pk)
         if refreshed_agv.current_node is not None:
-            print(
-                f"Warning: AGV {agv.agv_id} current_node was not reset properly")
+            print(f"Warning: AGV {agv.agv_id} current_node was not reset properly")
 
 
 class BulkDeleteOrdersView(APIView):
@@ -163,8 +171,7 @@ class BulkDeleteOrdersView(APIView):
                 self._reset_associated_agvs(order_ids)
 
                 # Then delete the orders
-                deleted_count, _ = Order.objects.filter(
-                    order_id__in=order_ids).delete()
+                deleted_count, _ = Order.objects.filter(order_id__in=order_ids).delete()
 
             return Response(
                 {"message": f"{deleted_count} orders deleted successfully."},
@@ -187,7 +194,8 @@ class BulkDeleteOrdersView(APIView):
         # Find AGVs with active_order in the list of order_ids
         # Using select_for_update to lock the rows during update
         agvs_to_reset = Agv.objects.filter(
-            active_order__order_id__in=order_ids).select_for_update()
+            active_order__order_id__in=order_ids
+        ).select_for_update()
 
         reset_agvs_ids = []
         for agv in agvs_to_reset:
@@ -208,29 +216,40 @@ class BulkDeleteOrdersView(APIView):
             agv.active_order = None
 
             # Save with specific fields to update
-            agv.save(update_fields=[
-                'current_node', 'next_node', 'reserved_node', 'motion_state',
-                'spare_flag', 'backup_nodes', 'initial_path', 'remaining_path',
-                'common_nodes', 'adjacent_common_nodes', 'active_order'
-            ])
+            agv.save(
+                update_fields=[
+                    "current_node",
+                    "next_node",
+                    "reserved_node",
+                    "motion_state",
+                    "spare_flag",
+                    "backup_nodes",
+                    "initial_path",
+                    "remaining_path",
+                    "common_nodes",
+                    "adjacent_common_nodes",
+                    "active_order",
+                ]
+            )
 
         # Verify all AGVs were properly reset
         if reset_agvs_ids:
             # Re-query to make sure changes were committed
             still_active_agvs = Agv.objects.filter(
-                agv_id__in=reset_agvs_ids,
-                current_node__isnull=False
-            ).values_list('agv_id', flat=True)
+                agv_id__in=reset_agvs_ids, current_node__isnull=False
+            ).values_list("agv_id", flat=True)
 
             if still_active_agvs:
                 print(
-                    f"Warning: The following AGVs weren't reset properly: {list(still_active_agvs)}")
+                    f"Warning: The following AGVs weren't reset properly: {list(still_active_agvs)}"
+                )
                 # Force another save attempt on these AGVs
                 for agv_id in still_active_agvs:
                     try:
                         agv = Agv.objects.get(agv_id=agv_id)
                         agv.current_node = None
-                        agv.save(update_fields=['current_node'])
+                        agv.save(update_fields=["current_node"])
                     except Exception as e:
                         print(
-                            f"Error during second reset attempt for AGV {agv_id}: {str(e)}")
+                            f"Error during second reset attempt for AGV {agv_id}: {str(e)}"
+                        )

@@ -5,8 +5,8 @@ import os
 
 # MQTT Configuration
 # Use localhost for both development and inside Docker container
-MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
-MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.environ.get("MQTT_PORT", 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "test_client"
 
@@ -54,11 +54,7 @@ def get_motion_state_display(state_value: int) -> str:
     Get human-readable display for motion state value.
     Based on AGV model choices.
     """
-    motion_state_choices = {
-        0: "Idle",
-        1: "Moving",
-        2: "Waiting"
-    }
+    motion_state_choices = {0: "Idle", 1: "Moving", 2: "Waiting"}
     return motion_state_choices.get(state_value, f"Unknown ({state_value})")
 
 
@@ -71,7 +67,7 @@ def get_direction_change_display(direction_value: int) -> str:
         0: "Go straight",
         1: "Turn around",
         2: "Turn left",
-        3: "Turn right"
+        3: "Turn right",
     }
     return direction_change_choices.get(direction_value, f"Unknown ({direction_value})")
 
@@ -169,8 +165,8 @@ def encode_agv_position(agv_id: int, current_node: int) -> bytes:
     """
     try:
         # Convert values to bytes (little-endian)
-        agv_id_bytes = agv_id.to_bytes(2, byteorder='little')
-        node_bytes = current_node.to_bytes(2, byteorder='little')
+        agv_id_bytes = agv_id.to_bytes(2, byteorder="little")
+        node_bytes = current_node.to_bytes(2, byteorder="little")
 
         # Create data for CRC calculation (excluding frame start/end markers)
         data_for_crc = bytearray()
@@ -181,7 +177,7 @@ def encode_agv_position(agv_id: int, current_node: int) -> bytes:
 
         # Calculate CRC for the data
         crc_value = calculate_crc(data_for_crc)
-        crc_bytes = crc_value.to_bytes(1, byteorder='little')
+        crc_bytes = crc_value.to_bytes(1, byteorder="little")
 
         # Create complete frame
         frame = bytearray()
@@ -224,7 +220,7 @@ def on_message(client, userdata, msg):
         frame_length = raw_data[1]
         message_type = raw_data[2]
         motion_state = raw_data[3]
-        reserved_node = int.from_bytes(raw_data[4:6], byteorder='little')
+        reserved_node = int.from_bytes(raw_data[4:6], byteorder="little")
         direction_change = raw_data[6]
         crc = raw_data[7]
         frame_end = raw_data[8]
@@ -233,11 +229,14 @@ def on_message(client, userdata, msg):
         print(f"Frame length: {hex(frame_length)}")
         print(f"Message type: {hex(message_type)}")
         print(
-            f"Motion state: {motion_state} ({get_motion_state_display(motion_state)})")
+            f"Motion state: {motion_state} ({get_motion_state_display(motion_state)})"
+        )
         print(
-            f"Reserved node: {reserved_node} ({get_reserved_node_display(reserved_node)})")
+            f"Reserved node: {reserved_node} ({get_reserved_node_display(reserved_node)})"
+        )
         print(
-            f"Direction change: {direction_change} ({get_direction_change_display(direction_change)})")
+            f"Direction change: {direction_change} ({get_direction_change_display(direction_change)})"
+        )
         print(f"CRC: {hex(crc)}")
         print(f"Frame end: {hex(frame_end)}")
     else:
@@ -247,8 +246,8 @@ def on_message(client, userdata, msg):
 
 def signal_handler(sig, frame):
     """Handle Ctrl+C gracefully"""
-    print('\nExiting program...')
-    if 'client' in globals() and client.is_connected():
+    print("\nExiting program...")
+    if "client" in globals() and client.is_connected():
         client.loop_stop()
         client.disconnect()
     sys.exit(0)
@@ -271,8 +270,8 @@ def main():
     # Initialize MQTT client
     client = mqtt_client.Client(
         callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-        client_id=CLIENT_ID
-    )    # Set up callbacks
+        client_id=CLIENT_ID,
+    )  # Set up callbacks
     client.on_connect = on_connect
     client.on_message = on_message
 
@@ -304,10 +303,11 @@ def main():
                 try:
                     current_node_input = input("Enter current node (1-999): ")
                     current_node = validate_input(
-                        current_node_input, 1, 999, "Current node")
+                        current_node_input, 1, 999, "Current node"
+                    )
                     break
                 except ValueError as e:
-                    print(f"Error: {e}")            # Encode message
+                    print(f"Error: {e}")  # Encode message
             print("\nPreparing to send AGV position update:")
             print(f"Raw data - AGV ID: {agv_id}, Current Node: {current_node}")
 
@@ -319,10 +319,8 @@ def main():
             print(f"  Frame start: {hex(message[0])}")
             print(f"  Frame length: {hex(message[1])}")
             print(f"  Message type: {hex(message[2])}")
-            print(
-                f"  AGV ID: {int.from_bytes(message[3:5], byteorder='little')}")
-            print(
-                f"  Current node: {int.from_bytes(message[5:7], byteorder='little')}")
+            print(f"  AGV ID: {int.from_bytes(message[3:5], byteorder='little')}")
+            print(f"  Current node: {int.from_bytes(message[5:7], byteorder='little')}")
             print(f"  CRC: {hex(message[7])}")
             print(f"  Frame end: {hex(message[8])}")
 

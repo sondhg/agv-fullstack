@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0009_remove_agv_spare_points_agv_backup_nodes'),
+        ("agv_data", "0009_remove_agv_spare_points_agv_backup_nodes"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='agv',
-            name='journey_phase',
-            field=models.IntegerField(choices=[(0, 'Outbound'), (1, 'Return')], default=0, help_text='Whether AGV is on outbound (parking→storage→workstation) or return (workstation→parking) journey'),
+            model_name="agv",
+            name="journey_phase",
+            field=models.IntegerField(
+                choices=[(0, "Outbound"), (1, "Return")],
+                default=0,
+                help_text="Whether AGV is on outbound (parking→storage→workstation) or return (workstation→parking) journey",
+            ),
         ),
     ]

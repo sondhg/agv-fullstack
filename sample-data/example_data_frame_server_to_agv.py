@@ -13,9 +13,9 @@ DIRECTION_CHANGE = 0
 
 FRAME_END = 0x7F  # fixed value
 
-motion_state_to_bytes = MOTION_STATE.to_bytes(1, byteorder='little')
-next_node_to_bytes = NEXT_NODE.to_bytes(2, byteorder='little')
-direction_change_to_bytes = DIRECTION_CHANGE.to_bytes(1, byteorder='little')
+motion_state_to_bytes = MOTION_STATE.to_bytes(1, byteorder="little")
+next_node_to_bytes = NEXT_NODE.to_bytes(2, byteorder="little")
+direction_change_to_bytes = DIRECTION_CHANGE.to_bytes(1, byteorder="little")
 
 data_frame_server_to_agv = bytearray()
 data_frame_server_to_agv.append(FRAME_START)

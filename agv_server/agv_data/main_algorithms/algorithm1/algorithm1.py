@@ -4,6 +4,7 @@ Algorithm 1: Initial Path Planning and Shared Points Detection.
 This algorithm handles task dispatching, initial path planning,
 and shared points identification.
 """
+
 import schedule
 import time
 import datetime
@@ -29,8 +30,7 @@ class TaskDispatcher:
     def __init__(self):
         """Initialize TaskDispatcher with required data"""
         self.nodes, self.connections = self._validate_map_data()
-        self.common_nodes_calculator = CommonNodesCalculator(
-            self.connections)
+        self.common_nodes_calculator = CommonNodesCalculator(self.connections)
         self.order_processor = None  # Initialized in dispatch_tasks with algorithm
         # Scheduling attributes
         self.scheduler_running = False
@@ -46,16 +46,17 @@ class TaskDispatcher:
         Raises:
             ValueError: If map data is incomplete or missing.
         """
-        nodes = list(Direction.objects.values_list(
-            "node1", flat=True).distinct())
+        nodes = list(Direction.objects.values_list("node1", flat=True).distinct())
         # Convert connections to use integers instead of strings for node values
         connections = []
         for conn in Connection.objects.values():
-            connections.append({
-                'node1': int(conn['node1']),
-                'node2': int(conn['node2']),
-                'distance': conn['distance']
-            })
+            connections.append(
+                {
+                    "node1": int(conn["node1"]),
+                    "node2": int(conn["node2"]),
+                    "distance": conn["distance"],
+                }
+            )
         if not nodes or not connections:
             raise ValueError(ErrorMessages.INVALID_MAP_DATA)
         return nodes, connections
@@ -78,7 +79,7 @@ class TaskDispatcher:
             agv = Agv.objects.filter(
                 motion_state=Agv.IDLE,
                 preferred_parking_node=parking_node,
-                active_order__isnull=True  # Ensure AGV is truly idle
+                active_order__isnull=True,  # Ensure AGV is truly idle
             ).first()
             return agv
         except Exception as e:
@@ -106,7 +107,8 @@ class TaskDispatcher:
 
         # Initialize pathfinding algorithm and order processor
         pathfinding_algorithm = PathfindingFactory.get_algorithm(
-            algorithm, self.nodes, self.connections)
+            algorithm, self.nodes, self.connections
+        )
         if not pathfinding_algorithm:
             raise ValueError(ErrorMessages.INVALID_ALGORITHM)
 
@@ -126,14 +128,15 @@ class TaskDispatcher:
                 assigned_agv = self._find_idle_agv_for_task(task.parking_node)
                 if not assigned_agv:
                     print(
-                        f"No idle AGV available for task {task.order_id} at parking node {task.parking_node}")
+                        f"No idle AGV available for task {task.order_id} at parking node {task.parking_node}"
+                    )
                     continue
 
                 # Generate order data for task (without CP calculation yet)
                 order_data = self.order_processor.process_order(task)
                 if order_data:
                     # Add AGV assignment to order data
-                    order_data['assigned_agv'] = assigned_agv
+                    order_data["assigned_agv"] = assigned_agv
                     orders_data_list.append(order_data)
 
                     # Update AGV state to waiting (according to Algorithm 2 in paper)
@@ -159,8 +162,11 @@ class TaskDispatcher:
             common_nodes = self.common_nodes_calculator.calculate_common_nodes(
                 current_order["remaining_path"], other_paths
             )
-            sequential_common_nodes = self.common_nodes_calculator.calculate_sequential_common_nodes(
-                common_nodes)
+            sequential_common_nodes = (
+                self.common_nodes_calculator.calculate_sequential_common_nodes(
+                    common_nodes
+                )
+            )
 
             # Update the order data with calculated points
             current_order["common_nodes"] = common_nodes
@@ -172,36 +178,46 @@ class TaskDispatcher:
         newly_assigned_agvs = []
 
         for order_data in orders_data_list:
-            assigned_agv = order_data.pop('assigned_agv')
+            assigned_agv = order_data.pop("assigned_agv")
             success = self.order_processor.update_agv_with_order(
-                assigned_agv, order_data)
+                assigned_agv, order_data
+            )
             if success:
-                processed_orders.append({
-                    "order_id": order_data["order_id"],
-                    "agv_id": assigned_agv.agv_id,
-                    "initial_path": order_data["initial_path"],
-                    "common_nodes": order_data["common_nodes"],
-                    "adjacent_common_nodes": order_data["adjacent_common_nodes"]})
+                processed_orders.append(
+                    {
+                        "order_id": order_data["order_id"],
+                        "agv_id": assigned_agv.agv_id,
+                        "initial_path": order_data["initial_path"],
+                        "common_nodes": order_data["common_nodes"],
+                        "adjacent_common_nodes": order_data["adjacent_common_nodes"],
+                    }
+                )
 
                 # Store successful assignments for later common nodes update
-                newly_assigned_agvs.append({
-                    "agv_id": assigned_agv.agv_id,
-                    "remaining_path": order_data["remaining_path"]
-                })                # Log the successful assignment
+                newly_assigned_agvs.append(
+                    {
+                        "agv_id": assigned_agv.agv_id,
+                        "remaining_path": order_data["remaining_path"],
+                    }
+                )  # Log the successful assignment
                 print(
                     # After all new orders are assigned, recalculate common nodes for all active AGVs
-                    f"Successfully assigned order {order_data['order_id']} to AGV {assigned_agv.agv_id}")
+                    f"Successfully assigned order {order_data['order_id']} to AGV {assigned_agv.agv_id}"
+                )
         # This ensures that all AGVs (both newly assigned and existing) have updated common_nodes
         # that reflect the current state with all active AGVs considered
         if processed_orders:
             try:
                 from .common_nodes import recalculate_all_common_nodes
+
                 recalculate_all_common_nodes(log_summary=True)
                 print(
-                    f"Recalculated common nodes for all AGVs after batch assignment of {len(processed_orders)} orders")
+                    f"Recalculated common nodes for all AGVs after batch assignment of {len(processed_orders)} orders"
+                )
             except Exception as e:
                 print(
-                    f"Error recalculating common nodes after batch assignment: {str(e)}")
+                    f"Error recalculating common nodes after batch assignment: {str(e)}"
+                )
 
         return processed_orders
 
@@ -224,9 +240,14 @@ class TaskDispatcher:
                 return False
 
             # Setup pathfinding algorithm if not already initialized
-            if not self.order_processor or self.order_processor.pathfinding_algorithm.__class__.__name__.lower() != algorithm:
+            if (
+                not self.order_processor
+                or self.order_processor.pathfinding_algorithm.__class__.__name__.lower()
+                != algorithm
+            ):
                 pathfinding_algorithm = PathfindingFactory.get_algorithm(
-                    algorithm, self.nodes, self.connections)
+                    algorithm, self.nodes, self.connections
+                )
                 if not pathfinding_algorithm:
                     print(f"Invalid pathfinding algorithm: {algorithm}")
                     return False
@@ -237,22 +258,33 @@ class TaskDispatcher:
                 # Send notification with common nodes information
                 try:
                     from ...views import send_order_assignment_notification
+
                     # Refresh AGV from database to get updated common_nodes
                     available_agv.refresh_from_db()
                     message = f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}"
                     additional_data = {
                         "common_nodes_calculated": True,
-                        "common_nodes_count": len(available_agv.common_nodes) if available_agv.common_nodes else 0,
-                        "adjacent_common_nodes_count": len(available_agv.adjacent_common_nodes) if available_agv.adjacent_common_nodes else 0,
-                        "remaining_path_length": len(available_agv.remaining_path) if available_agv.remaining_path else 0
+                        "common_nodes_count": len(available_agv.common_nodes)
+                        if available_agv.common_nodes
+                        else 0,
+                        "adjacent_common_nodes_count": len(
+                            available_agv.adjacent_common_nodes
+                        )
+                        if available_agv.adjacent_common_nodes
+                        else 0,
+                        "remaining_path_length": len(available_agv.remaining_path)
+                        if available_agv.remaining_path
+                        else 0,
                     }
                     send_order_assignment_notification(
-                        order_id, available_agv.agv_id, message, additional_data)
+                        order_id, available_agv.agv_id, message, additional_data
+                    )
                 except ImportError:
                     # Handle case where notification function is not available
                     pass
                 print(
-                    f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}")
+                    f"Successfully assigned order {order_id} to AGV {available_agv.agv_id}"
+                )
                 return True
 
             return False
@@ -261,7 +293,9 @@ class TaskDispatcher:
             print(f"Error assigning order {order_id}: {str(e)}")
             return False
 
-    def _validate_order_assignment(self, order_id: str) -> Tuple[Optional[Order], Optional[Agv]]:
+    def _validate_order_assignment(
+        self, order_id: str
+    ) -> Tuple[Optional[Order], Optional[Agv]]:
         """
         Validate if an order can be assigned and find available AGV.
 
@@ -275,16 +309,18 @@ class TaskDispatcher:
             order = Order.objects.get(order_id=order_id)
 
             # Check if order is still unassigned
-            if hasattr(order, 'active_agv') and order.active_agv:
+            if hasattr(order, "active_agv") and order.active_agv:
                 print(
-                    f"Order {order_id} is already assigned to AGV {order.active_agv.agv_id}")
+                    f"Order {order_id} is already assigned to AGV {order.active_agv.agv_id}"
+                )
                 return None, None
 
             # Find an available AGV for this order
             available_agv = self._find_idle_agv_for_task(order.parking_node)
             if not available_agv:
                 print(
-                    f"No available AGV for order {order_id} at parking node {order.parking_node}")
+                    f"No available AGV for order {order_id} at parking node {order.parking_node}"
+                )
                 return None, None
 
             return order, available_agv
@@ -317,11 +353,9 @@ class TaskDispatcher:
                 return False
 
             # Update AGV with order data
-            success = self.order_processor.update_agv_with_order(
-                agv, order_data)
+            success = self.order_processor.update_agv_with_order(agv, order_data)
             if not success:
-                print(
-                    f"Failed to update AGV {agv.agv_id} with order {order.order_id}")
+                print(f"Failed to update AGV {agv.agv_id} with order {order.order_id}")
                 return False
 
             # Update AGV state to waiting
@@ -329,13 +363,14 @@ class TaskDispatcher:
             agv.direction_change = Agv.GO_STRAIGHT
             # Recalculate common nodes for all AGVs (including the newly assigned AGV)
             agv.save()
-            active_agvs_count = Agv.objects.filter(
-                active_order__isnull=False).count()
+            active_agvs_count = Agv.objects.filter(active_order__isnull=False).count()
 
             if active_agvs_count > 1:
                 print(
-                    f"Recalculating common nodes for all AGVs after assigning order {order.order_id} to AGV {agv.agv_id}")
+                    f"Recalculating common nodes for all AGVs after assigning order {order.order_id} to AGV {agv.agv_id}"
+                )
                 from .common_nodes import recalculate_all_common_nodes
+
                 recalculate_all_common_nodes(log_summary=True)
             else:
                 # If this is the only active AGV, ensure its common_nodes are empty
@@ -343,13 +378,13 @@ class TaskDispatcher:
                 agv.adjacent_common_nodes = []
                 agv.save()
                 print(
-                    f"No other active AGVs, cleared common nodes for AGV {agv.agv_id}")
+                    f"No other active AGVs, cleared common nodes for AGV {agv.agv_id}"
+                )
 
             return True
 
         except Exception as e:
-            print(
-                f"Error processing and assigning order {order.order_id}: {str(e)}")
+            print(f"Error processing and assigning order {order.order_id}: {str(e)}")
             return False
 
     # Scheduling-related methods
@@ -374,7 +409,9 @@ class TaskDispatcher:
         """
         return datetime.datetime.combine(order.order_date, order.start_time)
 
-    def is_order_scheduled_for_future(self, schedule_datetime: datetime.datetime) -> bool:
+    def is_order_scheduled_for_future(
+        self, schedule_datetime: datetime.datetime
+    ) -> bool:
         """
         Check if the order is scheduled for future execution.
 
@@ -386,7 +423,9 @@ class TaskDispatcher:
         """
         return schedule_datetime > datetime.datetime.now()
 
-    def create_scheduled_order_info(self, order: Order, agv: Agv, schedule_datetime: datetime.datetime) -> Dict:
+    def create_scheduled_order_info(
+        self, order: Order, agv: Agv, schedule_datetime: datetime.datetime
+    ) -> Dict:
         """
         Create information dictionary for a scheduled order.
 
@@ -404,7 +443,7 @@ class TaskDispatcher:
             "agv_id": agv.agv_id,
             "parking_node": order.parking_node,
             "scheduled_time": schedule_datetime.strftime("%Y-%m-%d %H:%M:%S"),
-            "seconds_from_now": (schedule_datetime - now).total_seconds()
+            "seconds_from_now": (schedule_datetime - now).total_seconds(),
         }
 
     def create_immediate_order_info(self, order: Order, agv: Agv) -> Dict:
@@ -422,7 +461,7 @@ class TaskDispatcher:
             "order_id": order.order_id,
             "agv_id": agv.agv_id,
             "parking_node": order.parking_node,
-            "status": "assigned_immediately"
+            "status": "assigned_immediately",
         }
 
     def schedule_order_assignment(self, order: Order, algorithm: str) -> None:
@@ -433,24 +472,30 @@ class TaskDispatcher:
             order: The order to schedule
             algorithm: The algorithm to use
         """
+
         def create_assignment_function(order_id_val, algorithm_val):
             def assign_order():
                 self.assign_single_order(order_id_val, algorithm_val)
                 return schedule.CancelJob  # Remove job after execution
+
             return assign_order
 
-        assignment_function = create_assignment_function(
-            order.order_id, algorithm)
+        assignment_function = create_assignment_function(order.order_id, algorithm)
 
-        job = schedule.every().day.at(order.start_time.strftime("%H:%M:%S")).do(
-            assignment_function
+        job = (
+            schedule.every()
+            .day.at(order.start_time.strftime("%H:%M:%S"))
+            .do(assignment_function)
         )
         job.tag(f"order_{order.order_id}")
 
         print(
-            f"Scheduled order {order.order_id} at {order.start_time.strftime('%H:%M:%S')}")
+            f"Scheduled order {order.order_id} at {order.start_time.strftime('%H:%M:%S')}"
+        )
 
-    def process_orders_for_scheduling(self, algorithm: str = "dijkstra") -> Tuple[List[Dict], List[Dict]]:
+    def process_orders_for_scheduling(
+        self, algorithm: str = "dijkstra"
+    ) -> Tuple[List[Dict], List[Dict]]:
         """
         Process all unassigned orders for scheduling or immediate assignment.
 
@@ -469,7 +514,8 @@ class TaskDispatcher:
 
             if not available_agv:
                 print(
-                    f"No available AGV for order {order.order_id} at parking node {order.parking_node}")
+                    f"No available AGV for order {order.order_id} at parking node {order.parking_node}"
+                )
                 continue
 
             schedule_datetime = self.calculate_schedule_datetime(order)
@@ -478,17 +524,20 @@ class TaskDispatcher:
                 # Schedule for future assignment
                 self.schedule_order_assignment(order, algorithm)
                 scheduled_order_info = self.create_scheduled_order_info(
-                    order, available_agv, schedule_datetime)
+                    order, available_agv, schedule_datetime
+                )
                 scheduled_orders.append(scheduled_order_info)
             else:
                 # Assign immediately
                 success = self.assign_single_order(order.order_id, algorithm)
                 if success:
                     immediate_order_info = self.create_immediate_order_info(
-                        order, available_agv)
+                        order, available_agv
+                    )
                     immediate_orders.append(immediate_order_info)
                     print(
-                        f"Assigned order {order.order_id} to AGV {available_agv.agv_id} immediately (scheduled time already passed)")
+                        f"Assigned order {order.order_id} to AGV {available_agv.agv_id} immediately (scheduled time already passed)"
+                    )
 
         return scheduled_orders, immediate_orders
 
@@ -508,7 +557,7 @@ class TaskDispatcher:
                 self.scheduler_thread = threading.Thread(
                     target=self._run_scheduler,
                     daemon=True,
-                    name="task_dispatcher_scheduler_thread"
+                    name="task_dispatcher_scheduler_thread",
                 )
                 self.scheduler_thread.start()
 

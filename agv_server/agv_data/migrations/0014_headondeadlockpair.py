@@ -5,24 +5,53 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0013_alter_agv_adjacent_common_nodes_and_more'),
+        ("agv_data", "0013_alter_agv_adjacent_common_nodes_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='HeadOnDeadlockPair',
+            name="HeadOnDeadlockPair",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='When this deadlock pair was created')),
-                ('backup_moving_agv', models.ForeignKey(help_text='AGV that moves to backup node in the deadlock resolution', on_delete=django.db.models.deletion.CASCADE, related_name='deadlock_pairs_as_backup', to='agv_data.agv')),
-                ('normal_moving_agv', models.ForeignKey(help_text='AGV that moves forward normally in the deadlock resolution', on_delete=django.db.models.deletion.CASCADE, related_name='deadlock_pairs_as_normal', to='agv_data.agv')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="When this deadlock pair was created",
+                    ),
+                ),
+                (
+                    "backup_moving_agv",
+                    models.ForeignKey(
+                        help_text="AGV that moves to backup node in the deadlock resolution",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="deadlock_pairs_as_backup",
+                        to="agv_data.agv",
+                    ),
+                ),
+                (
+                    "normal_moving_agv",
+                    models.ForeignKey(
+                        help_text="AGV that moves forward normally in the deadlock resolution",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="deadlock_pairs_as_normal",
+                        to="agv_data.agv",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Head-on Deadlock Pair',
-                'verbose_name_plural': 'Head-on Deadlock Pairs',
-                'unique_together': {('normal_moving_agv', 'backup_moving_agv')},
+                "verbose_name": "Head-on Deadlock Pair",
+                "verbose_name_plural": "Head-on Deadlock Pairs",
+                "unique_together": {("normal_moving_agv", "backup_moving_agv")},
             },
         ),
     ]

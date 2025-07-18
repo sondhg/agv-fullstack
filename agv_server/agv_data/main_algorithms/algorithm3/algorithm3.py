@@ -62,14 +62,15 @@ class DeadlockResolver:
     def reserve_current_position(self):
         """Reserve the current position of the AGV."""
         self.agv.reserved_node = self.agv.current_node
-        self.agv.save(update_fields=['reserved_node'])
+        self.agv.save(update_fields=["reserved_node"])
 
     def clear_deadlock_resolution_state(self):
         """Clear deadlock resolution tracking state."""
         self.agv.waiting_for_deadlock_resolution = False
         self.agv.deadlock_partner_agv_id = None
         self.agv.save(
-            update_fields=['waiting_for_deadlock_resolution', 'deadlock_partner_agv_id'])
+            update_fields=["waiting_for_deadlock_resolution", "deadlock_partner_agv_id"]
+        )
 
     # === Private Implementation ===
 
@@ -87,8 +88,10 @@ class DeadlockResolver:
         other_agvs = Agv.objects.exclude(agv_id=self.agv.agv_id)
 
         for other_agv in other_agvs:
-            if (self.agv.next_node == other_agv.current_node and
-                    self.agv.current_node == other_agv.next_node):
+            if (
+                self.agv.next_node == other_agv.current_node
+                and self.agv.current_node == other_agv.next_node
+            ):
                 return other_agv
 
         return None
@@ -145,14 +148,16 @@ class DeadlockResolver:
 
         if current_node_str not in agv.backup_nodes:
             logger.warning(
-                f"No backup node available for AGV {agv.agv_id} at node {agv.current_node}")
+                f"No backup node available for AGV {agv.agv_id} at node {agv.current_node}"
+            )
             return
 
         backup_node = agv.backup_nodes[current_node_str]
 
         logger.info(
             # Create detour path: backup_node -> current_node -> remaining_path
-            f"Moving AGV {agv.agv_id} to backup node {backup_node} to resolve deadlock")
+            f"Moving AGV {agv.agv_id} to backup node {backup_node} to resolve deadlock"
+        )
         # Update AGV state for backup node movement and track deadlock resolution
         new_path = [backup_node, agv.current_node] + agv.remaining_path
         agv.remaining_path = new_path
@@ -162,9 +167,16 @@ class DeadlockResolver:
         agv.waiting_for_deadlock_resolution = True
         agv.deadlock_partner_agv_id = partner_agv_id
 
-        agv.save(update_fields=['remaining_path', 'next_node', 'reserved_node',
-                                'motion_state', 'waiting_for_deadlock_resolution',
-                                'deadlock_partner_agv_id'])
+        agv.save(
+            update_fields=[
+                "remaining_path",
+                "next_node",
+                "reserved_node",
+                "motion_state",
+                "waiting_for_deadlock_resolution",
+                "deadlock_partner_agv_id",
+            ]
+        )
 
         determine_direction_change(agv)
 
@@ -175,6 +187,6 @@ class DeadlockResolver:
         agv.motion_state = Agv.MOVING
         agv.reserved_node = agv.next_node
 
-        agv.save(update_fields=['motion_state', 'reserved_node'])
+        agv.save(update_fields=["motion_state", "reserved_node"])
 
         determine_direction_change(agv)

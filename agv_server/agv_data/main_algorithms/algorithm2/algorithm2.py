@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from ...models import Agv
 import logging
 
@@ -17,7 +17,7 @@ class PositionManager:
             self.agv.previous_node = self.agv.current_node
 
         self.agv.current_node = current_node
-        self.agv.save(update_fields=['current_node', 'previous_node'])
+        self.agv.save(update_fields=["current_node", "previous_node"])
 
     def update_path(self, current_node: int) -> None:
         """Update remaining path and next node based on current position."""
@@ -28,16 +28,19 @@ class PositionManager:
 
     def _should_remove_current_node_from_path(self, current_node: int) -> bool:
         """Check if current node should be removed from remaining path."""
-        return (self.agv.remaining_path and
-                len(self.agv.remaining_path) > 0 and
-                current_node == self.agv.remaining_path[0])
+        return (
+            self.agv.remaining_path
+            and len(self.agv.remaining_path) > 0
+            and current_node == self.agv.remaining_path[0]
+        )
 
     def _remove_current_node_from_path(self, current_node: int) -> None:
         """Remove current node from remaining path."""
         logger.debug(
-            f"AGV {self.agv.agv_id} reached node {current_node}, removing from remaining path")
+            f"AGV {self.agv.agv_id} reached node {current_node}, removing from remaining path"
+        )
         self.agv.remaining_path = self.agv.remaining_path[1:]
-        self.agv.save(update_fields=['remaining_path'])
+        self.agv.save(update_fields=["remaining_path"])
 
     def _update_next_node(self) -> None:
         """Update next node based on remaining path."""
@@ -45,10 +48,11 @@ class PositionManager:
             self.agv.next_node = self.agv.remaining_path[0]
         else:
             logger.debug(
-                f"AGV {self.agv.agv_id} has no remaining path, clearing next_node")
+                f"AGV {self.agv.agv_id} has no remaining path, clearing next_node"
+            )
             self.agv.next_node = None
 
-        self.agv.save(update_fields=['next_node'])
+        self.agv.save(update_fields=["next_node"])
 
 
 class SharedNodesManager:
@@ -59,8 +63,8 @@ class SharedNodesManager:
 
     def update_shared_nodes(self, current_node: int) -> None:
         """Update common nodes and adjacent common nodes when reaching a node."""
-        self._remove_from_shared_nodes(current_node, 'common_nodes')
-        self._remove_from_shared_nodes(current_node, 'adjacent_common_nodes')
+        self._remove_from_shared_nodes(current_node, "common_nodes")
+        self._remove_from_shared_nodes(current_node, "adjacent_common_nodes")
         self._cleanup_insufficient_adjacent_nodes()
 
     def _remove_from_shared_nodes(self, node: int, field_name: str) -> None:
@@ -79,8 +83,9 @@ class SharedNodesManager:
     def _remove_from_other_agvs_if_needed(self, node: int, field_name: str) -> None:
         """Remove node from other AGVs if only one or no other AGV has this node."""
         filter_kwargs = {f"{field_name}__contains": [node]}
-        other_agvs_with_node = Agv.objects.filter(
-            **filter_kwargs).exclude(agv_id=self.agv.agv_id)
+        other_agvs_with_node = Agv.objects.filter(**filter_kwargs).exclude(
+            agv_id=self.agv.agv_id
+        )
 
         if other_agvs_with_node.count() <= 1:
             for other_agv in other_agvs_with_node:
@@ -95,7 +100,7 @@ class SharedNodesManager:
         for agv in Agv.objects.all():
             if len(agv.adjacent_common_nodes) < 2:
                 agv.adjacent_common_nodes = []
-                agv.save(update_fields=['adjacent_common_nodes'])
+                agv.save(update_fields=["adjacent_common_nodes"])
 
 
 class JourneyPhaseManager:
@@ -139,8 +144,10 @@ class JourneyPhaseManager:
         if not self.agv.remaining_path or len(self.agv.remaining_path) == 0:
             return True
 
-        if (self.agv.active_order and
-                self.agv.current_node == self.agv.active_order.parking_node):
+        if (
+            self.agv.active_order
+            and self.agv.current_node == self.agv.active_order.parking_node
+        ):
             return True
 
         return False
@@ -154,27 +161,35 @@ class JourneyPhaseManager:
         """
         if not self.agv.remaining_path or len(self.agv.remaining_path) == 0:
             logger.debug(
-                f"AGV {self.agv.agv_id} outbound journey complete: no remaining path")
+                f"AGV {self.agv.agv_id} outbound journey complete: no remaining path"
+            )
             return True
 
         if not self.agv.inbound_path:
             logger.warning(
-                f"AGV {self.agv.agv_id} has no inbound path set, treating outbound as complete")
+                f"AGV {self.agv.agv_id} has no inbound path set, treating outbound as complete"
+            )
             return True
 
         if self.agv.remaining_path == self.agv.inbound_path:
             logger.debug(
-                f"AGV {self.agv.agv_id} outbound journey complete: remaining path matches inbound path")
+                f"AGV {self.agv.agv_id} outbound journey complete: remaining path matches inbound path"
+            )
             return True
 
-        if (len(self.agv.remaining_path) <= len(self.agv.inbound_path) and
-                self.agv.remaining_path == self.agv.inbound_path[:len(self.agv.remaining_path)]):
+        if (
+            len(self.agv.remaining_path) <= len(self.agv.inbound_path)
+            and self.agv.remaining_path
+            == self.agv.inbound_path[: len(self.agv.remaining_path)]
+        ):
             logger.debug(
-                f"AGV {self.agv.agv_id} outbound journey complete: remaining path is subset of inbound path")
+                f"AGV {self.agv.agv_id} outbound journey complete: remaining path is subset of inbound path"
+            )
             return True
 
         logger.debug(
-            f"AGV {self.agv.agv_id} outbound journey not complete. Remaining: {self.agv.remaining_path}, Inbound: {self.agv.inbound_path}")
+            f"AGV {self.agv.agv_id} outbound journey not complete. Remaining: {self.agv.remaining_path}, Inbound: {self.agv.inbound_path}"
+        )
         return False
 
     def _validate_inbound_remaining_path(self, current_node: int) -> None:
@@ -191,57 +206,69 @@ class JourneyPhaseManager:
 
     def _is_at_parking_node(self, current_node: int) -> bool:
         """Check if AGV is at the parking node."""
-        return (self.agv.active_order and
-                current_node == self.agv.active_order.parking_node)
+        return (
+            self.agv.active_order and current_node == self.agv.active_order.parking_node
+        )
 
     def _clear_remaining_path_at_parking(self) -> None:
         """Clear remaining path when AGV reaches parking node."""
         if self.agv.remaining_path:
             logger.info(
-                f"AGV {self.agv.agv_id} has reached parking node, clearing remaining path for order completion")
+                f"AGV {self.agv.agv_id} has reached parking node, clearing remaining path for order completion"
+            )
             self.agv.remaining_path = []
             self.agv.next_node = None
             self.agv.reserved_node = None
             self.agv.save(
-                update_fields=['remaining_path', 'next_node', 'reserved_node'])
+                update_fields=["remaining_path", "next_node", "reserved_node"]
+            )
 
     def _should_fix_remaining_path(self) -> bool:
         """Check if remaining path needs correction."""
         if not self.agv.remaining_path:
             logger.warning(
-                f"AGV {self.agv.agv_id} in inbound phase but has no remaining path")
+                f"AGV {self.agv.agv_id} in inbound phase but has no remaining path"
+            )
             return True
 
-        if (len(self.agv.remaining_path) > len(self.agv.inbound_path) or
-                not self._is_valid_inbound_remaining_path()):
+        if (
+            len(self.agv.remaining_path) > len(self.agv.inbound_path)
+            or not self._is_valid_inbound_remaining_path()
+        ):
             logger.warning(
-                f"AGV {self.agv.agv_id} in inbound phase but remaining path doesn't match inbound structure")
+                f"AGV {self.agv.agv_id} in inbound phase but remaining path doesn't match inbound structure"
+            )
             return True
 
         return False
 
     def _fix_inbound_remaining_path(self, current_node: int) -> None:
         """Fix the remaining path for inbound journey."""
-        logger.info(
-            f"Fixing remaining path for AGV {self.agv.agv_id} in inbound phase")
+        logger.info(f"Fixing remaining path for AGV {self.agv.agv_id} in inbound phase")
 
         self.agv.remaining_path = self.agv.inbound_path.copy()
 
         if self._should_remove_current_node_from_remaining_path(current_node):
             logger.info(
-                f"AGV {self.agv.agv_id} is at node {current_node}, removing from remaining path")
+                f"AGV {self.agv.agv_id} is at node {current_node}, removing from remaining path"
+            )
             self.agv.remaining_path = self.agv.remaining_path[1:]
 
         self._update_next_and_reserved_nodes()
 
         logger.info(
-            f"Fixed AGV {self.agv.agv_id} remaining path: {self.agv.remaining_path}")
+            f"Fixed AGV {self.agv.agv_id} remaining path: {self.agv.remaining_path}"
+        )
 
-    def _should_remove_current_node_from_remaining_path(self, current_node: int) -> bool:
+    def _should_remove_current_node_from_remaining_path(
+        self, current_node: int
+    ) -> bool:
         """Check if current node should be removed from remaining path."""
-        return (self.agv.remaining_path and
-                len(self.agv.remaining_path) > 0 and
-                current_node == self.agv.remaining_path[0])
+        return (
+            self.agv.remaining_path
+            and len(self.agv.remaining_path) > 0
+            and current_node == self.agv.remaining_path[0]
+        )
 
     def _update_next_and_reserved_nodes(self) -> None:
         """Update next_node and reserved_node based on remaining path."""
@@ -251,8 +278,7 @@ class JourneyPhaseManager:
             self.agv.next_node = None
 
         self.agv.reserved_node = None
-        self.agv.save(
-            update_fields=['remaining_path', 'next_node', 'reserved_node'])
+        self.agv.save(update_fields=["remaining_path", "next_node", "reserved_node"])
 
     def _is_valid_inbound_remaining_path(self) -> bool:
         """Check if the current remaining path is a valid subset of the inbound path."""
@@ -260,19 +286,24 @@ class JourneyPhaseManager:
             return False
 
         for i in range(len(self.agv.inbound_path)):
-            if (len(self.agv.remaining_path) <= len(self.agv.inbound_path) - i and
-                    self.agv.remaining_path == self.agv.inbound_path[i:i + len(self.agv.remaining_path)]):
+            if (
+                len(self.agv.remaining_path) <= len(self.agv.inbound_path) - i
+                and self.agv.remaining_path
+                == self.agv.inbound_path[i : i + len(self.agv.remaining_path)]
+            ):
                 return True
         return False
 
     def _transition_to_inbound_journey(self) -> None:
         """Transition AGV from outbound to inbound journey phase."""
         logger.info(
-            f"AGV {self.agv.agv_id} transitioning from outbound to inbound journey")
+            f"AGV {self.agv.agv_id} transitioning from outbound to inbound journey"
+        )
 
         if not self.agv.inbound_path:
             logger.error(
-                f"AGV {self.agv.agv_id} cannot transition to inbound: no inbound path set")
+                f"AGV {self.agv.agv_id} cannot transition to inbound: no inbound path set"
+            )
             return
 
         self._set_inbound_journey_state()
@@ -285,21 +316,30 @@ class JourneyPhaseManager:
 
         if self._should_remove_current_node_from_remaining_path(self.agv.current_node):
             logger.info(
-                f"AGV {self.agv.agv_id} is already at workstation node {self.agv.current_node}, removing from remaining path")
+                f"AGV {self.agv.agv_id} is already at workstation node {self.agv.current_node}, removing from remaining path"
+            )
             self.agv.remaining_path = self.agv.remaining_path[1:]
 
         self._update_next_and_reserved_nodes()
 
-        self.agv.save(update_fields=[
-                      'journey_phase', 'remaining_path', 'next_node', 'reserved_node'])
+        self.agv.save(
+            update_fields=[
+                "journey_phase",
+                "remaining_path",
+                "next_node",
+                "reserved_node",
+            ]
+        )
         logger.info(
-            f"AGV {self.agv.agv_id} now on inbound journey with remaining path: {self.agv.remaining_path}")
+            f"AGV {self.agv.agv_id} now on inbound journey with remaining path: {self.agv.remaining_path}"
+        )
 
     def _complete_order_journey(self) -> None:
         """Complete the AGV's order journey when it reaches the parking node."""
         if not self.agv.active_order:
             logger.warning(
-                f"AGV {self.agv.agv_id} cannot complete journey: no active order")
+                f"AGV {self.agv.agv_id} cannot complete journey: no active order"
+            )
             return
 
         order_id = self.agv.active_order.order_id
@@ -309,7 +349,8 @@ class JourneyPhaseManager:
         self._recalculate_common_nodes()
 
         logger.info(
-            f"AGV {self.agv.agv_id} order {order_id} completion finished - now idle")
+            f"AGV {self.agv.agv_id} order {order_id} completion finished - now idle"
+        )
 
     def _reset_agv_to_idle(self) -> None:
         """Reset AGV to idle state after completing order."""
@@ -335,20 +376,36 @@ class JourneyPhaseManager:
         self.agv.waiting_for_deadlock_resolution = False
         self.agv.deadlock_partner_agv_id = None
 
-        self.agv.save(update_fields=[
-            'active_order', 'initial_path', 'remaining_path', 'outbound_path',
-            'inbound_path', 'common_nodes', 'adjacent_common_nodes', 'journey_phase',
-            'motion_state', 'next_node', 'reserved_node', 'direction_change', 'spare_flag',
-            'backup_nodes', 'waiting_for_deadlock_resolution', 'deadlock_partner_agv_id'
-        ])
+        self.agv.save(
+            update_fields=[
+                "active_order",
+                "initial_path",
+                "remaining_path",
+                "outbound_path",
+                "inbound_path",
+                "common_nodes",
+                "adjacent_common_nodes",
+                "journey_phase",
+                "motion_state",
+                "next_node",
+                "reserved_node",
+                "direction_change",
+                "spare_flag",
+                "backup_nodes",
+                "waiting_for_deadlock_resolution",
+                "deadlock_partner_agv_id",
+            ]
+        )
 
     def _recalculate_common_nodes(self) -> None:
         """Recalculate common nodes for all AGVs."""
         try:
             from ..algorithm1.common_nodes import recalculate_all_common_nodes
+
             recalculate_all_common_nodes(log_summary=True)
             logger.info(
-                f"Recalculated common nodes after AGV {self.agv.agv_id} journey phase change")
+                f"Recalculated common nodes after AGV {self.agv.agv_id} journey phase change"
+            )
         except Exception as e:
             logger.error(f"Failed to recalculate common nodes: {str(e)}")
 
@@ -367,16 +424,18 @@ class MovementDecisionManager:
         reserved_nodes = self._get_reserved_nodes_by_others()
 
         # Condition 1: Next node not reserved and not in adjacent common nodes
-        if (self.agv.next_node not in reserved_nodes and
-                self.agv.next_node not in self.agv.adjacent_common_nodes):
+        if (
+            self.agv.next_node not in reserved_nodes
+            and self.agv.next_node not in self.agv.adjacent_common_nodes
+        ):
             return True
 
         # Condition 2: Next node in adjacent common nodes but safe to move
-        if (self.agv.next_node not in reserved_nodes and
-                self.agv.next_node in self.agv.adjacent_common_nodes):
-
-            reserved_by_non_spare = self._get_reserved_nodes_by_others(
-                spare_flag=False)
+        if (
+            self.agv.next_node not in reserved_nodes
+            and self.agv.next_node in self.agv.adjacent_common_nodes
+        ):
+            reserved_by_non_spare = self._get_reserved_nodes_by_others(spare_flag=False)
             adjacent_nodes_blocked = any(
                 node in reserved_by_non_spare for node in self.agv.adjacent_common_nodes
             )
@@ -398,25 +457,30 @@ class MovementDecisionManager:
             return False
 
         reserved_nodes = self._get_reserved_nodes_by_others()
-        reserved_by_non_spare = self._get_reserved_nodes_by_others(
-            spare_flag=False)
+        reserved_by_non_spare = self._get_reserved_nodes_by_others(spare_flag=False)
 
         adjacent_nodes_blocked = any(
             node in reserved_by_non_spare for node in self.agv.adjacent_common_nodes
         )
 
-        return (self.agv.next_node not in reserved_nodes and
-                self.agv.next_node in self.agv.adjacent_common_nodes and
-                adjacent_nodes_blocked)
+        return (
+            self.agv.next_node not in reserved_nodes
+            and self.agv.next_node in self.agv.adjacent_common_nodes
+            and adjacent_nodes_blocked
+        )
 
-    def _get_reserved_nodes_by_others(self, spare_flag: Optional[bool] = None) -> List[int]:
+    def _get_reserved_nodes_by_others(
+        self, spare_flag: Optional[bool] = None
+    ) -> List[int]:
         """Get reserved nodes from other AGVs, optionally filtered by spare_flag."""
         other_agvs = Agv.objects.exclude(agv_id=self.agv.agv_id)
 
         if spare_flag is not None:
             other_agvs = other_agvs.filter(spare_flag=spare_flag)
 
-        return [agv.reserved_node for agv in other_agvs if agv.reserved_node is not None]
+        return [
+            agv.reserved_node for agv in other_agvs if agv.reserved_node is not None
+        ]
 
 
 class StateManager:
@@ -432,20 +496,25 @@ class StateManager:
         self.agv.backup_nodes = {}
         self.agv.reserved_node = self.agv.next_node
         self.agv.save(
-            update_fields=['motion_state', 'spare_flag', 'backup_nodes', 'reserved_node'])
+            update_fields=[
+                "motion_state",
+                "spare_flag",
+                "backup_nodes",
+                "reserved_node",
+            ]
+        )
 
     def set_moving_with_backup_state(self) -> None:
         """Set AGV to moving state with backup nodes."""
         self.agv.motion_state = Agv.MOVING
         self.agv.spare_flag = True
         self.agv.reserved_node = self.agv.next_node
-        self.agv.save(update_fields=['motion_state',
-                      'spare_flag', 'reserved_node'])
+        self.agv.save(update_fields=["motion_state", "spare_flag", "reserved_node"])
 
     def set_waiting_state(self) -> None:
         """Set AGV to waiting state."""
         self.agv.motion_state = Agv.WAITING
-        self.agv.save(update_fields=['motion_state'])
+        self.agv.save(update_fields=["motion_state"])
 
 
 class BackupNodeManager:
@@ -456,13 +525,14 @@ class BackupNodeManager:
 
     def cleanup_current_backup_node(self) -> None:
         """Remove backup node associated with current position."""
-        if (self.agv.current_node is not None and
-                str(self.agv.current_node) in self.agv.backup_nodes):
-
+        if (
+            self.agv.current_node is not None
+            and str(self.agv.current_node) in self.agv.backup_nodes
+        ):
             backup_nodes_copy = dict(self.agv.backup_nodes)
             backup_nodes_copy.pop(str(self.agv.current_node))
             self.agv.backup_nodes = backup_nodes_copy
-            self.agv.save(update_fields=['backup_nodes'])
+            self.agv.save(update_fields=["backup_nodes"])
 
 
 class ControlPolicy:
@@ -533,6 +603,8 @@ class ControlPolicy:
 
     # === Helper Methods ===
 
-    def _get_reserved_nodes_by_others(self, spare_flag: Optional[bool] = None) -> List[int]:
+    def _get_reserved_nodes_by_others(
+        self, spare_flag: Optional[bool] = None
+    ) -> List[int]:
         """Get reserved nodes from other AGVs, optionally filtered by spare_flag."""
         return self.movement_manager._get_reserved_nodes_by_others(spare_flag)

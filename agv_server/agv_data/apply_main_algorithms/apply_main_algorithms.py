@@ -5,7 +5,7 @@ from ..main_algorithms.algorithm2.algorithm2 import ControlPolicy
 from ..main_algorithms.algorithm3.algorithm3 import DeadlockResolver
 from ..main_algorithms.algorithm4.algorithm4 import BackupNodesAllocator
 
-from ..direction_change.direction_to_turn import get_action, determine_direction_change
+from ..direction_change.direction_to_turn import determine_direction_change
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ def _apply_control_policy(agv: Agv) -> List[Agv]:
             deadlock_resolver = DeadlockResolver(agv)
             deadlock_resolver.clear_deadlock_resolution_state()
             logger.info(
-                f"AGV {agv.agv_id} cleared from deadlock resolution and moving normally")
+                f"AGV {agv.agv_id} cleared from deadlock resolution and moving normally"
+            )
 
         determine_direction_change(agv)
         return []
@@ -78,19 +79,20 @@ def _trigger_deadlock_partner_control_policy(moved_agv_id: int) -> List[Agv]:
         waiting_agvs = Agv.objects.filter(
             waiting_for_deadlock_resolution=True,
             deadlock_partner_agv_id=moved_agv_id,
-            motion_state=Agv.WAITING
+            motion_state=Agv.WAITING,
         )
 
         for waiting_agv in waiting_agvs:
-            logger.info(f"Triggering control policy for AGV {waiting_agv.agv_id} "
-                        f"after partner AGV {moved_agv_id} moved")
+            logger.info(
+                f"Triggering control policy for AGV {waiting_agv.agv_id} "
+                f"after partner AGV {moved_agv_id} moved"
+            )
             additional_affected_agvs = _apply_control_policy(waiting_agv)
             partner_agvs.append(waiting_agv)
             partner_agvs.extend(additional_affected_agvs)
 
     except Exception as e:
-        logger.error(
-            f"Error triggering deadlock partner control policy: {str(e)}")
+        logger.error(f"Error triggering deadlock partner control policy: {str(e)}")
 
     return partner_agvs
 

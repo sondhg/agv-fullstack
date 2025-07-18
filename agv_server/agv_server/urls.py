@@ -20,10 +20,15 @@ from django.contrib import admin
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include([
-        path("auth/", include("users.urls")),
-        path("orders/", include("order_data.urls")),
-        path("map/", include("map_data.urls")),
-        path("agvs/", include("agv_data.urls")),
-    ])),
+    path(
+        "api/",
+        include(
+            [
+                path("auth/", include("users.urls")),
+                path("orders/", include("order_data.urls")),
+                path("map/", include("map_data.urls")),
+                path("agvs/", include("agv_data.urls")),
+            ]
+        ),
+    ),
 ]

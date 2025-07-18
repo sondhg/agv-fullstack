@@ -7,8 +7,6 @@ from .serializers import AGVSerializer
 from django.db import transaction
 import schedule
 import datetime
-from django.conf import settings
-from order_data.models import Order
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import csv
@@ -31,12 +29,17 @@ def send_order_assignment_notification(order_id, agv_id, message, additional_dat
         agv_data = {}
         try:
             from .models import Agv
+
             agv = Agv.objects.get(agv_id=agv_id)
             agv_data = {
                 "current_node": agv.current_node,
                 "common_nodes_count": len(agv.common_nodes) if agv.common_nodes else 0,
-                "adjacent_common_nodes_count": len(agv.adjacent_common_nodes) if agv.adjacent_common_nodes else 0,
-                "remaining_path_length": len(agv.remaining_path) if agv.remaining_path else 0
+                "adjacent_common_nodes_count": len(agv.adjacent_common_nodes)
+                if agv.adjacent_common_nodes
+                else 0,
+                "remaining_path_length": len(agv.remaining_path)
+                if agv.remaining_path
+                else 0,
             }
         except Exception as e:
             print(f"Error getting AGV details for notification: {str(e)}")
@@ -48,8 +51,8 @@ def send_order_assignment_notification(order_id, agv_id, message, additional_dat
                 "agv_id": agv_id,
                 "message": message,
                 "timestamp": datetime.datetime.now().isoformat(),
-                "agv_details": agv_data
-            }
+                "agv_details": agv_data,
+            },
         }
 
         # Add any additional data if provided
@@ -58,11 +61,7 @@ def send_order_assignment_notification(order_id, agv_id, message, additional_dat
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "agv_group",
-            {
-                "type": "agv_message",
-                "message": notification_data
-            }
+            "agv_group", {"type": "agv_message", "message": notification_data}
         )
     except Exception as e:
         print(f"Error sending order assignment notification: {str(e)}")
@@ -114,8 +113,7 @@ class BulkDeleteAGVsView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            deleted_count, _ = Agv.objects.filter(
-                agv_id__in=agv_ids).delete()
+            deleted_count, _ = Agv.objects.filter(agv_id__in=agv_ids).delete()
             return Response(
                 {"message": f"{deleted_count} AGVs deleted successfully."},
                 status=status.HTTP_200_OK,
@@ -136,6 +134,7 @@ class DispatchOrdersToAGVsView(APIView):
     def __init__(self):
         super().__init__()
         from .main_algorithms.algorithm1.algorithm1 import TaskDispatcher
+
         self.task_dispatcher = TaskDispatcher()
 
     def post(self, request):
@@ -145,7 +144,7 @@ class DispatchOrdersToAGVsView(APIView):
         Returns:
             Response: Information about scheduled orders.
         """
-        try:            # Get the algorithm parameter (defaults to dijkstra)
+        try:  # Get the algorithm parameter (defaults to dijkstra)
             algorithm = request.data.get("algorithm", "dijkstra")
 
             # Get all unassigned orders with their scheduling information
@@ -158,21 +157,27 @@ class DispatchOrdersToAGVsView(APIView):
             schedule.clear()
 
             # Process orders for scheduling or immediate assignment
-            scheduled_orders, immediate_orders = self.task_dispatcher.process_orders_for_scheduling(
-                algorithm)
+            scheduled_orders, immediate_orders = (
+                self.task_dispatcher.process_orders_for_scheduling(algorithm)
+            )
 
             # Start scheduler if needed
             # Recalculate common nodes for all active AGVs after immediate assignments
             self.task_dispatcher.start_scheduler_if_needed(scheduled_orders)
             if immediate_orders:
                 try:
-                    from .main_algorithms.algorithm1.common_nodes import recalculate_all_common_nodes
+                    from .main_algorithms.algorithm1.common_nodes import (
+                        recalculate_all_common_nodes,
+                    )
+
                     recalculate_all_common_nodes(log_summary=True)
                     print(
-                        f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments")
+                        f"Recalculated common nodes for all AGVs after {len(immediate_orders)} immediate assignments"
+                    )
                 except Exception as e:
                     print(
-                        f"Error recalculating common nodes after immediate assignments: {str(e)}")
+                        f"Error recalculating common nodes after immediate assignments: {str(e)}"
+                    )
 
             return self._create_success_response(scheduled_orders, immediate_orders)
 
@@ -184,7 +189,7 @@ class DispatchOrdersToAGVsView(APIView):
         return Response(
             {
                 "success": False,
-                "message": "No unassigned orders available to schedule."
+                "message": "No unassigned orders available to schedule.",
             },
             status=status.HTTP_200_OK,
         )
@@ -199,7 +204,7 @@ class DispatchOrdersToAGVsView(APIView):
                 "message": f"Successfully scheduled {len(scheduled_orders)} orders and immediately assigned {len(immediate_orders)} orders",
                 "scheduled_orders": scheduled_orders,
                 "immediate_orders": immediate_orders,
-                "total_processed": total_processed
+                "total_processed": total_processed,
             },
             status=status.HTTP_200_OK,
         )
@@ -207,13 +212,14 @@ class DispatchOrdersToAGVsView(APIView):
     def _create_error_response(self, exception):
         """Create error response with exception details."""
         import traceback
+
         traceback_str = traceback.format_exc()
 
         return Response(
             {
                 "success": False,
                 "message": f"Error scheduling orders: {str(exception)}",
-                "details": traceback_str
+                "details": traceback_str,
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
@@ -241,10 +247,6 @@ class ResetAGVsView(APIView):
 
             # Reset each AGV
             for agv in agvs:
-                # Store the fields we want to keep
-                agv_id = agv.agv_id
-                preferred_parking_node = agv.preferred_parking_node
-
                 # Reset all state fields
                 agv.current_node = None
                 agv.next_node = None
@@ -261,30 +263,43 @@ class ResetAGVsView(APIView):
                 agv.direction_change = Agv.GO_STRAIGHT
 
                 # Save the changes
-                agv.save(update_fields=[
-                    'current_node', 'next_node', 'reserved_node', 'motion_state',
-                    'spare_flag', 'backup_nodes', 'initial_path', 'remaining_path',
-                    'common_nodes', 'adjacent_common_nodes', 'active_order', 'previous_node', 'direction_change'
-                ])
+                agv.save(
+                    update_fields=[
+                        "current_node",
+                        "next_node",
+                        "reserved_node",
+                        "motion_state",
+                        "spare_flag",
+                        "backup_nodes",
+                        "initial_path",
+                        "remaining_path",
+                        "common_nodes",
+                        "adjacent_common_nodes",
+                        "active_order",
+                        "previous_node",
+                        "direction_change",
+                    ]
+                )
 
                 reset_count += 1
 
             return Response(
                 {
                     "success": True,
-                    "message": f"Successfully reset {reset_count} AGVs to their default state."
+                    "message": f"Successfully reset {reset_count} AGVs to their default state.",
                 },
                 status=status.HTTP_200_OK,
             )
 
         except Exception as e:
             import traceback
+
             traceback_str = traceback.format_exc()
             return Response(
                 {
                     "success": False,
                     "message": f"Error resetting AGVs: {str(e)}",
-                    "details": traceback_str
+                    "details": traceback_str,
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
@@ -295,21 +310,24 @@ class CreateAGVsViaCSVView(APIView):
     API endpoint to create multiple AGVs from a CSV file.
     Expected CSV format: agv_id,preferred_parking_node
     """
+
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
         try:
             # Check if CSV file is provided
-            if 'csv_file' not in request.FILES:
+            if "csv_file" not in request.FILES:
                 return Response(
-                    {"error": "No CSV file provided. Please upload a file with the key 'csv_file'."},
+                    {
+                        "error": "No CSV file provided. Please upload a file with the key 'csv_file'."
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            csv_file = request.FILES['csv_file']
+            csv_file = request.FILES["csv_file"]
 
             # Validate file extension
-            if not csv_file.name.lower().endswith('.csv'):
+            if not csv_file.name.lower().endswith(".csv"):
                 return Response(
                     {"error": "File must be a CSV file."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -317,13 +335,14 @@ class CreateAGVsViaCSVView(APIView):
 
             # Read and parse CSV file
             try:
-                file_content = csv_file.read().decode('utf-8')
+                file_content = csv_file.read().decode("utf-8")
                 csv_reader = csv.DictReader(io.StringIO(file_content))
 
                 # Validate CSV headers
-                expected_headers = {'agv_id', 'preferred_parking_node'}
-                actual_headers = set(
-                    csv_reader.fieldnames) if csv_reader.fieldnames else set()
+                expected_headers = {"agv_id", "preferred_parking_node"}
+                actual_headers = (
+                    set(csv_reader.fieldnames) if csv_reader.fieldnames else set()
+                )
 
                 if not expected_headers.issubset(actual_headers):
                     missing_headers = expected_headers - actual_headers
@@ -348,9 +367,12 @@ class CreateAGVsViaCSVView(APIView):
 
                     # Validate and clean data
                     try:
-                        agv_id = int(row['agv_id'])
-                        preferred_parking_node = int(
-                            row['preferred_parking_node']) if row['preferred_parking_node'].strip() else None
+                        agv_id = int(row["agv_id"])
+                        preferred_parking_node = (
+                            int(row["preferred_parking_node"])
+                            if row["preferred_parking_node"].strip()
+                            else None
+                        )
                     except ValueError as e:
                         return Response(
                             {
@@ -361,7 +383,7 @@ class CreateAGVsViaCSVView(APIView):
                         )
 
                     # Check for duplicate AGV IDs in the CSV
-                    if any(agv_data['agv_id'] == agv_id for agv_data in agv_data_list):
+                    if any(agv_data["agv_id"] == agv_id for agv_data in agv_data_list):
                         return Response(
                             {
                                 "error": f"Duplicate agv_id {agv_id} found in row {row_number}. "
@@ -370,10 +392,12 @@ class CreateAGVsViaCSVView(APIView):
                             status=status.HTTP_400_BAD_REQUEST,
                         )
 
-                    agv_data_list.append({
-                        'agv_id': agv_id,
-                        'preferred_parking_node': preferred_parking_node
-                    })
+                    agv_data_list.append(
+                        {
+                            "agv_id": agv_id,
+                            "preferred_parking_node": preferred_parking_node,
+                        }
+                    )
 
                 if not agv_data_list:
                     return Response(
@@ -388,9 +412,11 @@ class CreateAGVsViaCSVView(APIView):
                 )
 
             # Check for existing AGV IDs in database
-            existing_agv_ids = list(Agv.objects.filter(
-                agv_id__in=[agv_data['agv_id'] for agv_data in agv_data_list]
-            ).values_list('agv_id', flat=True))
+            existing_agv_ids = list(
+                Agv.objects.filter(
+                    agv_id__in=[agv_data["agv_id"] for agv_data in agv_data_list]
+                ).values_list("agv_id", flat=True)
+            )
 
             if existing_agv_ids:
                 return Response(
@@ -412,7 +438,7 @@ class CreateAGVsViaCSVView(APIView):
                         {
                             "success": True,
                             "message": f"Successfully created {len(created_agvs)} AGVs from CSV file.",
-                            "created_agvs": AGVSerializer(created_agvs, many=True).data
+                            "created_agvs": AGVSerializer(created_agvs, many=True).data,
                         },
                         status=status.HTTP_201_CREATED,
                     )
@@ -420,18 +446,19 @@ class CreateAGVsViaCSVView(APIView):
                     return Response(
                         {
                             "error": "Validation failed for AGV data.",
-                            "details": serializer.errors
+                            "details": serializer.errors,
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
         except Exception as e:
             import traceback
+
             traceback_str = traceback.format_exc()
             return Response(
                 {
                     "error": f"An unexpected error occurred: {str(e)}",
-                    "details": traceback_str
+                    "details": traceback_str,
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

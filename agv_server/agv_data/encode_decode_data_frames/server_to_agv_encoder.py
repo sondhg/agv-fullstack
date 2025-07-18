@@ -12,7 +12,9 @@ MESSAGE_TYPE = 0x03
 FRAME_END = 0x7F
 
 
-def encode_message(motion_state: int, reserved_node: int, direction_change: int) -> bytes:
+def encode_message(
+    motion_state: int, reserved_node: int, direction_change: int
+) -> bytes:
     """
     Encode server message into byte array format.
 
@@ -20,7 +22,7 @@ def encode_message(motion_state: int, reserved_node: int, direction_change: int)
         motion_state (int): AGV motion state (0=IDLE, 1=MOVING, 2=WAITING)
         reserved_node (int or None): Reserved node ID for AGV to move to (None will be encoded as 0)
         direction_change (int): Direction change instruction
-                              (0=GO_STRAIGHT, 1=TURN_AROUND, 
+                              (0=GO_STRAIGHT, 1=TURN_AROUND,
                                2=TURN_LEFT, 3=TURN_RIGHT)
 
     Returns:
@@ -30,14 +32,12 @@ def encode_message(motion_state: int, reserved_node: int, direction_change: int)
         ValueError: If input parameters are invalid
     """
 
-    try:        # Convert values to bytes
-        motion_state_bytes = motion_state.to_bytes(1, byteorder='little')
+    try:  # Convert values to bytes
+        motion_state_bytes = motion_state.to_bytes(1, byteorder="little")
         # Handle None values for reserved_node (use 0 as default)
         reserved_node_value = reserved_node if reserved_node is not None else 0
-        reserved_node_bytes = reserved_node_value.to_bytes(
-            2, byteorder='little')
-        direction_change_bytes = direction_change.to_bytes(
-            1, byteorder='little')
+        reserved_node_bytes = reserved_node_value.to_bytes(2, byteorder="little")
+        direction_change_bytes = direction_change.to_bytes(1, byteorder="little")
 
         # Prepare data for CRC calculation (without CRC field itself)
         data_for_crc = bytearray()
@@ -48,7 +48,7 @@ def encode_message(motion_state: int, reserved_node: int, direction_change: int)
         data_for_crc.extend(direction_change_bytes)
 
         crc = calculate_crc(data_for_crc)
-        crc_bytes = crc.to_bytes(1, byteorder='little')
+        crc_bytes = crc.to_bytes(1, byteorder="little")
 
         # Create frame
         frame = bytearray()

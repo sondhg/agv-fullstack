@@ -1,4 +1,3 @@
-import math
 from .base import BasePathfinding
 
 
@@ -34,9 +33,9 @@ class GreedyDistance(BasePathfinding):
 
         while current != end:
             # Find the nearest unvisited neighbor
-            min_distance = float('inf')
+            min_distance = float("inf")
             next_node = None
-            
+
             for neighbor, distance in self.graph[current].items():
                 if neighbor not in visited and distance < min_distance:
                     min_distance = distance
@@ -46,10 +45,14 @@ class GreedyDistance(BasePathfinding):
             if next_node is None:
                 # Try to backtrack or find any path to end
                 for node in self.nodes:
-                    if node not in visited and node in self.graph and end in self.graph[node]:
+                    if (
+                        node not in visited
+                        and node in self.graph
+                        and end in self.graph[node]
+                    ):
                         next_node = node
                         break
-                
+
                 if next_node is None:
                     return []  # No path found
 

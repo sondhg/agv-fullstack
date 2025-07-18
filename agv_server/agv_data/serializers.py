@@ -7,16 +7,24 @@ class OrderInfoSerializer(serializers.ModelSerializer):
     """
     Serializer for basic order information needed in AGV responses.
     """
+
     class Meta:
         model = Order
-        fields = ('order_id', 'order_date', 'start_time',
-                  'parking_node', 'storage_node', 'workstation_node')
+        fields = (
+            "order_id",
+            "order_date",
+            "start_time",
+            "parking_node",
+            "storage_node",
+            "workstation_node",
+        )
 
 
 class AGVSerializer(serializers.ModelSerializer):
     """
     Serializer for the AGV model that includes active order information.
     """
+
     # Include order information for API compatibility
     active_order_info = serializers.SerializerMethodField()
 

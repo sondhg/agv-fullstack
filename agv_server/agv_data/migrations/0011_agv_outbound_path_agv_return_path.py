@@ -4,20 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0010_agv_journey_phase'),
+        ("agv_data", "0010_agv_journey_phase"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='agv',
-            name='outbound_path',
-            field=models.JSONField(default=list, help_text='Path from parking node to workstation node.'),
+            model_name="agv",
+            name="outbound_path",
+            field=models.JSONField(
+                default=list, help_text="Path from parking node to workstation node."
+            ),
         ),
         migrations.AddField(
-            model_name='agv',
-            name='return_path',
-            field=models.JSONField(default=list, help_text='Path from workstation node back to parking node.'),
+            model_name="agv",
+            name="return_path",
+            field=models.JSONField(
+                default=list,
+                help_text="Path from workstation node back to parking node.",
+            ),
         ),
     ]

@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0018_alter_agv_direction_change'),
+        ("agv_data", "0018_alter_agv_direction_change"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='agv',
-            name='journey_phase',
-            field=models.IntegerField(choices=[(0, 'Outbound'), (1, 'Inbound')], default=0, help_text='Whether AGV is on outbound (parking→storage→workstation) or inbound (workstation→parking) journey'),
+            model_name="agv",
+            name="journey_phase",
+            field=models.IntegerField(
+                choices=[(0, "Outbound"), (1, "Inbound")],
+                default=0,
+                help_text="Whether AGV is on outbound (parking→storage→workstation) or inbound (workstation→parking) journey",
+            ),
         ),
     ]

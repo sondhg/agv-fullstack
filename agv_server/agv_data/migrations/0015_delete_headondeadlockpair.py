@@ -4,13 +4,12 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0014_headondeadlockpair'),
+        ("agv_data", "0014_headondeadlockpair"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='HeadOnDeadlockPair',
+            name="HeadOnDeadlockPair",
         ),
     ]

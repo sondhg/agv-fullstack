@@ -1,4 +1,5 @@
 """Service layer for map data operations."""
+
 import csv
 import io
 from typing import List, Dict, Any, TypedDict, Optional
@@ -8,6 +9,7 @@ from ..constants import MapConstants
 
 class MapResponse(TypedDict):
     """Type definition for map operation responses."""
+
     success: bool
     message: str
     data: Optional[Dict[str, Any]]
@@ -71,16 +73,14 @@ class MapService:
             connections = cls._process_matrix_nodes(
                 matrix,
                 lambda node1, node2, value: Connection(
-                    node1=node1,
-                    node2=node2,
-                    distance=value
-                )
+                    node1=node1, node2=node2, distance=value
+                ),
             )
 
             Connection.objects.bulk_create(connections)
             return cls._create_success_response(
                 "Connection data imported successfully",
-                connection_count=len(connections)
+                connection_count=len(connections),
             )
 
         except Exception as e:
@@ -99,16 +99,13 @@ class MapService:
             directions = cls._process_matrix_nodes(
                 matrix,
                 lambda node1, node2, value: Direction(
-                    node1=node1,
-                    node2=node2,
-                    direction=value
-                )
+                    node1=node1, node2=node2, direction=value
+                ),
             )
 
             Direction.objects.bulk_create(directions)
             return cls._create_success_response(
-                "Direction data imported successfully",
-                direction_count=len(directions)
+                "Direction data imported successfully", direction_count=len(directions)
             )
 
         except Exception as e:
@@ -118,8 +115,7 @@ class MapService:
     def get_map_data() -> MapResponse:
         """Get all map data including nodes, connections, and directions."""
         try:
-            nodes = list(Direction.objects.values_list(
-                "node1", flat=True).distinct())
+            nodes = list(Direction.objects.values_list("node1", flat=True).distinct())
             connections = list(Connection.objects.values())
             directions = list(Direction.objects.values())
 
@@ -129,14 +125,14 @@ class MapService:
             if not has_connections and not has_directions:
                 return MapService._create_error_response(
                     "No map data available. Please import both connection and direction data.",
-                    missing=["connections", "directions"]
+                    missing=["connections", "directions"],
                 )
 
             if not has_connections:
                 return MapService._create_error_response(
                     "Connection data is missing. Please import the connections CSV file.",
                     missing=["connections"],
-                    available={"nodes": nodes, "directions": directions}
+                    available={"nodes": nodes, "directions": directions},
                 )
 
             if not has_directions:
@@ -144,9 +140,13 @@ class MapService:
                     "Direction data is missing. Please import the directions CSV file.",
                     missing=["directions"],
                     available={
-                        "nodes": list(Connection.objects.values_list("node1", flat=True).distinct()),
-                        "connections": connections
-                    }
+                        "nodes": list(
+                            Connection.objects.values_list(
+                                "node1", flat=True
+                            ).distinct()
+                        ),
+                        "connections": connections,
+                    },
                 )
 
             return MapService._create_success_response(
@@ -154,12 +154,14 @@ class MapService:
                 data={
                     "nodes": nodes,
                     "connections": connections,
-                    "directions": directions
-                }
+                    "directions": directions,
+                },
             )
 
         except Exception as e:
-            return MapService._create_error_response(f"Error retrieving map data: {str(e)}")
+            return MapService._create_error_response(
+                f"Error retrieving map data: {str(e)}"
+            )
 
     @staticmethod
     def delete_all_data() -> MapResponse:
@@ -176,8 +178,10 @@ class MapService:
                 "All map data deleted successfully",
                 deleted={
                     "connections": connections_count,
-                    "directions": directions_count
-                }
+                    "directions": directions_count,
+                },
             )
         except Exception as e:
-            return MapService._create_error_response(f"Error deleting map data: {str(e)}")
+            return MapService._create_error_response(
+                f"Error deleting map data: {str(e)}"
+            )

@@ -23,27 +23,30 @@ class GreedyDistance(BasePathfinding):
         """
         if start == end:
             return [start]
-        
+
         current = start
         path = [start]
         visited = set([start])
-        
+
         while current != end:
-            neighbors = [(neighbor, dist) for neighbor, dist in self.graph[current].items() 
-                        if neighbor not in visited]
-            
+            neighbors = [
+                (neighbor, dist)
+                for neighbor, dist in self.graph[current].items()
+                if neighbor not in visited
+            ]
+
             if not neighbors:
                 # Dead end - this greedy approach can get stuck
                 return []
-            
+
             # Choose the closest neighbor (greedy choice)
             next_node = min(neighbors, key=lambda x: x[1])[0]
             path.append(next_node)
             visited.add(next_node)
             current = next_node
-            
+
             # Prevent infinite loops
             if len(path) > len(self.nodes):
                 return []
-        
+
         return path

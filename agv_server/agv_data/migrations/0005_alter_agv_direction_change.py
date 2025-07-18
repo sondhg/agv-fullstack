@@ -4,15 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0004_alter_agv_direction_change'),
+        ("agv_data", "0004_alter_agv_direction_change"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='agv',
-            name='direction_change',
-            field=models.IntegerField(choices=[(0, 'Go straight'), (1, 'Turn around'), (2, 'Turn left'), (3, 'Turn right'), (4, 'Do nothing')], help_text='Direction the AGV should turn to after reaching a node', null=True),
+            model_name="agv",
+            name="direction_change",
+            field=models.IntegerField(
+                choices=[
+                    (0, "Go straight"),
+                    (1, "Turn around"),
+                    (2, "Turn left"),
+                    (3, "Turn right"),
+                    (4, "Do nothing"),
+                ],
+                help_text="Direction the AGV should turn to after reaching a node",
+                null=True,
+            ),
         ),
     ]

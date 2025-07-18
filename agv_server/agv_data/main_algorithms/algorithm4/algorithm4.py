@@ -8,7 +8,7 @@ class BackupNodesAllocator:
     Algorithm 4: Dynamic Backup Nodes Allocation Service
 
     This class implements the backup nodes allocation strategy from DSPA algorithm.
-    It allocates backup nodes for AGVs based on their adjacent common nodes 
+    It allocates backup nodes for AGVs based on their adjacent common nodes
     (sequential shared points) to provide alternative paths during conflicts.
     """
 
@@ -32,7 +32,7 @@ class BackupNodesAllocator:
         # Update AGV with allocated backup nodes
         self.agv.backup_nodes = backup_nodes
         self.agv.spare_flag = True
-        self.agv.save(update_fields=['backup_nodes', 'spare_flag'])
+        self.agv.save(update_fields=["backup_nodes", "spare_flag"])
 
         return len(backup_nodes) > 0
 
@@ -114,14 +114,14 @@ class BackupNodesAllocator:
         Returns:
             list: List of directly connected node IDs
         """
-        connections = Connection.objects.filter(
-            Q(node1=node) | Q(node2=node)
-        )
+        connections = Connection.objects.filter(Q(node1=node) | Q(node2=node))
 
         connected_nodes = []
         for connection in connections:
             # Add the other node in each connection
-            other_node = connection.node2 if connection.node1 == node else connection.node1
+            other_node = (
+                connection.node2 if connection.node1 == node else connection.node1
+            )
             connected_nodes.append(other_node)
 
         return connected_nodes
@@ -146,12 +146,12 @@ class BackupNodesAllocator:
             return candidate_nodes[0]
 
         closest_node = None
-        min_distance = float('inf')
+        min_distance = float("inf")
 
         for candidate in candidate_nodes:
             connection = Connection.objects.filter(
-                Q(node1=reference_node, node2=candidate) |
-                Q(node1=candidate, node2=reference_node)
+                Q(node1=reference_node, node2=candidate)
+                | Q(node1=candidate, node2=reference_node)
             ).first()
 
             if connection and connection.distance < min_distance:

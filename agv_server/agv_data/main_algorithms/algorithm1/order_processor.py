@@ -2,6 +2,7 @@
 Order processing module for the DSPA algorithm.
 This replaces the schedule generator module from the schedule_generate app.
 """
+
 from typing import Dict, List, Optional, Tuple
 from order_data.models import Order
 from ...models import Agv
@@ -17,10 +18,12 @@ class OrderProcessor:
         Initialize the processor with a pathfinding algorithm.
 
         Args:
-            pathfinding_algorithm_instance: Instance of a pathfinding algorithm        """
+            pathfinding_algorithm_instance: Instance of a pathfinding algorithm"""
         self.pathfinding_algorithm = pathfinding_algorithm_instance
 
-    def _compute_path(self, order: Order) -> Tuple[Optional[List[int]], Optional[List[int]]]:
+    def _compute_path(
+        self, order: Order
+    ) -> Tuple[Optional[List[int]], Optional[List[int]]]:
         """
         Compute shortest path for an order using the pathfinding algorithm.
         Separates the path into outbound and return segments.
@@ -94,7 +97,7 @@ class OrderProcessor:
             # Initially, remaining_path is the outbound path
             "remaining_path": outbound_path,
             "common_nodes": [],  # Will be calculated later in process_tasks
-            "adjacent_common_nodes": []  # Will be calculated later in process_tasks
+            "adjacent_common_nodes": [],  # Will be calculated later in process_tasks
         }
 
         return order_data
@@ -131,7 +134,8 @@ class OrderProcessor:
             return True
         except Exception as e:
             print(
-                f"Failed to update AGV {agv.agv_id} with order {order_data['order_id']}: {str(e)}")
+                f"Failed to update AGV {agv.agv_id} with order {order_data['order_id']}: {str(e)}"
+            )
             return False
 
     def validate_order_data(self, order: Order, valid_nodes: List[int]) -> bool:
@@ -146,6 +150,8 @@ class OrderProcessor:
             bool: True if order data is valid, False otherwise
         """
         # Check if all required nodes exist in the map
-        return (order.parking_node in valid_nodes and
-                order.storage_node in valid_nodes and
-                order.workstation_node in valid_nodes)
+        return (
+            order.parking_node in valid_nodes
+            and order.storage_node in valid_nodes
+            and order.workstation_node in valid_nodes
+        )

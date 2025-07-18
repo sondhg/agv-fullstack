@@ -4,19 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0008_rename_scp_agv_adjacent_common_nodes'),
+        ("agv_data", "0008_rename_scp_agv_adjacent_common_nodes"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='agv',
-            name='spare_points',
+            model_name="agv",
+            name="spare_points",
         ),
         migrations.AddField(
-            model_name='agv',
-            name='backup_nodes',
-            field=models.JSONField(default=dict, help_text='SP^i: mapping of shared points to their allocated backup nodes'),
+            model_name="agv",
+            name="backup_nodes",
+            field=models.JSONField(
+                default=dict,
+                help_text="SP^i: mapping of shared points to their allocated backup nodes",
+            ),
         ),
     ]

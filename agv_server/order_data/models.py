@@ -13,4 +13,4 @@ class Order(models.Model):
         return f"Order {self.order_id} at {self.start_time} of {self.order_date} / Nodes {self.parking_node} → {self.storage_node} → {self.workstation_node}"
 
     class Meta:
-        ordering = ['order_id']  # Ensure ascending order by order_id
+        ordering = ["order_id"]  # Ensure ascending order by order_id

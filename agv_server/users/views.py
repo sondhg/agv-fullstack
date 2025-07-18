@@ -58,8 +58,7 @@ class LoginView(APIView):
 
         response = Response()
 
-        response.set_cookie(key="access_token",
-                            value=access_token, httponly=True)
+        response.set_cookie(key="access_token", value=access_token, httponly=True)
         response.data = {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -95,8 +94,7 @@ class LogoutView(APIView):
         email = request.data.get("email")
         refresh_token = request.data.get("refresh_token")
 
-        user = User.objects.filter(
-            email=email, refresh_token=refresh_token).first()
+        user = User.objects.filter(email=email, refresh_token=refresh_token).first()
         if user is None:
             raise AuthenticationFailed("Invalid refresh token!")
 

@@ -4,15 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0016_agv_deadlock_partner_agv_id_and_more'),
+        ("agv_data", "0016_agv_deadlock_partner_agv_id_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='agv',
-            old_name='return_path',
-            new_name='inbound_path',
+            model_name="agv",
+            old_name="return_path",
+            new_name="inbound_path",
         ),
     ]

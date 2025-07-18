@@ -4,25 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Order',
+            name="Order",
             fields=[
-                ('order_id', models.BigIntegerField(primary_key=True, serialize=False)),
-                ('order_date', models.DateField()),
-                ('start_time', models.TimeField()),
-                ('parking_node', models.IntegerField()),
-                ('storage_node', models.IntegerField()),
-                ('workstation_node', models.IntegerField()),
+                ("order_id", models.BigIntegerField(primary_key=True, serialize=False)),
+                ("order_date", models.DateField()),
+                ("start_time", models.TimeField()),
+                ("parking_node", models.IntegerField()),
+                ("storage_node", models.IntegerField()),
+                ("workstation_node", models.IntegerField()),
             ],
             options={
-                'ordering': ['order_id'],
+                "ordering": ["order_id"],
             },
         ),
     ]

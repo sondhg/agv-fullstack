@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import import_connections, import_directions, get_map_data, delete_all_map_data
+from .views import (
+    import_connections,
+    import_directions,
+    get_map_data,
+    delete_all_map_data,
+)
 
 urlpatterns = [
     path("import-connections/", import_connections, name="import-connections"),

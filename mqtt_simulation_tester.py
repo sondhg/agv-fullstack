@@ -6,8 +6,8 @@ import json
 
 # MQTT Configuration
 # Use localhost for both development and inside Docker container
-MQTT_BROKER = os.environ.get('MQTT_BROKER', 'localhost')
-MQTT_PORT = int(os.environ.get('MQTT_PORT', 1883))
+MQTT_BROKER = os.environ.get("MQTT_BROKER", "localhost")
+MQTT_PORT = int(os.environ.get("MQTT_PORT", 1883))
 MQTT_KEEPALIVE = 60
 CLIENT_ID = "simulation_test_client"
 
@@ -63,8 +63,8 @@ def encode_agv_position(agv_id: int, current_node: int) -> bytes:
     """
     try:
         # Convert values to bytes (little-endian)
-        agv_id_bytes = agv_id.to_bytes(2, byteorder='little')
-        node_bytes = current_node.to_bytes(2, byteorder='little')
+        agv_id_bytes = agv_id.to_bytes(2, byteorder="little")
+        node_bytes = current_node.to_bytes(2, byteorder="little")
 
         # Create data for CRC calculation (excluding frame start/end markers)
         data_for_crc = bytearray()
@@ -75,7 +75,7 @@ def encode_agv_position(agv_id: int, current_node: int) -> bytes:
 
         # Calculate CRC for the data
         crc_value = calculate_crc(data_for_crc)
-        crc_bytes = crc_value.to_bytes(1, byteorder='little')
+        crc_bytes = crc_value.to_bytes(1, byteorder="little")
 
         # Create complete frame
         frame = bytearray()
@@ -106,42 +106,44 @@ def load_simulation_steps(file_path: str) -> list:
         ValueError: If the JSON file is invalid
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         # Remove comments from JSONC format
         # This is a simple implementation that removes lines starting with //
-        lines = content.split('\n')
+        lines = content.split("\n")
         json_lines = []
         for line in lines:
             stripped_line = line.strip()
             # Skip lines that are comments or empty
-            if not stripped_line.startswith('//') and stripped_line:
+            if not stripped_line.startswith("//") and stripped_line:
                 json_lines.append(line)
 
         # Join the lines back and parse as JSON
-        json_content = '\n'.join(json_lines)
+        json_content = "\n".join(json_lines)
         steps = json.loads(json_content)
 
         if not isinstance(steps, list):
-            raise ValueError(
-                "JSON file must contain an array of simulation steps")
+            raise ValueError("JSON file must contain an array of simulation steps")
 
         # Validate each step
         for i, step in enumerate(steps):
             if not isinstance(step, dict):
                 raise ValueError(f"Step {i + 1} must be an object")
-            if 'agv_id' not in step or 'current_node' not in step:
+            if "agv_id" not in step or "current_node" not in step:
                 raise ValueError(
-                    f"Step {i + 1} must contain 'agv_id' and 'current_node' fields")
-            if not isinstance(step['agv_id'], int) or not isinstance(step['current_node'], int):
+                    f"Step {i + 1} must contain 'agv_id' and 'current_node' fields"
+                )
+            if not isinstance(step["agv_id"], int) or not isinstance(
+                step["current_node"], int
+            ):
                 raise ValueError(
-                    f"Step {i + 1}: 'agv_id' and 'current_node' must be integers")
+                    f"Step {i + 1}: 'agv_id' and 'current_node' must be integers"
+                )
 
         return steps
     except FileNotFoundError:
-        raise FileNotFoundError(
-            f"Simulation steps file not found: {file_path}")
+        raise FileNotFoundError(f"Simulation steps file not found: {file_path}")
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON format in file {file_path}: {str(e)}")
 
@@ -167,15 +169,13 @@ def on_message(client, userdata, msg):
     print(f"Raw message (bytes): {raw_data}")
     print(f"Raw message (hex): {hex_data}")
     # Display data as binary
-    print("Raw message (binary):", ' '.join(format(byte, '08b')
-          for byte in raw_data))
+    print("Raw message (binary):", " ".join(format(byte, "08b") for byte in raw_data))
     if len(data) >= 8:  # Server messages are 8 bytes
         print(f"Frame start: {hex(raw_data[0])}")
         print(f"Frame length: {hex(raw_data[1])}")
         print(f"Message type: {hex(raw_data[2])}")
         print(f"Motion state: {raw_data[3]}")
-        print(
-            f"Reserved node: {int.from_bytes(raw_data[4:6], byteorder='little')}")
+        print(f"Reserved node: {int.from_bytes(raw_data[4:6], byteorder='little')}")
         print(f"Direction change: {raw_data[6]}")
         print(f"CRC: {hex(raw_data[7])}")
         print(f"Frame end: {hex(raw_data[8])}")
@@ -186,8 +186,8 @@ def on_message(client, userdata, msg):
 
 def signal_handler(sig, frame):
     """Handle Ctrl+C gracefully"""
-    print('\nExiting program...')
-    if 'client' in globals() and client.is_connected():
+    print("\nExiting program...")
+    if "client" in globals() and client.is_connected():
         client.loop_stop()
         client.disconnect()
     sys.exit(0)
@@ -200,8 +200,9 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     # Load simulation steps
-    simulation_file = os.path.join(os.path.dirname(
-        __file__), 'sample-data', 'mqttSimulationSteps.jsonc')
+    simulation_file = os.path.join(
+        os.path.dirname(__file__), "sample-data", "mqttSimulationSteps.jsonc"
+    )
     print(f"Loading simulation steps from: {simulation_file}")
 
     try:
@@ -214,7 +215,7 @@ def main():
     # Initialize MQTT client
     client = mqtt_client.Client(
         callback_api_version=mqtt_client.CallbackAPIVersion.VERSION2,
-        client_id=CLIENT_ID
+        client_id=CLIENT_ID,
     )
 
     # Set up callbacks
@@ -232,18 +233,17 @@ def main():
     # Start client loop in background
     client.loop_start()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("MQTT SIMULATION TESTER")
-    print("="*60)
+    print("=" * 60)
     print("Press Enter to send the next simulation step")
     print("Press Ctrl+C to exit the program")
-    print("="*60)
+    print("=" * 60)
 
     # Display all simulation steps
     print("\nSimulation Steps:")
     for i, step in enumerate(simulation_steps, 1):
-        print(
-            f"  Step {i}: AGV {step['agv_id']} -> Node {step['current_node']}")
+        print(f"  Step {i}: AGV {step['agv_id']} -> Node {step['current_node']}")
     print("")
 
     # Main simulation loop
@@ -253,12 +253,13 @@ def main():
         try:
             # Wait for user input
             input(
-                f"Press Enter to send step {current_step + 1}/{len(simulation_steps)} (AGV {simulation_steps[current_step]['agv_id']} -> Node {simulation_steps[current_step]['current_node']})...")
+                f"Press Enter to send step {current_step + 1}/{len(simulation_steps)} (AGV {simulation_steps[current_step]['agv_id']} -> Node {simulation_steps[current_step]['current_node']})..."
+            )
 
             # Get current simulation step
             step = simulation_steps[current_step]
-            agv_id = step['agv_id']
-            current_node = step['current_node']
+            agv_id = step["agv_id"]
+            current_node = step["current_node"]
 
             print(f"\nSending simulation step {current_step + 1}:")
             print(f"  AGV ID: {agv_id}")
@@ -273,10 +274,10 @@ def main():
             print(f"    Frame start: {hex(message[0])}")
             print(f"    Frame length: {hex(message[1])}")
             print(f"    Message type: {hex(message[2])}")
+            print(f"    AGV ID: {int.from_bytes(message[3:5], byteorder='little')}")
             print(
-                f"    AGV ID: {int.from_bytes(message[3:5], byteorder='little')}")
-            print(
-                f"    Current node: {int.from_bytes(message[5:7], byteorder='little')}")
+                f"    Current node: {int.from_bytes(message[5:7], byteorder='little')}"
+            )
             print(f"    CRC: {hex(message[7])}")
             print(f"    Frame end: {hex(message[8])}")
 
@@ -296,7 +297,7 @@ def main():
             current_step += 1
             continue
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("All simulation steps completed!")
     print("Press Ctrl+C to exit or continue listening for server responses...")
 

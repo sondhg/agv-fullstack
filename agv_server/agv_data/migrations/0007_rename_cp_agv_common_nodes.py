@@ -4,15 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('agv_data', '0006_rename_residual_path_agv_remaining_path'),
+        ("agv_data", "0006_rename_residual_path_agv_remaining_path"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='agv',
-            old_name='cp',
-            new_name='common_nodes',
+            model_name="agv",
+            old_name="cp",
+            new_name="common_nodes",
         ),
     ]

@@ -4,7 +4,8 @@ Shared points calculation module for the DSPA algorithm.
 This module implements the shared points calculation aspects of Algorithm 1
 from the research paper.
 """
-from typing import List, Dict, Set, Optional
+
+from typing import List, Dict, Set
 from map_data.models import Connection
 from ...models import Agv
 
@@ -37,7 +38,7 @@ class CommonNodesCalculator:
         """
         adjacent_points = {}
         for conn in self.connections:
-            node1, node2 = conn['node1'], conn['node2']
+            node1, node2 = conn["node1"], conn["node2"]
             if node1 not in adjacent_points:
                 adjacent_points[node1] = set()
             if node2 not in adjacent_points:
@@ -46,7 +47,9 @@ class CommonNodesCalculator:
             adjacent_points[node2].add(node1)
         return adjacent_points
 
-    def calculate_common_nodes(self, current_path: List[int], other_paths: List[List[int]]) -> List[int]:
+    def calculate_common_nodes(
+        self, current_path: List[int], other_paths: List[List[int]]
+    ) -> List[int]:
         """
         Calculate the common nodes (CP^i) for a path based on Definition 3.
         For an active AGV r_i, CP^i consists of an ordered sequence of points shared with other AGVs:
@@ -96,7 +99,10 @@ class CommonNodesCalculator:
                 continue
 
             # Check if point has any adjacent shared points
-            if any(adj_point in common_nodes_set for adj_point in self.adjacent_points[point]):
+            if any(
+                adj_point in common_nodes_set
+                for adj_point in self.adjacent_points[point]
+            ):
                 sequential_points.append(point)
 
         # Return points in original order
@@ -112,8 +118,9 @@ def update_common_nodes(agv: Agv) -> None:
     """
     # Get all other AGVs' remaining paths
     other_paths = []
-    other_agvs = Agv.objects.filter(
-        active_order__isnull=False).exclude(agv_id=agv.agv_id)
+    other_agvs = Agv.objects.filter(active_order__isnull=False).exclude(
+        agv_id=agv.agv_id
+    )
 
     for other_agv in other_agvs:
         if other_agv.remaining_path:
@@ -134,7 +141,9 @@ def update_common_nodes(agv: Agv) -> None:
     agv.save()
 
 
-def calculate_common_nodes(current_path: List[int], other_paths: List[List[int]]) -> List[int]:
+def calculate_common_nodes(
+    current_path: List[int], other_paths: List[List[int]]
+) -> List[int]:
     """
     Calculate the shared points (CP^i) for a path based on Definition 3.
     For an active AGV r_i, CP^i consists of an ordered sequence of points shared with other AGVs:
@@ -178,12 +187,12 @@ def calculate_sequential_common_nodes(common_nodes: List[int]) -> List[int]:
         return []
 
     # Get all connections from the database
-    connections = Connection.objects.all().values('node1', 'node2')
+    connections = Connection.objects.all().values("node1", "node2")
 
     # Build adjacency map
     adjacent_points = {}
     for conn in connections:
-        node1, node2 = conn['node1'], conn['node2']
+        node1, node2 = conn["node1"], conn["node2"]
         if node1 not in adjacent_points:
             adjacent_points[node1] = set()
         if node2 not in adjacent_points:
@@ -225,11 +234,13 @@ def recalculate_all_common_nodes(log_summary: bool = False) -> None:
         # Get connections for adjacency calculations
         connections = []
         for conn in Connection.objects.values():
-            connections.append({
-                'node1': int(conn['node1']),
-                'node2': int(conn['node2']),
-                'distance': conn['distance']
-            })
+            connections.append(
+                {
+                    "node1": int(conn["node1"]),
+                    "node2": int(conn["node2"]),
+                    "distance": conn["distance"],
+                }
+            )
 
         # Initialize the common nodes calculator
         calculator = CommonNodesCalculator(connections)
@@ -239,8 +250,7 @@ def recalculate_all_common_nodes(log_summary: bool = False) -> None:
             if not agv.remaining_path:
                 agv.common_nodes = []
                 agv.adjacent_common_nodes = []
-                agv.save(update_fields=['common_nodes',
-                         'adjacent_common_nodes'])
+                agv.save(update_fields=["common_nodes", "adjacent_common_nodes"])
                 continue
 
             # Get all other active AGVs' remaining paths
@@ -253,16 +263,19 @@ def recalculate_all_common_nodes(log_summary: bool = False) -> None:
 
             # Calculate common nodes and adjacent common nodes
             common_nodes = calculator.calculate_common_nodes(
-                agv.remaining_path, other_paths)
+                agv.remaining_path, other_paths
+            )
             adjacent_common_nodes = calculator.calculate_sequential_common_nodes(
-                common_nodes)
+                common_nodes
+            )
             # Update the AGV
             agv.common_nodes = common_nodes
             agv.adjacent_common_nodes = adjacent_common_nodes
-            agv.save(update_fields=['common_nodes', 'adjacent_common_nodes'])
+            agv.save(update_fields=["common_nodes", "adjacent_common_nodes"])
 
         print(
-            f"Successfully recalculated common nodes for {active_agvs.count()} active AGVs")
+            f"Successfully recalculated common nodes for {active_agvs.count()} active AGVs"
+        )
 
         # Log summary if requested
         if log_summary:
@@ -271,6 +284,7 @@ def recalculate_all_common_nodes(log_summary: bool = False) -> None:
     except Exception as e:
         print(f"Error recalculating common nodes for all AGVs: {str(e)}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -286,17 +300,18 @@ def log_common_nodes_summary() -> None:
             print("No active AGVs found for common nodes summary")
             return
 
-        print(
-            f"\n=== Common Nodes Summary for {active_agvs.count()} Active AGVs ===")
+        print(f"\n=== Common Nodes Summary for {active_agvs.count()} Active AGVs ===")
 
         for agv in active_agvs:
             common_count = len(agv.common_nodes) if agv.common_nodes else 0
-            adjacent_count = len(
-                agv.adjacent_common_nodes) if agv.adjacent_common_nodes else 0
+            adjacent_count = (
+                len(agv.adjacent_common_nodes) if agv.adjacent_common_nodes else 0
+            )
             path_length = len(agv.remaining_path) if agv.remaining_path else 0
 
             print(
-                f"AGV {agv.agv_id}: Path Length={path_length}, Common Nodes={common_count}, Adjacent Common={adjacent_count}")
+                f"AGV {agv.agv_id}: Path Length={path_length}, Common Nodes={common_count}, Adjacent Common={adjacent_count}"
+            )
 
             if agv.common_nodes:
                 print(f"  Common nodes: {agv.common_nodes}")

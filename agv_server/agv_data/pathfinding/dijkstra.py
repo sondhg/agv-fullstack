@@ -34,7 +34,6 @@ class Dijkstra(BasePathfinding):
 
             for neighbor, distance in self.graph[node].items():
                 if neighbor not in visited:
-                    heapq.heappush(
-                        priority_queue, (cost + distance, neighbor, path))
+                    heapq.heappush(priority_queue, (cost + distance, neighbor, path))
 
         return []  # No path found

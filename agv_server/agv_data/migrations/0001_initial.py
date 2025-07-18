@@ -5,35 +5,102 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('order_data', '0001_initial'),
+        ("order_data", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Agv',
+            name="Agv",
             fields=[
-                ('agv_id', models.BigIntegerField(primary_key=True, serialize=False)),
-                ('preferred_parking_node', models.IntegerField(help_text='Preferred parking point for AGV')),
-                ('current_node', models.IntegerField(help_text='Current position (v_c^i): point where AGV is located or last left', null=True)),
-                ('next_node', models.IntegerField(help_text='Next point to visit (v_n^i)', null=True)),
-                ('reserved_node', models.IntegerField(help_text='Reserved point (v_r^i)', null=True)),
-                ('motion_state', models.IntegerField(choices=[(0, 'Idle'), (1, 'Moving'), (2, 'Waiting')], default=0, help_text='AGV state (SA^i) as defined in Definition 7')),
-                ('spare_flag', models.BooleanField(default=False, help_text='F^i: indicates if AGV moves along shared points with sufficient spare points')),
-                ('spare_points', models.JSONField(default=dict, help_text='SP^i: mapping of shared points to their allocated spare points')),
-                ('initial_path', models.JSONField(default=list, help_text='P_i^j: Path of AGV i performing task j. Once generated, will not change.')),
-                ('residual_path', models.JSONField(default=list, help_text='Pi_i: Remaining points to be visited by AGV i.')),
-                ('cp', models.JSONField(default=list, help_text='CP: Shared points with other AGVs')),
-                ('scp', models.JSONField(default=list, help_text='SCP: Sequential shared points')),
-                ('active_order', models.OneToOneField(blank=True, help_text='Currently executing order', null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='active_agv', to='order_data.order')),
+                ("agv_id", models.BigIntegerField(primary_key=True, serialize=False)),
+                (
+                    "preferred_parking_node",
+                    models.IntegerField(help_text="Preferred parking point for AGV"),
+                ),
+                (
+                    "current_node",
+                    models.IntegerField(
+                        help_text="Current position (v_c^i): point where AGV is located or last left",
+                        null=True,
+                    ),
+                ),
+                (
+                    "next_node",
+                    models.IntegerField(
+                        help_text="Next point to visit (v_n^i)", null=True
+                    ),
+                ),
+                (
+                    "reserved_node",
+                    models.IntegerField(help_text="Reserved point (v_r^i)", null=True),
+                ),
+                (
+                    "motion_state",
+                    models.IntegerField(
+                        choices=[(0, "Idle"), (1, "Moving"), (2, "Waiting")],
+                        default=0,
+                        help_text="AGV state (SA^i) as defined in Definition 7",
+                    ),
+                ),
+                (
+                    "spare_flag",
+                    models.BooleanField(
+                        default=False,
+                        help_text="F^i: indicates if AGV moves along shared points with sufficient spare points",
+                    ),
+                ),
+                (
+                    "spare_points",
+                    models.JSONField(
+                        default=dict,
+                        help_text="SP^i: mapping of shared points to their allocated spare points",
+                    ),
+                ),
+                (
+                    "initial_path",
+                    models.JSONField(
+                        default=list,
+                        help_text="P_i^j: Path of AGV i performing task j. Once generated, will not change.",
+                    ),
+                ),
+                (
+                    "residual_path",
+                    models.JSONField(
+                        default=list,
+                        help_text="Pi_i: Remaining points to be visited by AGV i.",
+                    ),
+                ),
+                (
+                    "cp",
+                    models.JSONField(
+                        default=list, help_text="CP: Shared points with other AGVs"
+                    ),
+                ),
+                (
+                    "scp",
+                    models.JSONField(
+                        default=list, help_text="SCP: Sequential shared points"
+                    ),
+                ),
+                (
+                    "active_order",
+                    models.OneToOneField(
+                        blank=True,
+                        help_text="Currently executing order",
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="active_agv",
+                        to="order_data.order",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'AGV',
-                'verbose_name_plural': 'AGVs',
-                'ordering': ['agv_id'],
+                "verbose_name": "AGV",
+                "verbose_name_plural": "AGVs",
+                "ordering": ["agv_id"],
             },
         ),
     ]

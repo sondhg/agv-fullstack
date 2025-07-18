@@ -16,21 +16,14 @@ class Agv(models.Model):
     WAITING = 2  # Stopped at current point
 
     # Human readable names
-    MOTION_STATE_CHOICES = {
-        IDLE: "Idle",
-        MOVING: "Moving",
-        WAITING: "Waiting"
-    }
+    MOTION_STATE_CHOICES = {IDLE: "Idle", MOVING: "Moving", WAITING: "Waiting"}
 
     # Define choices for journey phase
     OUTBOUND = 0  # Moving from parking → storage → workstation
-    INBOUND = 1    # Moving from workstation → parking
+    INBOUND = 1  # Moving from workstation → parking
 
     # Human readable names
-    JOURNEY_PHASE_CHOICES = {
-        OUTBOUND: "Outbound",
-        INBOUND: "Inbound"
-    }
+    JOURNEY_PHASE_CHOICES = {OUTBOUND: "Outbound", INBOUND: "Inbound"}
 
     # Define choices for direction_change
     # Actual integer values to be set on model
@@ -61,57 +54,48 @@ class Agv(models.Model):
     )
 
     # previous_node is not needed for DSPA, but will be useful for deciding which direction to turn to when AGV reaches a node, based on considering the relevant three consecutive nodes and the map layout.
-    previous_node = models.IntegerField(
-        null=True,
-        help_text="Last point visited"
-    )
+    previous_node = models.IntegerField(null=True, help_text="Last point visited")
 
     # Traveling information I^i from Definition 8
     current_node = models.IntegerField(
         null=True,
-        help_text="Current position (v_c^i): point where AGV is located or last left"
+        help_text="Current position (v_c^i): point where AGV is located or last left",
     )
-    next_node = models.IntegerField(
-        null=True,
-        help_text="Next point to visit (v_n^i)"
-    )
-    reserved_node = models.IntegerField(
-        null=True,
-        help_text="Reserved point (v_r^i)"
-    )
+    next_node = models.IntegerField(null=True, help_text="Next point to visit (v_n^i)")
+    reserved_node = models.IntegerField(null=True, help_text="Reserved point (v_r^i)")
 
     # State management from Algorithm 2
 
     motion_state = models.IntegerField(
         choices=MOTION_STATE_CHOICES,
         default=IDLE,
-        help_text="AGV state (SA^i) as defined in Definition 7"
+        help_text="AGV state (SA^i) as defined in Definition 7",
     )
 
     journey_phase = models.IntegerField(
         choices=JOURNEY_PHASE_CHOICES,
         default=OUTBOUND,
-        help_text="Whether AGV is on outbound (parking→storage→workstation) or inbound (workstation→parking) journey"
+        help_text="Whether AGV is on outbound (parking→storage→workstation) or inbound (workstation→parking) journey",
     )
 
     # DSPA algorithm specific fields from Algorithm 2
     spare_flag = models.BooleanField(
         default=False,
-        help_text="F^i: indicates if AGV moves along shared points with sufficient spare points"
+        help_text="F^i: indicates if AGV moves along shared points with sufficient spare points",
     )
     backup_nodes = models.JSONField(
         default=dict,
-        help_text="SP^i: mapping of shared points to their allocated backup nodes"
+        help_text="SP^i: mapping of shared points to their allocated backup nodes",
     )
     # Track deadlock resolution state
     waiting_for_deadlock_resolution = models.BooleanField(
         default=False,
-        help_text="Indicates if AGV is waiting due to being moved to backup node during deadlock resolution"
+        help_text="Indicates if AGV is waiting due to being moved to backup node during deadlock resolution",
     )
     deadlock_partner_agv_id = models.BigIntegerField(
         null=True,
         blank=True,
-        help_text="ID of the AGV that this AGV had head-on deadlock with (used to trigger control policy when partner moves)"
+        help_text="ID of the AGV that this AGV had head-on deadlock with (used to trigger control policy when partner moves)",
     )
 
     # Path information according to Algorithm 1 - Using ArrayField for better type clarity
@@ -119,37 +103,37 @@ class Agv(models.Model):
         models.IntegerField(),
         help_text="P_i^j: Path of AGV i performing task j. Once generated, will not change.",
         default=list,
-        size=None  # No size limit
+        size=None,  # No size limit
     )
     remaining_path = ArrayField(
         models.IntegerField(),
         help_text="Pi_i: Remaining points to be visited by AGV i. Name in research paper: residual path",
         default=list,
-        size=None  # No size limit
+        size=None,  # No size limit
     )
     outbound_path = ArrayField(
         models.IntegerField(),
         help_text="Path from parking node to workstation node.",
         default=list,
-        size=None
+        size=None,
     )
     inbound_path = ArrayField(
         models.IntegerField(),
         help_text="Path from workstation node back to parking node.",
         default=list,
-        size=None
+        size=None,
     )
     common_nodes = ArrayField(
         models.IntegerField(),
         help_text="CN (Common nodes). Name in research paper: CP (Shared points with other AGVs)",
         default=list,
-        size=None
+        size=None,
     )
     adjacent_common_nodes = ArrayField(
         models.IntegerField(),
         help_text="ACN (Adjacent common nodes). Name in research paper: SCP (Sequential shared points)",
         default=list,
-        size=None
+        size=None,
     )
 
     # Current order
@@ -158,8 +142,8 @@ class Agv(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='active_agv',
-        help_text="Currently executing order"
+        related_name="active_agv",
+        help_text="Currently executing order",
     )
 
     def save(self, *args, **kwargs):
@@ -187,19 +171,17 @@ class Agv(models.Model):
             "agv_group",  # Group name for AGV updates
             {
                 "type": "agv_message",
-                "message": {
-                    "type": "agv_update",
-                    "data": agv_data
-                }
-            }
+                "message": {"type": "agv_update", "data": agv_data},
+            },
         )
 
     class Meta:
         verbose_name = "AGV"
         verbose_name_plural = "AGVs"
-        ordering = ['agv_id']
+        ordering = ["agv_id"]
 
     def __str__(self):
         return f"AGV {self.agv_id} likes to park at {self.preferred_parking_node} and is currently at {self.current_node} with state {self.get_motion_state_display()}."
+
 
 # For every field that has choices set, the object will have a get_FOO_display() method, where FOO is the name of the field. This method returns the “human-readable” value of the field.

@@ -1,6 +1,7 @@
 """
 Factory class for creating pathfinding algorithm instances.
 """
+
 from .dijkstra import Dijkstra
 from .greedy import GreedyDistance
 from .hill_climbing import HillClimbing
@@ -13,7 +14,7 @@ class PathfindingFactory:
     This factory pattern allows for easily switching between different
     pathfinding algorithms while maintaining a consistent interface.
     """
-    
+
     @staticmethod
     def get_algorithm(algorithm_name, nodes, connections):
         """
@@ -35,7 +36,7 @@ class PathfindingFactory:
             "greedy": GreedyDistance,
             "hill_climbing": HillClimbing,
         }
-        
+
         if algorithm_name in algorithms:
             return algorithms[algorithm_name](nodes, connections)
         else:

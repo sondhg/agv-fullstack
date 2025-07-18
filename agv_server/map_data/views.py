@@ -1,4 +1,5 @@
 """Views for handling map data operations."""
+
 import logging
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -18,8 +19,9 @@ def import_connections(request):
         result = MapService.import_connections(data)
 
         if result["success"]:
-            logger.info(LogMessages.IMPORT_CONNECTIONS.format(
-                result["connection_count"]))
+            logger.info(
+                LogMessages.IMPORT_CONNECTIONS.format(result["connection_count"])
+            )
             return JsonResponse({"message": result["message"]}, status=200)
         else:
             logger.error(result["message"])
@@ -38,8 +40,7 @@ def import_directions(request):
         result = MapService.import_directions(data)
 
         if result["success"]:
-            logger.info(LogMessages.IMPORT_DIRECTIONS.format(
-                result["direction_count"]))
+            logger.info(LogMessages.IMPORT_DIRECTIONS.format(result["direction_count"]))
             return JsonResponse({"message": result["message"]}, status=200)
         else:
             logger.error(result["message"])
